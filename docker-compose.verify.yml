@@ -1,0 +1,11 @@
+# Temporary override: run Perlunas on alternate host ports so it can be
+# verified alongside the reference stack (which holds 5080/5432).
+# Usage: docker compose -f docker-compose.yml -f docker-compose.verify.yml up -d --build
+# !override replaces the base port list instead of appending to it.
+services:
+  postgres_db:
+    ports: !override
+      - "5433:5432"
+  webapi:
+    ports: !override
+      - "5081:8080"
