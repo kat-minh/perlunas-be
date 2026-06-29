@@ -469,8 +469,8 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/aspnetcore,dotnetcore,windows,rider,intellij
-HoaTheoMua.Api/appsettings.json
-HoaTheoMua.Api/appsettings.Development.json
+Cms.API/appsettings.json
+Cms.API/appsettings.Development.json
 
 # Docker local environment (keep .env.sample, ignore real secrets)
 .docker/.env
