@@ -472,9 +472,12 @@ $RECYCLE.BIN/
 Cms.API/appsettings.json
 Cms.API/appsettings.Development.json
 
-# Docker local environment (keep .env.sample, ignore real secrets)
-.docker/.env
-.docker/.env.*
-!.docker/.env.sample
-.env
+# Docker
+.docker/
+.dockerignore
+docker-compose*.yml
+
+# Env files
+.env*
+!.env.example
 .claude/
