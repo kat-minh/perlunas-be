@@ -475,7 +475,6 @@ Cms.API/appsettings.Development.json
 # Docker
 .docker/
 .dockerignore
-docker-compose*.yml
 
 # Env files
 .env*
