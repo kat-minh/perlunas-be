@@ -472,10 +472,6 @@ $RECYCLE.BIN/
 Cms.API/appsettings.json
 Cms.API/appsettings.Development.json
 
-# Docker
-.docker/
-.dockerignore
-
 # Env files
 .env*
 !.env.example
