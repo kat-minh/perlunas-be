@@ -1,5 +1,6 @@
 using Cms.Repository;
 using Cms.Service.Exceptions;
+using Cms.Service.Models;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,17 +19,26 @@ public class Service : IService
         _updateValidator = updateValidator;
     }
 
-    public async Task<List<Response.PageContentResponse>> GetAllAsync()
+    public async Task<BasePaginationResponse> GetAllAsync(int pageIndex, int pageSize)
     {
-        var all = await _dbContext.PageContents
+        pageIndex = pageIndex <= 0 ? 1 : pageIndex;
+        pageSize = pageSize <= 0 ? 10 : Math.Min(pageSize, 100);
+
+        var query = _dbContext.PageContents
             .AsNoTracking()
-            .Where(x => !x.IsDeleted)
+            .Where(x => !x.IsDeleted);
+
+        var totalCount = await query.CountAsync();
+        var items = await query
             .OrderBy(x => x.PageKey)
             .ThenBy(x => x.SectionKey)
             .ThenBy(x => x.SoftOrder)
+            .Skip((pageIndex - 1) * pageSize)
+            .Take(pageSize)
+            .Select(x => ToResponse(x))
             .ToListAsync();
 
-        return BuildTree(all, null);
+        return ApiResponseFactory.BasePagination(items, pageIndex, pageSize, totalCount);
     }
 
     public async Task<Response.PageContentResponse> GetByIdAsync(Guid id)

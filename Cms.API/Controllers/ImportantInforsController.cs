@@ -19,10 +19,11 @@ public class ImportantInforsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
     {
-        var result = await _importantInforService.GetAllAsync();
-        return Ok(ApiResponseFactory.Base(result, true, "", HttpContext.TraceIdentifier));
+        var result = await _importantInforService.GetAllAsync(pageIndex, pageSize);
+        result.TraceId = HttpContext.TraceIdentifier;
+        return Ok(result);
     }
 
     [HttpGet("{id:guid}")]

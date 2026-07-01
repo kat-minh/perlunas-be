@@ -19,10 +19,11 @@ public class BlogsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
     {
-        var result = await _blogService.GetAllAsync();
-        return Ok(ApiResponseFactory.Base(result, true, "", HttpContext.TraceIdentifier));
+        var result = await _blogService.GetAllAsync(pageIndex, pageSize);
+        result.TraceId = HttpContext.TraceIdentifier;
+        return Ok(result);
     }
 
     [HttpGet("{id:guid}")]
@@ -50,6 +51,6 @@ public class BlogsController : ControllerBase
     public async Task<IActionResult> Delete(Guid id)
     {
         var result = await _blogService.DeleteAsync(id);
-        return Ok(ApiResponseFactory.Base(result, true, result, HttpContext.TraceIdentifier));
+        return Ok(ApiResponseFactory.Base(result, true, "", HttpContext.TraceIdentifier));
     }
 }
