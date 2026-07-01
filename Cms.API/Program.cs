@@ -2,21 +2,12 @@ using System.Text.Json.Serialization;
 using Cms.API.Extentions;
 using Cms.API.Middleware;
 using Cms.Repository;
-using Cms.Service.Common;
-using Cms.Service.JwtService;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
-// Feature aliases for DI registration
-using AuthService = Cms.Service.Auth;
-using UsersService = Cms.Service.Users;
-using JwtService = Cms.Service.JwtService;
-using Cms.Service.CurrentUser;
-
 var builder = WebApplication.CreateBuilder(args);
 
-// PaaS platforms (Railway, Render, Heroku…) inject the public port via $PORT.
 var port = Environment.GetEnvironmentVariable("PORT");
 if (!string.IsNullOrWhiteSpace(port))
     builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
@@ -30,6 +21,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerServices();
+builder.Services.AddJwtServices(builder.Configuration);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
@@ -40,19 +32,19 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(dataSource)
 );
 
-builder.Services.AddJwtServices(builder.Configuration);
-builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
+builder.Services.Configure<Cms.Service.JwtService.JwtOption>(builder.Configuration.GetSection(nameof(Cms.Service.JwtService.JwtOption)));
+builder.Services.AddScoped<Cms.Service.JwtService.IService, Cms.Service.JwtService.Service>();
+builder.Services.AddScoped<Cms.Service.Auth.IService, Cms.Service.Auth.Service>();
+builder.Services.AddScoped<Cms.Service.Blog.IService, Cms.Service.Blog.Service>();
+builder.Services.AddScoped<Cms.Service.PageContent.IService, Cms.Service.PageContent.Service>();
+builder.Services.AddScoped<Cms.Service.Service.IService, Cms.Service.Service.Service>();
+builder.Services.AddScoped<Cms.Service.Schedule.IService, Cms.Service.Schedule.Service>();
+builder.Services.AddScoped<Cms.Service.RoomCategory.IService, Cms.Service.RoomCategory.Service>();
+builder.Services.AddScoped<Cms.Service.DepartureSchedule.IService, Cms.Service.DepartureSchedule.Service>();
+builder.Services.AddScoped<Cms.Service.ImportantInfor.IService, Cms.Service.ImportantInfor.Service>();
+builder.Services.AddScoped<Cms.Service.SiteSetting.IService, Cms.Service.SiteSetting.Service>();
 builder.Services.AddValidatorsFromAssembly(Cms.Service.AssemblyReference.Assembly);
-
-// ── DI ─────────────────────────────────────────────────────────────────────
-builder.Services.Configure<JwtOption>(builder.Configuration.GetSection("Jwt"));
-builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-
-builder.Services.AddScoped<JwtService.IService, JwtService.Service>();
-
-builder.Services.AddScoped<AuthService.IService, AuthService.Service>();
-builder.Services.AddScoped<UsersService.IService, UsersService.Service>();
 
 // ── CORS ───────────────────────────────────────────────────────────────────
 const string CorsPolicy = "NextjsFrontend";
@@ -71,13 +63,6 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
-
-// ── Auto migration ─────────────────────────────────────────────────────────
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.MigrateAsync();
-}
 
 // ── Middleware pipeline ────────────────────────────────────────────────────
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();

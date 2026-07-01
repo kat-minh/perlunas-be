@@ -9,7 +9,14 @@ public class AppDbContext : DbContext
     {
     }
 
-    public DbSet<User> Users => Set<User>();
+    public DbSet<Entities.Service> Services => Set<Entities.Service>();
+    public DbSet<Schedule> Schedules => Set<Schedule>();
+    public DbSet<RoomCategory> RoomCategories => Set<RoomCategory>();
+    public DbSet<DepartureSchedule> DepartureSchedules => Set<DepartureSchedule>();
+    public DbSet<ImportantInfor> ImportantInfors => Set<ImportantInfor>();
+    public DbSet<PageContent> PageContents => Set<PageContent>();
+    public DbSet<SiteSetting> SiteSettings => Set<SiteSetting>();
+    public DbSet<Blog> Blogs => Set<Blog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

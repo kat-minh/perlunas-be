@@ -4,6 +4,5 @@ namespace Cms.Service.JwtService;
 
 public interface IService
 {
-    string GenerateAccessToken(List<Claim> claims);
-    string GenerateRefreshToken();
+    string GenerateAccessToken(IEnumerable<Claim> claims);
 }

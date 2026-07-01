@@ -1,6 +1,9 @@
+using System.Security.Claims;
 using System.Text;
-using Cms.Repository.Enums;
+using Cms.Service.Exceptions;
+using Cms.Service.JwtService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Cms.API.Extentions;
@@ -8,12 +11,12 @@ namespace Cms.API.Extentions;
 public static class JwtExtensions
 {
     public const string AdminPolicy = "AdminPolicy";
-    public const string StaffPolicy = "StaffPolicy";
 
     public static void AddJwtServices(this IServiceCollection services, IConfiguration configuration)
     {
-        var jwtSection = configuration.GetSection("Jwt");
-        var key = Encoding.UTF8.GetBytes(jwtSection["Key"]!);
+        var jwtOption = new JwtOption();
+        configuration.GetSection(nameof(JwtOption)).Bind(jwtOption);
+        var key = Encoding.UTF8.GetBytes(jwtOption.AccessTokenKey);
 
         services.AddAuthentication(options =>
             {
@@ -28,19 +31,34 @@ public static class JwtExtensions
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = jwtSection["Issuer"],
-                    ValidAudience = jwtSection["Audience"],
+                    ValidIssuer = jwtOption.Issuer,
+                    ValidAudience = jwtOption.Audience,
                     IssuerSigningKey = new SymmetricSecurityKey(key),
+                    NameClaimType = ClaimTypes.NameIdentifier,
+                    RoleClaimType = ClaimTypes.Role,
                     ClockSkew = TimeSpan.Zero,
+                };
+                options.Events = new JwtBearerEvents
+                {
+                    OnAuthenticationFailed = context =>
+                    {
+                        if (context.Exception is SecurityTokenExpiredException)
+                        {
+                            throw new ExpiredAccessTokenException();
+                        }
+                        return Task.CompletedTask;
+                    }
                 };
             });
 
         services.AddAuthorization(options =>
         {
-            options.AddPolicy(AdminPolicy, policy =>
-                policy.RequireRole(UserRole.Admin.ToString()));
-            options.AddPolicy(StaffPolicy, policy =>
-                policy.RequireRole(UserRole.Staff.ToString()));
+            options.DefaultPolicy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .RequireRole("Admin")
+                .Build();
+
+            options.AddPolicy(AdminPolicy, policy => policy.RequireRole("Admin"));
         });
     }
 }

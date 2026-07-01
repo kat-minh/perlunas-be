@@ -1,6 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -9,33 +8,25 @@ namespace Cms.Service.JwtService;
 
 public class Service : IService
 {
-    private readonly JwtOption _jwt;
+    private readonly JwtOption _jwtOption;
 
-    public Service(IOptions<JwtOption> jwt)
+    public Service(IOptions<JwtOption> jwtOption)
     {
-        _jwt = jwt.Value;
+        _jwtOption = jwtOption.Value;
     }
 
-    public string GenerateAccessToken(List<Claim> claims)
+    public string GenerateAccessToken(IEnumerable<Claim> claims)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Key));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOption.AccessTokenKey));
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
-            issuer: _jwt.Issuer,
-            audience: _jwt.Audience,
+            issuer: _jwtOption.Issuer,
+            audience: _jwtOption.Audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(_jwt.AccessTokenExpiryMinutes),
-            signingCredentials: creds);
+            expires: DateTime.UtcNow.AddMinutes(_jwtOption.AccessTokenExpireMin),
+            signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
-    }
-
-    public string GenerateRefreshToken()
-    {
-        var randomBytes = new byte[64];
-        using var rng = RandomNumberGenerator.Create();
-        rng.GetBytes(randomBytes);
-        return Convert.ToBase64String(randomBytes);
     }
 }
