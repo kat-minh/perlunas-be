@@ -8,7 +8,6 @@ namespace Cms.API.Controllers;
 
 [ApiController]
 [Route("api/services")]
-[Authorize(Policy = JwtExtensions.AdminPolicy)]
 public class ServicesController : ControllerBase
 {
     private readonly ServiceService.IService _serviceService;
@@ -26,6 +25,14 @@ public class ServicesController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("tours")]
+    public async Task<IActionResult> GetTours([FromQuery] string? keyword, [FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
+    {
+        var result = await _serviceService.GetToursAsync(keyword, pageIndex, pageSize);
+        result.TraceId = HttpContext.TraceIdentifier;
+        return Ok(result);
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
@@ -34,6 +41,7 @@ public class ServicesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> Create([FromBody] ServiceService.Request.CreateServiceRequest request)
     {
         var result = await _serviceService.CreateAsync(request);
@@ -41,6 +49,7 @@ public class ServicesController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Update(Guid id, [FromBody] ServiceService.Request.UpdateServiceRequest request)
     {
         var result = await _serviceService.UpdateAsync(id, request);
@@ -48,6 +57,7 @@ public class ServicesController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Delete(Guid id)
     {
         var result = await _serviceService.DeleteAsync(id);

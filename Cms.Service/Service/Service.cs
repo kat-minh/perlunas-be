@@ -1,4 +1,6 @@
+using System.Text.Json;
 using Cms.Repository;
+using Cms.Repository.Enums;
 using Cms.Service.Exceptions;
 using Cms.Service.Models;
 using FluentValidation;
@@ -39,6 +41,33 @@ public class Service : IService
         return ApiResponseFactory.BasePagination(items, pageIndex, pageSize, totalCount);
     }
 
+    public async Task<BasePaginationResponse> GetToursAsync(string? keyword, int pageIndex, int pageSize)
+    {
+        pageIndex = pageIndex <= 0 ? 1 : pageIndex;
+        pageSize = pageSize <= 0 ? 10 : Math.Min(pageSize, 100);
+
+        var query = _dbContext.Services
+            .AsNoTracking()
+            .Where(x => !x.IsDeleted && x.Type == nameof(ServiceType.Tour));
+
+        if (!string.IsNullOrWhiteSpace(keyword))
+        {
+            var kw = keyword.Trim().ToLower();
+            query = query.Where(x => x.Title != null && x.Title.ToLower().Contains(kw)
+                                  || x.Region != null && x.Region.ToLower().Contains(kw));
+        }
+
+        var totalCount = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(x => x.CreatedAt)
+            .Skip((pageIndex - 1) * pageSize)
+            .Take(pageSize)
+            .Select(x => ToResponse(x))
+            .ToListAsync();
+
+        return ApiResponseFactory.BasePagination(items, pageIndex, pageSize, totalCount);
+    }
+
     public async Task<Response.ServiceResponse> GetByIdAsync(Guid id)
     {
         var service = await _dbContext.Services
@@ -59,23 +88,15 @@ public class Service : IService
         {
             Id = Guid.NewGuid(),
             Title = request.Title.Trim(),
-            Introducetion = request.Introducetion.Trim(),
-            Day = request.Day,
-            Night = request.Night,
-            Label = request.Label.Trim(),
-            Album = request.Album.Trim(),
-            Region = request.Region.Trim(),
-            Description = request.Description.Trim(),
-            Infor = request.Infor.Trim(),
-            Highlight = request.Highlight.Trim(),
-            Code = request.Code.Trim(),
-            Instruct = request.Instruct.Trim(),
-            Feature = request.Feature.Trim(),
             Type = request.Type.Trim(),
+            Album = JsonSerializer.Serialize(request.Album),
+            Region = request.Region.Trim(),
             IsPublic = request.IsPublic,
             CreatedAt = now,
             UpdatedAt = now,
         };
+
+        ApplyTypeFields(service, request.Type, request);
 
         _dbContext.Services.Add(service);
         await _dbContext.SaveChangesAsync();
@@ -91,21 +112,13 @@ public class Service : IService
         if (service is null) throw new NotFoundException("Service not found.");
 
         service.Title = request.Title.Trim();
-        service.Introducetion = request.Introducetion.Trim();
-        service.Day = request.Day;
-        service.Night = request.Night;
-        service.Label = request.Label.Trim();
-        service.Album = request.Album.Trim();
-        service.Region = request.Region.Trim();
-        service.Description = request.Description.Trim();
-        service.Infor = request.Infor.Trim();
-        service.Highlight = request.Highlight.Trim();
-        service.Code = request.Code.Trim();
-        service.Instruct = request.Instruct.Trim();
-        service.Feature = request.Feature.Trim();
         service.Type = request.Type.Trim();
+        service.Album = JsonSerializer.Serialize(request.Album);
+        service.Region = request.Region.Trim();
         service.IsPublic = request.IsPublic;
         service.UpdatedAt = DateTime.UtcNow;
+
+        ApplyTypeFields(service, request.Type, request);
 
         await _dbContext.SaveChangesAsync();
 
@@ -124,6 +137,75 @@ public class Service : IService
         return "Service deleted successfully.";
     }
 
+    private static void ApplyTypeFields(Repository.Entities.Service service, string type,
+        string? introducetion, int day, int night, string? label,
+        string? description, string? infor, string? highlight, string? code,
+        string? instruct, string? feature,
+        string? purposeOfTrip, string? destination, string? form, string? classify)
+    {
+        // Reset all type-specific fields first
+        service.Introducetion = null;
+        service.Day = null;
+        service.Night = null;
+        service.Label = null;
+        service.Description = null;
+        service.Infor = null;
+        service.Highlight = null;
+        service.Code = null;
+        service.Instruct = null;
+        service.Feature = null;
+        service.PurposeOfTrip = null;
+        service.Destination = null;
+        service.Form = null;
+        service.Classify = null;
+
+        switch (type)
+        {
+            case nameof(ServiceType.Tour):
+                service.Day = day;
+                service.Night = night;
+                service.Description = description?.Trim();
+                service.Infor = infor?.Trim();
+                service.Highlight = highlight?.Trim();
+                service.Code = code?.Trim();
+                break;
+
+            case nameof(ServiceType.Combo):
+                service.Night = night;
+                service.Label = label?.Trim();
+                service.Description = description?.Trim();
+                service.Infor = infor?.Trim();
+                service.Highlight = highlight?.Trim();
+                service.Code = code?.Trim();
+                service.PurposeOfTrip = purposeOfTrip?.Trim();
+                service.Destination = destination?.Trim();
+                service.Form = form?.Trim();
+                service.Classify = classify?.Trim();
+                break;
+
+            case nameof(ServiceType.Hotel):
+                service.Introducetion = introducetion?.Trim();
+                service.Instruct = instruct?.Trim();
+                service.Feature = feature?.Trim();
+                service.PurposeOfTrip = purposeOfTrip?.Trim();
+                service.Destination = destination?.Trim();
+                service.Form = form?.Trim();
+                break;
+        }
+    }
+
+    private static void ApplyTypeFields(Repository.Entities.Service service, string type, Request.CreateServiceRequest request) =>
+        ApplyTypeFields(service, type, request.Introducetion, request.Day, request.Night, request.Label,
+            request.Description, request.Infor, request.Highlight, request.Code,
+            request.Instruct, request.Feature,
+            request.PurposeOfTrip, request.Destination, request.Form, request.Classify);
+
+    private static void ApplyTypeFields(Repository.Entities.Service service, string type, Request.UpdateServiceRequest request) =>
+        ApplyTypeFields(service, type, request.Introducetion, request.Day, request.Night, request.Label,
+            request.Description, request.Infor, request.Highlight, request.Code,
+            request.Instruct, request.Feature,
+            request.PurposeOfTrip, request.Destination, request.Form, request.Classify);
+
     private static Response.ServiceResponse ToResponse(Repository.Entities.Service service)
     {
         return new Response.ServiceResponse
@@ -134,7 +216,7 @@ public class Service : IService
             Day = service.Day ?? 0,
             Night = service.Night ?? 0,
             Label = service.Label ?? string.Empty,
-            Album = service.Album ?? string.Empty,
+            Album = DeserializeAlbum(service.Album),
             Region = service.Region ?? string.Empty,
             Description = service.Description ?? string.Empty,
             Infor = service.Infor ?? string.Empty,
@@ -144,8 +226,19 @@ public class Service : IService
             Feature = service.Feature ?? string.Empty,
             Type = service.Type ?? string.Empty,
             IsPublic = service.IsPublic,
+            PurposeOfTrip = service.PurposeOfTrip,
+            Destination = service.Destination,
+            Form = service.Form,
+            Classify = service.Classify,
             CreatedAt = service.CreatedAt,
             UpdatedAt = service.UpdatedAt,
         };
+    }
+
+    private static List<string> DeserializeAlbum(string? album)
+    {
+        if (string.IsNullOrWhiteSpace(album)) return new();
+        try { return JsonSerializer.Deserialize<List<string>>(album) ?? new(); }
+        catch { return new(); }
     }
 }

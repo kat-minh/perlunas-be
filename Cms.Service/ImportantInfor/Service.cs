@@ -1,4 +1,5 @@
 using Cms.Repository;
+using Cms.Repository.Enums;
 using Cms.Service.Exceptions;
 using Cms.Service.Models;
 using FluentValidation;
@@ -54,8 +55,11 @@ public class Service : IService
     {
         await _createValidator.ValidateAndThrowAsync(request);
 
-        var serviceExists = await _dbContext.Services.AnyAsync(x => x.Id == request.ServiceId && !x.IsDeleted);
-        if (!serviceExists) throw new NotFoundException("Service not found.");
+        var service = await _dbContext.Services.FirstOrDefaultAsync(x => x.Id == request.ServiceId && !x.IsDeleted)
+            ?? throw new NotFoundException("Service not found.");
+
+        if (service.Type != nameof(ServiceType.Tour) && service.Type != nameof(ServiceType.Combo))
+            throw new BadRequestException("Important information is only allowed for Tour or Combo services.");
 
         var now = DateTime.UtcNow;
         var importantInfor = new Repository.Entities.ImportantInfor
@@ -82,8 +86,11 @@ public class Service : IService
         var importantInfor = await _dbContext.ImportantInfors.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
         if (importantInfor is null) throw new NotFoundException("Important information not found.");
 
-        var serviceExists = await _dbContext.Services.AnyAsync(x => x.Id == request.ServiceId && !x.IsDeleted);
-        if (!serviceExists) throw new NotFoundException("Service not found.");
+        var service = await _dbContext.Services.FirstOrDefaultAsync(x => x.Id == request.ServiceId && !x.IsDeleted)
+            ?? throw new NotFoundException("Service not found.");
+
+        if (service.Type != nameof(ServiceType.Tour) && service.Type != nameof(ServiceType.Combo))
+            throw new BadRequestException("Important information is only allowed for Tour or Combo services.");
 
         importantInfor.ServiceId = request.ServiceId;
         importantInfor.Title = request.Title.Trim();
@@ -98,8 +105,13 @@ public class Service : IService
 
     public async Task<string> DeleteAsync(Guid id)
     {
-        var importantInfor = await _dbContext.ImportantInfors.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+        var importantInfor = await _dbContext.ImportantInfors
+            .Include(x => x.Service)
+            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
         if (importantInfor is null) throw new NotFoundException("Important information not found.");
+
+        if (importantInfor.Service.Type != nameof(ServiceType.Tour) && importantInfor.Service.Type != nameof(ServiceType.Combo))
+            throw new BadRequestException("Important information is only allowed for Tour or Combo services.");
 
         importantInfor.IsDeleted = true;
         importantInfor.UpdatedAt = DateTime.UtcNow;

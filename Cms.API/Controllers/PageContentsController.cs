@@ -8,7 +8,6 @@ namespace Cms.API.Controllers;
 
 [ApiController]
 [Route("api/page-contents")]
-[Authorize(Policy = JwtExtensions.AdminPolicy)]
 public class PageContentsController : ControllerBase
 {
     private readonly PageContentService.IService _pageContentService;
@@ -34,6 +33,7 @@ public class PageContentsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> Create([FromBody] PageContentService.Request.CreatePageContentRequest request)
     {
         var result = await _pageContentService.CreateAsync(request);
@@ -41,6 +41,7 @@ public class PageContentsController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Update(Guid id, [FromBody] PageContentService.Request.UpdatePageContentRequest request)
     {
         var result = await _pageContentService.UpdateAsync(id, request);
@@ -48,6 +49,7 @@ public class PageContentsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Delete(Guid id)
     {
         var result = await _pageContentService.DeleteAsync(id);

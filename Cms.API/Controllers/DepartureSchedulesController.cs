@@ -8,7 +8,6 @@ namespace Cms.API.Controllers;
 
 [ApiController]
 [Route("api/departure-schedules")]
-[Authorize(Policy = JwtExtensions.AdminPolicy)]
 public class DepartureSchedulesController : ControllerBase
 {
     private readonly DepartureScheduleService.IService _departureScheduleService;
@@ -34,6 +33,7 @@ public class DepartureSchedulesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> Create([FromBody] DepartureScheduleService.Request.CreateDepartureScheduleRequest request)
     {
         var result = await _departureScheduleService.CreateAsync(request);
@@ -41,6 +41,7 @@ public class DepartureSchedulesController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Update(Guid id, [FromBody] DepartureScheduleService.Request.UpdateDepartureScheduleRequest request)
     {
         var result = await _departureScheduleService.UpdateAsync(id, request);
@@ -48,6 +49,7 @@ public class DepartureSchedulesController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Delete(Guid id)
     {
         var result = await _departureScheduleService.DeleteAsync(id);

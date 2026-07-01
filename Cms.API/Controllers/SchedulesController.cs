@@ -8,7 +8,6 @@ namespace Cms.API.Controllers;
 
 [ApiController]
 [Route("api/schedules")]
-[Authorize(Policy = JwtExtensions.AdminPolicy)]
 public class SchedulesController : ControllerBase
 {
     private readonly ScheduleService.IService _scheduleService;
@@ -34,6 +33,7 @@ public class SchedulesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> Create([FromBody] ScheduleService.Request.CreateScheduleRequest request)
     {
         var result = await _scheduleService.CreateAsync(request);
@@ -41,6 +41,7 @@ public class SchedulesController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Update(Guid id, [FromBody] ScheduleService.Request.UpdateScheduleRequest request)
     {
         var result = await _scheduleService.UpdateAsync(id, request);
@@ -48,6 +49,7 @@ public class SchedulesController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Delete(Guid id)
     {
         var result = await _scheduleService.DeleteAsync(id);

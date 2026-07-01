@@ -1,4 +1,5 @@
 using Cms.Repository;
+using Cms.Repository.Enums;
 using Cms.Service.Exceptions;
 using Cms.Service.Models;
 using FluentValidation;
@@ -54,8 +55,11 @@ public class Service : IService
     {
         await _createValidator.ValidateAndThrowAsync(request);
 
-        var serviceExists = await _dbContext.Services.AnyAsync(x => x.Id == request.ServiceId && !x.IsDeleted);
-        if (!serviceExists) throw new NotFoundException("Service not found.");
+        var service = await _dbContext.Services.FirstOrDefaultAsync(x => x.Id == request.ServiceId && !x.IsDeleted)
+            ?? throw new NotFoundException("Service not found.");
+
+        if (service.Type != nameof(ServiceType.Tour))
+            throw new BadRequestException("Departure schedules are only allowed for Tour services.");
 
         var now = DateTime.UtcNow;
         var departureSchedule = new Repository.Entities.DepartureSchedule
@@ -83,8 +87,11 @@ public class Service : IService
         var departureSchedule = await _dbContext.DepartureSchedules.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
         if (departureSchedule is null) throw new NotFoundException("Departure schedule not found.");
 
-        var serviceExists = await _dbContext.Services.AnyAsync(x => x.Id == request.ServiceId && !x.IsDeleted);
-        if (!serviceExists) throw new NotFoundException("Service not found.");
+        var service = await _dbContext.Services.FirstOrDefaultAsync(x => x.Id == request.ServiceId && !x.IsDeleted)
+            ?? throw new NotFoundException("Service not found.");
+
+        if (service.Type != nameof(ServiceType.Tour))
+            throw new BadRequestException("Departure schedules are only allowed for Tour services.");
 
         departureSchedule.ServiceId = request.ServiceId;
         departureSchedule.StartTime = request.StartTime.Trim();
@@ -100,8 +107,13 @@ public class Service : IService
 
     public async Task<string> DeleteAsync(Guid id)
     {
-        var departureSchedule = await _dbContext.DepartureSchedules.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+        var departureSchedule = await _dbContext.DepartureSchedules
+            .Include(x => x.Service)
+            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
         if (departureSchedule is null) throw new NotFoundException("Departure schedule not found.");
+
+        if (departureSchedule.Service.Type != nameof(ServiceType.Tour))
+            throw new BadRequestException("Departure schedules are only allowed for Tour services.");
 
         departureSchedule.IsDeleted = true;
         departureSchedule.UpdatedAt = DateTime.UtcNow;

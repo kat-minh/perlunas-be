@@ -8,7 +8,6 @@ namespace Cms.API.Controllers;
 
 [ApiController]
 [Route("api/site-settings")]
-[Authorize(Policy = JwtExtensions.AdminPolicy)]
 public class SiteSettingsController : ControllerBase
 {
     private readonly SiteSettingService.IService _siteSettingService;
@@ -34,6 +33,7 @@ public class SiteSettingsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> Create([FromBody] SiteSettingService.Request.CreateSiteSettingRequest request)
     {
         var result = await _siteSettingService.CreateAsync(request);
@@ -41,6 +41,7 @@ public class SiteSettingsController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Update(Guid id, [FromBody] SiteSettingService.Request.UpdateSiteSettingRequest request)
     {
         var result = await _siteSettingService.UpdateAsync(id, request);
@@ -48,6 +49,7 @@ public class SiteSettingsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Delete(Guid id)
     {
         var result = await _siteSettingService.DeleteAsync(id);

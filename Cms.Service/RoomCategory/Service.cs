@@ -1,4 +1,6 @@
+using System.Text.Json;
 using Cms.Repository;
+using Cms.Repository.Enums;
 using Cms.Service.Exceptions;
 using Cms.Service.Models;
 using FluentValidation;
@@ -54,22 +56,25 @@ public class Service : IService
     {
         await _createValidator.ValidateAndThrowAsync(request);
 
-        var serviceExists = await _dbContext.Services.AnyAsync(x => x.Id == request.ServiceId && !x.IsDeleted);
-        if (!serviceExists) throw new NotFoundException("Service not found.");
+        var service = await _dbContext.Services.FirstOrDefaultAsync(x => x.Id == request.ServiceId && !x.IsDeleted)
+            ?? throw new NotFoundException("Service not found.");
+
+        if (service.Type != nameof(ServiceType.Combo) && service.Type != nameof(ServiceType.Hotel))
+            throw new BadRequestException("Room categories are only allowed for Combo or Hotel services.");
 
         var now = DateTime.UtcNow;
         var roomCategory = new Repository.Entities.RoomCategory
         {
             Id = Guid.NewGuid(),
             ServiceId = request.ServiceId,
-            Album = request.Album.Trim(),
+            Album = JsonSerializer.Serialize(request.Album),
             Titile = request.Titile.Trim(),
             NumberOfCustomer = request.NumberOfCustomer,
             Acreage = request.Acreage.Trim(),
             NumberOfBed = request.NumberOfBed,
             Description = request.Description.Trim(),
             Feature = request.Feature.Trim(),
-            Price = request.Price.Trim(),
+            Price = service.Type == nameof(ServiceType.Combo) ? null : request.Price?.Trim(),
             CreatedAt = now,
             UpdatedAt = now,
         };
@@ -87,18 +92,21 @@ public class Service : IService
         var roomCategory = await _dbContext.RoomCategories.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
         if (roomCategory is null) throw new NotFoundException("Room category not found.");
 
-        var serviceExists = await _dbContext.Services.AnyAsync(x => x.Id == request.ServiceId && !x.IsDeleted);
-        if (!serviceExists) throw new NotFoundException("Service not found.");
+        var service = await _dbContext.Services.FirstOrDefaultAsync(x => x.Id == request.ServiceId && !x.IsDeleted)
+            ?? throw new NotFoundException("Service not found.");
+
+        if (service.Type != nameof(ServiceType.Combo) && service.Type != nameof(ServiceType.Hotel))
+            throw new BadRequestException("Room categories are only allowed for Combo or Hotel services.");
 
         roomCategory.ServiceId = request.ServiceId;
-        roomCategory.Album = request.Album.Trim();
+        roomCategory.Album = JsonSerializer.Serialize(request.Album);
         roomCategory.Titile = request.Titile.Trim();
         roomCategory.NumberOfCustomer = request.NumberOfCustomer;
         roomCategory.Acreage = request.Acreage.Trim();
         roomCategory.NumberOfBed = request.NumberOfBed;
         roomCategory.Description = request.Description.Trim();
         roomCategory.Feature = request.Feature.Trim();
-        roomCategory.Price = request.Price.Trim();
+        roomCategory.Price = service.Type == nameof(ServiceType.Combo) ? null : request.Price?.Trim();
         roomCategory.UpdatedAt = DateTime.UtcNow;
 
         await _dbContext.SaveChangesAsync();
@@ -124,16 +132,23 @@ public class Service : IService
         {
             Id = roomCategory.Id,
             ServiceId = roomCategory.ServiceId,
-            Album = roomCategory.Album ?? string.Empty,
+            Album = DeserializeAlbum(roomCategory.Album),
             Titile = roomCategory.Titile ?? string.Empty,
             NumberOfCustomer = roomCategory.NumberOfCustomer ?? 0,
             Acreage = roomCategory.Acreage ?? string.Empty,
             NumberOfBed = roomCategory.NumberOfBed ?? 0,
             Description = roomCategory.Description ?? string.Empty,
             Feature = roomCategory.Feature ?? string.Empty,
-            Price = roomCategory.Price ?? string.Empty,
+            Price = roomCategory.Price,
             CreatedAt = roomCategory.CreatedAt,
             UpdatedAt = roomCategory.UpdatedAt,
         };
+    }
+
+    private static List<string> DeserializeAlbum(string? album)
+    {
+        if (string.IsNullOrWhiteSpace(album)) return new();
+        try { return JsonSerializer.Deserialize<List<string>>(album) ?? new(); }
+        catch { return new(); }
     }
 }

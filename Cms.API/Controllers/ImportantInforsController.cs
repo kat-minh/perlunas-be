@@ -8,7 +8,6 @@ namespace Cms.API.Controllers;
 
 [ApiController]
 [Route("api/important-infors")]
-[Authorize(Policy = JwtExtensions.AdminPolicy)]
 public class ImportantInforsController : ControllerBase
 {
     private readonly ImportantInforService.IService _importantInforService;
@@ -34,6 +33,7 @@ public class ImportantInforsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> Create([FromBody] ImportantInforService.Request.CreateImportantInforRequest request)
     {
         var result = await _importantInforService.CreateAsync(request);
@@ -41,6 +41,7 @@ public class ImportantInforsController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Update(Guid id, [FromBody] ImportantInforService.Request.UpdateImportantInforRequest request)
     {
         var result = await _importantInforService.UpdateAsync(id, request);
@@ -48,6 +49,7 @@ public class ImportantInforsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Delete(Guid id)
     {
         var result = await _importantInforService.DeleteAsync(id);

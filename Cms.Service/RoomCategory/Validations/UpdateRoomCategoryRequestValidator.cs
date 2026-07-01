@@ -14,6 +14,5 @@ public class UpdateRoomCategoryRequestValidator : AbstractValidator<Request.Upda
         RuleFor(x => x.NumberOfBed).GreaterThan(0).WithMessage("NUMBER_OF_BED_MUST_BE_GREATER_THAN_ZERO");
         RuleFor(x => x.Description).NotEmpty().WithMessage("DESCRIPTION_REQUIRED");
         RuleFor(x => x.Feature).NotEmpty().WithMessage("FEATURE_REQUIRED");
-        RuleFor(x => x.Price).NotEmpty().WithMessage("PRICE_REQUIRED");
     }
 }

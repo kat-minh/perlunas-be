@@ -8,7 +8,6 @@ namespace Cms.API.Controllers;
 
 [ApiController]
 [Route("api/room-categories")]
-[Authorize(Policy = JwtExtensions.AdminPolicy)]
 public class RoomCategoriesController : ControllerBase
 {
     private readonly RoomCategoryService.IService _roomCategoryService;
@@ -34,6 +33,7 @@ public class RoomCategoriesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> Create([FromBody] RoomCategoryService.Request.CreateRoomCategoryRequest request)
     {
         var result = await _roomCategoryService.CreateAsync(request);
@@ -41,6 +41,7 @@ public class RoomCategoriesController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Update(Guid id, [FromBody] RoomCategoryService.Request.UpdateRoomCategoryRequest request)
     {
         var result = await _roomCategoryService.UpdateAsync(id, request);
@@ -48,6 +49,7 @@ public class RoomCategoriesController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Delete(Guid id)
     {
         var result = await _roomCategoryService.DeleteAsync(id);

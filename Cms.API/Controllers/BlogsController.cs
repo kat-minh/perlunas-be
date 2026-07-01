@@ -8,7 +8,6 @@ namespace Cms.API.Controllers;
 
 [ApiController]
 [Route("api/blogs")]
-[Authorize(Policy = JwtExtensions.AdminPolicy)]
 public class BlogsController : ControllerBase
 {
     private readonly BlogService.IService _blogService;
@@ -34,6 +33,7 @@ public class BlogsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> Create([FromBody] BlogService.Request.CreateBlogRequest request)
     {
         var result = await _blogService.CreateAsync(request);
@@ -41,6 +41,7 @@ public class BlogsController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Update(Guid id, [FromBody] BlogService.Request.UpdateBlogRequest request)
     {
         var result = await _blogService.UpdateAsync(id, request);
@@ -48,6 +49,7 @@ public class BlogsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Delete(Guid id)
     {
         var result = await _blogService.DeleteAsync(id);
