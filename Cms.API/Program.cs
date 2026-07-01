@@ -10,16 +10,7 @@ using Npgsql;
 
 // Feature aliases for DI registration
 using AuthService = Cms.Service.Auth;
-using ToursService = Cms.Service.Tours;
-using HotelsService = Cms.Service.Hotels;
-using CombosService = Cms.Service.Combos;
-using SiteSettingsService = Cms.Service.SiteSettings;
-using ContactMessagesService = Cms.Service.ContactMessages;
 using UsersService = Cms.Service.Users;
-using TourCardsService = Cms.Service.TourCards;
-using ComboTiersService = Cms.Service.ComboTiers;
-using TaxonomiesService = Cms.Service.Taxonomies;
-using PageContentService = Cms.Service.PageContent;
 using JwtService = Cms.Service.JwtService;
 using Cms.Service.CurrentUser;
 
@@ -61,16 +52,7 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<JwtService.IService, JwtService.Service>();
 
 builder.Services.AddScoped<AuthService.IService, AuthService.Service>();
-builder.Services.AddScoped<ToursService.IService, ToursService.Service>();
-builder.Services.AddScoped<HotelsService.IService, HotelsService.Service>();
-builder.Services.AddScoped<CombosService.IService, CombosService.Service>();
-builder.Services.AddScoped<SiteSettingsService.IService, SiteSettingsService.Service>();
-builder.Services.AddScoped<ContactMessagesService.IService, ContactMessagesService.Service>();
 builder.Services.AddScoped<UsersService.IService, UsersService.Service>();
-builder.Services.AddScoped<TourCardsService.IService, TourCardsService.Service>();
-builder.Services.AddScoped<ComboTiersService.IService, ComboTiersService.Service>();
-builder.Services.AddScoped<TaxonomiesService.IService, TaxonomiesService.Service>();
-builder.Services.AddScoped<PageContentService.IService, PageContentService.Service>();
 
 // ── CORS ───────────────────────────────────────────────────────────────────
 const string CorsPolicy = "NextjsFrontend";

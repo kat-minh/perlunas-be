@@ -36,12 +36,4 @@ public class AuthController : ControllerBase
         var profile = await _auth.GetProfileAsync();
         return Ok(ApiResponseFactory.Base(profile, true, "", HttpContext.TraceIdentifier));
     }
-
-    [HttpPost("logout")]
-    [Authorize]
-    public async Task<IActionResult> Logout()
-    {
-        await _auth.LogoutAsync();
-        return Ok(ApiResponseFactory.Base(null, true, "Logged out successfully", HttpContext.TraceIdentifier));
-    }
 }

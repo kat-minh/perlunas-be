@@ -56,15 +56,6 @@ public class Service : IService
         var accessToken = _jwtService.GenerateAccessToken(claims);
         var refreshToken = _jwtService.GenerateRefreshToken();
 
-        _dbContext.RefreshTokens.Add(new RefreshToken
-        {
-            Id = Guid.NewGuid(),
-            UserId = user.Id,
-            Token = refreshToken,
-            ExpiresAt = DateTime.UtcNow.AddDays(_jwtOption.RefreshTokenExpiryDays),
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        });
         await _dbContext.SaveChangesAsync();
 
         return new Response.LoginResponse
@@ -113,15 +104,6 @@ public class Service : IService
         var accessToken = _jwtService.GenerateAccessToken(claims);
         var refreshToken = _jwtService.GenerateRefreshToken();
 
-        _dbContext.RefreshTokens.Add(new RefreshToken
-        {
-            Id = Guid.NewGuid(),
-            UserId = user.Id,
-            Token = refreshToken,
-            ExpiresAt = DateTime.UtcNow.AddDays(_jwtOption.RefreshTokenExpiryDays),
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        });
         await _dbContext.SaveChangesAsync();
 
         return new Response.LoginResponse
@@ -152,20 +134,4 @@ public class Service : IService
         };
     }
 
-    public async Task LogoutAsync()
-    {
-        var id = _currentUser.GetRequiredUserId();
-
-        var refreshTokens = await _dbContext.RefreshTokens
-            .Where(rt => rt.UserId == id && !rt.IsRevoked)
-            .ToListAsync();
-
-        foreach (var rt in refreshTokens)
-        {
-            rt.IsRevoked = true;
-            rt.UpdatedAt = DateTime.UtcNow;
-        }
-
-        await _dbContext.SaveChangesAsync();
-    }
 }

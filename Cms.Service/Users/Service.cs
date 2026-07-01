@@ -68,6 +68,7 @@ public class Service : IService
             Username = user.Username,
             Email = user.Email,
             Role = user.Role,
+            Message = "User created successfully",
         };
     }
 
@@ -105,10 +106,11 @@ public class Service : IService
             Username = user.Username,
             Email = user.Email,
             Role = user.Role,
+            Message = "User updated successfully",
         };
     }
 
-    public async Task DeleteAsync(Guid id)
+    public async Task<Response.UserResponse> DeleteAsync(Guid id)
     {
         var user = await _dbContext.Users
             .FirstOrDefaultAsync(u => u.Id == id && !u.IsDeleted);
@@ -118,5 +120,10 @@ public class Service : IService
         user.IsDeleted = true;
         user.UpdatedAt = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
+
+        return new Response.UserResponse
+        {
+            Message = "User deleted successfully",
+        };
     }
 }
