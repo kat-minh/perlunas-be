@@ -219,6 +219,8 @@ Dưới đây là toàn bộ API cho Service.
       {
         "id": "a1b2c3d4-...",
         "title": "Explorer Tour",
+        "slug": "explorer-tour",
+        "bestSeller": false,
         "introducetion": "",
         "day": 3,
         "night": 2,
@@ -227,7 +229,7 @@ Dưới đây là toàn bộ API cho Service.
         "region": "Vietnam",
         "description": "A wonderful tour...",
         "infor": "Includes meals...",
-        "highlight": "Beach visit, mountain trek",
+        "highlight": ["Beach visit", "mountain trek"],
         "code": "PLN-001",
         "instruct": "",
         "feature": "",
@@ -255,6 +257,8 @@ Dưới đây là toàn bộ API cho Service.
 |---|---|---|
 | `id` | string (guid) | |
 | `title` | string | |
+| `slug` | string | Tự sinh từ title, unique |
+| `bestSeller` | bool | Áp dụng cho Tour/Combo/Hotel |
 | `introducetion` | string | Chỉ Hotel mới có giá trị |
 | `day` | int | Chỉ Tour mới != 0 |
 | `night` | int | Tour + Combo mới != 0 |
@@ -263,7 +267,7 @@ Dưới đây là toàn bộ API cho Service.
 | `region` | string | |
 | `description` | string | Tour + Combo mới có giá trị |
 | `infor` | string | Tour + Combo mới có giá trị |
-| `highlight` | string | Tour + Combo mới có giá trị |
+| `highlight` | array string | Tour + Combo mới có giá trị |
 | `code` | string | Tour + Combo mới có giá trị |
 | `instruct` | string | Chỉ Hotel mới có giá trị |
 | `feature` | string | Chỉ Hotel mới có giá trị |
@@ -276,7 +280,9 @@ Dưới đây là toàn bộ API cho Service.
 | `schedules` | array | Danh sách `ScheduleResponse` — chỉ có trong response của POST tạo Tour/Combo |
 | `importantInfors` | array | Danh sách `ImportantInforResponse` — chỉ có trong response của POST tạo Tour/Combo |
 | `departureSchedules` | array | Danh sách `DepartureScheduleResponse` — chỉ có trong response của POST tạo Tour |
-| `roomCategories` | array | Danh sách `RoomCategoryResponse` — chỉ có trong response của POST tạo Combo/Hotel |
+| `roomCategories` | array | Danh sách `RoomCategoryResponse` — có trong detail/create/update nếu có |
+| `relatedTours` | array or null | Chỉ detail Tour: tối đa 3 Tour liên quan |
+| `relatedHotels` | array or null | Chỉ detail Tour: tối đa 3 Hotel cùng region |
 | `createdAt` | string (datetime) | |
 | `updatedAt` | string (datetime) or null | |
 
@@ -399,6 +405,8 @@ order by CreatedAt desc
   "value": {
     "id": "a1b2c3d4-...",
     "title": "Explorer Tour",
+    "slug": "explorer-tour",
+    "bestSeller": false,
     "introducetion": "",
     "day": 3,
     "night": 2,
@@ -407,7 +415,7 @@ order by CreatedAt desc
     "region": "Vietnam",
     "description": "A wonderful tour...",
     "infor": "Includes meals, hotel...",
-    "highlight": "Beach visit, mountain trek",
+    "highlight": ["Beach visit", "mountain trek"],
     "code": "PLN-001",
     "instruct": "",
     "feature": "",
@@ -428,6 +436,10 @@ order by CreatedAt desc
 |---|---|---|
 | 404 | NOT_FOUND | `"Service not found."` |
 
+**Nếu service là Tour:** response tự thêm:
+- `relatedTours`: tối đa 3 Tour khác. Ưu tiên cùng `Region` sort `CreatedAt DESC`; nếu chưa đủ thì lấy Tour khác region có giá gần nhất với tour hiện tại (giá lấy từ số nhỏ nhất trong `DepartureSchedules.Price`).
+- `relatedHotels`: tối đa 3 Hotel cùng `Region`, sort `CreatedAt DESC`.
+
 ---
 
 ### POST `/api/services/tours`
@@ -446,9 +458,10 @@ order by CreatedAt desc
 | `region` | string | ✅ | Khu vực |
 | `description` | string | ✅ | Mô tả chi tiết |
 | `infor` | string | ✅ | Thông tin thêm |
-| `highlight` | string | ✅ | Điểm nổi bật |
+| `highlight` | array string | ✅ | Danh sách điểm nổi bật |
 | `code` | string | ✅ | Mã tour (ví dụ: PLN-001) |
 | `isPublic` | bool | ❌ (optional, default false nếu không gửi) | Công khai hay không |
+| `bestSeller` | bool | ❌ (optional, default false nếu không gửi) | Đánh dấu bán chạy |
 | `schedules` | array | ✅ | Danh sách lịch trình (tối thiểu 1 item). Mỗi item gồm: `day`, `titile`, `sumary`, `description` |
 | `importantInfors` | array | ✅ | Danh sách thông tin quan trọng (tối thiểu 1 item). Mỗi item gồm: `title`, `subTitle`, `description` |
 | `departureSchedules` | array | ✅ | Danh sách lịch khởi hành (tối thiểu 1 item). Mỗi item gồm: `startTime`, `code`, `price`, `accommodationStandards` |
@@ -462,9 +475,10 @@ order by CreatedAt desc
   "region": "Vietnam",
   "description": "Khám phá vẻ đẹp Việt Nam...",
   "infor": "Bao gồm ăn sáng, khách sạn 3 sao",
-  "highlight": "Tham quan vịnh, leo núi",
+  "highlight": ["Tham quan vịnh", "leo núi"],
   "code": "PLN-001",
   "isPublic": true,
+  "bestSeller": false,
   "schedules": [
     {
       "day": "Day 1",
@@ -567,6 +581,8 @@ order by CreatedAt desc
   "value": {
     "id": "guid-mới",
     "title": "Explorer Tour",
+    "slug": "explorer-tour",
+    "bestSeller": false,
     "introducetion": "",
     "day": 3,
     "night": 2,
@@ -575,7 +591,7 @@ order by CreatedAt desc
     "region": "Vietnam",
     "description": "Khám phá vẻ đẹp Việt Nam...",
     "infor": "Bao gồm ăn sáng, khách sạn 3 sao",
-    "highlight": "Tham quan vịnh, leo núi",
+    "highlight": ["Tham quan vịnh", "leo núi"],
     "code": "PLN-001",
     "instruct": "",
     "feature": "",
@@ -652,7 +668,7 @@ order by CreatedAt desc
 | `region` | string | ✅ | Khu vực |
 | `description` | string | ✅ | Mô tả |
 | `infor` | string | ✅ | Thông tin thêm |
-| `highlight` | string | ✅ | Điểm nổi bật |
+| `highlight` | array string | ✅ | Danh sách điểm nổi bật |
 | `code` | string | ✅ | Mã combo |
 | `purposeOfTrip` | string (enum) | ✅ | `ResortVacation`, `Sightseeing`, `BusinessTrip`, `VisitingRelatives` |
 | `destination` | string | ✅ | Điểm đến |
@@ -672,13 +688,14 @@ order by CreatedAt desc
   "region": "Hoi An",
   "description": "Trọn gói khám phá Hội An...",
   "infor": "Bao gồm hướng dẫn viên, ăn sáng",
-  "highlight": "Phố cổ, ẩm thực đường phố",
+  "highlight": ["Phố cổ", "ẩm thực đường phố"],
   "code": "PLN-003",
   "purposeOfTrip": "Sightseeing",
   "destination": "Hoi An Ancient Town",
   "form": "Half-board",
   "classify": "Akoya",
   "isPublic": true,
+  "bestSeller": false,
   "schedules": [
     {
       "day": "Day 1",
@@ -811,6 +828,7 @@ order by CreatedAt desc
   "destination": "Da Nang Beach",
   "form": "Full-board",
   "isPublic": true,
+  "bestSeller": false,
   "roomCategories": [
     {
       "album": ["https://example.com/room1.jpg"],
@@ -898,7 +916,7 @@ order by CreatedAt desc
 | `region` | string | ✅ | Luôn bắt buộc |
 | `description` | string | ❌ (chỉ update nếu gửi, chỉ áp dụng khi Type≠Hotel) | |
 | `infor` | string | ❌ (chỉ update nếu gửi, chỉ áp dụng khi Type≠Hotel) | |
-| `highlight` | string | ❌ (chỉ update nếu gửi, chỉ áp dụng khi Type≠Hotel) | |
+| `highlight` | array string | ❌ (chỉ update nếu gửi, chỉ áp dụng khi Type≠Hotel) | |
 | `code` | string | ❌ (chỉ update nếu gửi, chỉ áp dụng khi Type≠Hotel) | |
 | `instruct` | string | ❌ (chỉ update nếu gửi, chỉ áp dụng cho Hotel) | |
 | `feature` | string | ❌ (chỉ update nếu gửi, chỉ áp dụng cho Hotel) | |
@@ -924,7 +942,7 @@ order by CreatedAt desc
   "region": "Vietnam",
   "description": "Mô tả cập nhật...",
   "infor": "Thông tin cập nhật...",
-  "highlight": "Điểm nổi bật cập nhật",
+  "highlight": ["Điểm nổi bật cập nhật"],
   "code": "PLN-001",
   "instruct": "",
   "feature": "",

@@ -11,6 +11,7 @@ public class Response
         public string ReadingTime { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string Tag { get; set; } = string.Empty;
+        public List<BlogResponse>? RecentBlogs { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }

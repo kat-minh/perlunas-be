@@ -12,6 +12,8 @@ public class ServiceConfiguration : IEntityTypeConfiguration<Entities.Service>
         builder.ToTable("Services");
 
         builder.Property(x => x.Title).HasMaxLength(255);
+        builder.Property(x => x.Slug).HasMaxLength(255).IsRequired();
+        builder.Property(x => x.BestSeller).HasDefaultValue(false);
         builder.Property(x => x.Label).HasMaxLength(255);
         builder.Property(x => x.Region).HasMaxLength(255);
         builder.Property(x => x.Code).HasMaxLength(50);
@@ -22,6 +24,7 @@ public class ServiceConfiguration : IEntityTypeConfiguration<Entities.Service>
         builder.Property(x => x.Classify).HasMaxLength(50).HasConversion<string>();
         builder.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
 
+        builder.HasIndex(x => x.Slug).IsUnique();
         builder.HasIndex(x => x.Code);
         builder.HasIndex(x => x.Type);
 

@@ -6,6 +6,8 @@ namespace Cms.Repository.Entities;
 public class Service : BaseEntity<Guid>, IAuditableEntity
 {
     public string? Title { get; set; }
+    public string Slug { get; set; } = string.Empty;
+    public bool BestSeller { get; set; }
     public string? Introducetion { get; set; }
     public int? Day { get; set; }
     public int? Night { get; set; }
@@ -14,7 +16,7 @@ public class Service : BaseEntity<Guid>, IAuditableEntity
     public string? Region { get; set; }
     public string? Description { get; set; }
     public string? Infor { get; set; }
-    public string? Highlight { get; set; }
+    public List<string> Highlight { get; set; } = new();
     public string? Code { get; set; }
     public string? Instruct { get; set; }
     public string? Feature { get; set; }

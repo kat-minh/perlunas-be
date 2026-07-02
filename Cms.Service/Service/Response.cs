@@ -8,6 +8,8 @@ public class Response
     {
         public Guid Id { get; set; }
         public string Title { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty;
+        public bool BestSeller { get; set; }
         public string Introducetion { get; set; } = string.Empty;
         public int Day { get; set; }
         public int Night { get; set; }
@@ -16,7 +18,7 @@ public class Response
         public string Region { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string Infor { get; set; } = string.Empty;
-        public string Highlight { get; set; } = string.Empty;
+        public List<string> Highlight { get; set; } = new();
         public string Code { get; set; } = string.Empty;
         public string Instruct { get; set; } = string.Empty;
         public string Feature { get; set; } = string.Empty;
@@ -30,6 +32,8 @@ public class Response
         public List<ImportantInfor.Response.ImportantInforResponse> ImportantInfors { get; set; } = new();
         public List<DepartureSchedule.Response.DepartureScheduleResponse> DepartureSchedules { get; set; } = new();
         public List<RoomCategory.Response.RoomCategoryResponse> RoomCategories { get; set; } = new();
+        public List<ServiceResponse>? RelatedTours { get; set; }
+        public List<ServiceResponse>? RelatedHotels { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }

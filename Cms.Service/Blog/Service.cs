@@ -47,7 +47,17 @@ public class Service : IService
 
         if (blog is null) throw new NotFoundException("Blog not found.");
 
-        return ToResponse(blog);
+        var response = ToResponse(blog);
+
+        response.RecentBlogs = await _dbContext.Blogs
+            .AsNoTracking()
+            .Where(x => !x.IsDeleted && x.Id != id)
+            .OrderByDescending(x => x.CreatedAt)
+            .Take(3)
+            .Select(x => ToResponse(x))
+            .ToListAsync();
+
+        return response;
     }
 
     public async Task<Response.BlogResponse> CreateAsync(Request.CreateBlogRequest request)
