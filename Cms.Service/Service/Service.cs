@@ -7,6 +7,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using SchedResponse = Cms.Service.Schedule.Response.ScheduleResponse;
 using ImpInforResponse = Cms.Service.ImportantInfor.Response.ImportantInforResponse;
+using DepSchedResponse = Cms.Service.DepartureSchedule.Response.DepartureScheduleResponse;
 
 namespace Cms.Service.Service;
 
@@ -212,6 +213,19 @@ public class Service : IService
         }).ToList();
         _dbContext.ImportantInfors.AddRange(importantInfors);
 
+        var departureSchedules = request.DepartureSchedules.Select(d => new Repository.Entities.DepartureSchedule
+        {
+            Id = Guid.NewGuid(),
+            ServiceId = serviceId,
+            StartTime = d.StartTime.Trim(),
+            Code = d.Code.Trim(),
+            Price = d.Price.Trim(),
+            AccommodationStandards = d.AccommodationStandards.Trim(),
+            CreatedAt = now,
+            UpdatedAt = now,
+        }).ToList();
+        _dbContext.DepartureSchedules.AddRange(departureSchedules);
+
         await _dbContext.SaveChangesAsync();
 
         var response = ToResponse(service);
@@ -235,6 +249,17 @@ public class Service : IService
             Description = i.Description ?? string.Empty,
             CreatedAt = i.CreatedAt,
             UpdatedAt = i.UpdatedAt,
+        }).ToList();
+        response.DepartureSchedules = departureSchedules.Select(d => new DepSchedResponse
+        {
+            Id = d.Id,
+            ServiceId = d.ServiceId,
+            StartTime = d.StartTime ?? string.Empty,
+            Code = d.Code ?? string.Empty,
+            Price = d.Price ?? string.Empty,
+            AccommodationStandards = d.AccommodationStandards ?? string.Empty,
+            CreatedAt = d.CreatedAt,
+            UpdatedAt = d.UpdatedAt,
         }).ToList();
         return response;
     }

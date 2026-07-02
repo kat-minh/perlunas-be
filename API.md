@@ -275,6 +275,7 @@ Dưới đây là toàn bộ API cho Service.
 | `classify` | string (enum) or null | Chỉ Combo mới có |
 | `schedules` | array | Danh sách `ScheduleResponse` — chỉ có trong response của POST tạo Tour/Combo |
 | `importantInfors` | array | Danh sách `ImportantInforResponse` — chỉ có trong response của POST tạo Tour/Combo |
+| `departureSchedules` | array | Danh sách `DepartureScheduleResponse` — chỉ có trong response của POST tạo Tour |
 | `createdAt` | string (datetime) | |
 | `updatedAt` | string (datetime) or null | |
 
@@ -432,7 +433,7 @@ order by CreatedAt desc
 
 **Auth:** `[Authorize]` — cần JWT Bearer token (role Admin)
 
-**Mô tả:** Tạo mới một service loại Tour, **kèm schedules và importantInfors** trong cùng request. Các field thuộc về Combo/Hotel sẽ tự động được bỏ qua (không cần gửi). Album là danh sách URL ảnh, lưu dạng JSON trong DB.
+**Mô tả:** Tạo mới một service loại Tour, **kèm schedules, importantInfors và departureSchedules** trong cùng request. Các field thuộc về Combo/Hotel sẽ tự động được bỏ qua (không cần gửi). Album là danh sách URL ảnh, lưu dạng JSON trong DB.
 
 **Request body:**
 | Field | Type | Bắt buộc | Mô tả |
@@ -449,6 +450,7 @@ order by CreatedAt desc
 | `isPublic` | bool | ❌ (optional, default false nếu không gửi) | Công khai hay không |
 | `schedules` | array | ✅ | Danh sách lịch trình (tối thiểu 1 item). Mỗi item gồm: `day`, `titile`, `sumary`, `description` |
 | `importantInfors` | array | ✅ | Danh sách thông tin quan trọng (tối thiểu 1 item). Mỗi item gồm: `title`, `subTitle`, `description` |
+| `departureSchedules` | array | ✅ | Danh sách lịch khởi hành (tối thiểu 1 item). Mỗi item gồm: `startTime`, `code`, `price`, `accommodationStandards` |
 
 ```json
 {
@@ -487,6 +489,20 @@ order by CreatedAt desc
       "subTitle": "Yêu cầu sức khỏe tốt",
       "description": "Tour này bao gồm leo núi, yêu cầu sức khỏe thể chất tốt."
     }
+  ],
+  "departureSchedules": [
+    {
+      "startTime": "07:00",
+      "code": "DEP-001",
+      "price": "1500000",
+      "accommodationStandards": "4-star hotel"
+    },
+    {
+      "startTime": "08:00",
+      "code": "DEP-002",
+      "price": "2000000",
+      "accommodationStandards": "5-star hotel"
+    }
   ]
 }
 ```
@@ -505,6 +521,14 @@ order by CreatedAt desc
 | `title` | string | ✅ | Tiêu đề |
 | `subTitle` | string | ❌ | Tiêu đề phụ |
 | `description` | string | ✅ | Mô tả chi tiết |
+
+**Cấu trúc item trong `departureSchedules`:**
+| Field | Type | Bắt buộc | Mô tả |
+|---|---|---|---|
+| `startTime` | string | ✅ | Giờ khởi hành (vd: "07:00") |
+| `code` | string | ✅ | Mã chuyến (vd: "DEP-001") |
+| `price` | string | ✅ | Giá |
+| `accommodationStandards` | string | ✅ | Tiêu chuẩn lưu trú (vd: "4-star hotel") |
 
 **Validation rules:**
 
@@ -525,6 +549,11 @@ order by CreatedAt desc
 | `ImportantInfors` | NotEmpty | `IMPORTANT_INFORS_REQUIRED` |
 | `ImportantInfors[*].Title` | NotEmpty | `IMPORTANT_INFOR_TITLE_REQUIRED` |
 | `ImportantInfors[*].Description` | NotEmpty | `IMPORTANT_INFOR_DESCRIPTION_REQUIRED` |
+| `DepartureSchedules` | NotEmpty | `DEPARTURE_SCHEDULES_REQUIRED` |
+| `DepartureSchedules[*].StartTime` | NotEmpty | `DEPARTURE_START_TIME_REQUIRED` |
+| `DepartureSchedules[*].Code` | NotEmpty | `DEPARTURE_CODE_REQUIRED` |
+| `DepartureSchedules[*].Price` | NotEmpty | `DEPARTURE_PRICE_REQUIRED` |
+| `DepartureSchedules[*].AccommodationStandards` | NotEmpty | `DEPARTURE_ACCOMMODATION_STANDARDS_REQUIRED` |
 
 **Response 200 — thành công:**
 ```json
@@ -574,6 +603,18 @@ order by CreatedAt desc
         "title": "Chính sách hủy",
         "subTitle": "Hủy miễn phí trước 24h",
         "description": "Nếu hủy trước 24 giờ khởi hành, bạn sẽ được hoàn lại toàn bộ chi phí.",
+        "createdAt": "2026-07-02T10:00:00Z",
+        "updatedAt": "2026-07-02T10:00:00Z"
+      }
+    ],
+    "departureSchedules": [
+      {
+        "id": "guid",
+        "serviceId": "guid",
+        "startTime": "07:00",
+        "code": "DEP-001",
+        "price": "1500000",
+        "accommodationStandards": "4-star hotel",
         "createdAt": "2026-07-02T10:00:00Z",
         "updatedAt": "2026-07-02T10:00:00Z"
       }

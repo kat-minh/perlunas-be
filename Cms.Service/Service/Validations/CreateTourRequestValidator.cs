@@ -27,5 +27,13 @@ public class CreateTourRequestValidator : AbstractValidator<Request.CreateTourRe
             i.RuleFor(x => x.Title).NotEmpty().WithMessage("IMPORTANT_INFOR_TITLE_REQUIRED");
             i.RuleFor(x => x.Description).NotEmpty().WithMessage("IMPORTANT_INFOR_DESCRIPTION_REQUIRED");
         });
+        RuleFor(x => x.DepartureSchedules).NotEmpty().WithMessage("DEPARTURE_SCHEDULES_REQUIRED");
+        RuleForEach(x => x.DepartureSchedules).ChildRules(d =>
+        {
+            d.RuleFor(x => x.StartTime).NotEmpty().WithMessage("DEPARTURE_START_TIME_REQUIRED");
+            d.RuleFor(x => x.Code).NotEmpty().WithMessage("DEPARTURE_CODE_REQUIRED");
+            d.RuleFor(x => x.Price).NotEmpty().WithMessage("DEPARTURE_PRICE_REQUIRED");
+            d.RuleFor(x => x.AccommodationStandards).NotEmpty().WithMessage("DEPARTURE_ACCOMMODATION_STANDARDS_REQUIRED");
+        });
     }
 }

@@ -19,6 +19,14 @@ public class Request
         public string Description { get; set; } = string.Empty;
     }
 
+    public class DepartureScheduleInline
+    {
+        public string StartTime { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty;
+        public string Price { get; set; } = string.Empty;
+        public string AccommodationStandards { get; set; } = string.Empty;
+    }
+
     public class CreateTourRequest
     {
         public string Title { get; set; } = string.Empty;
@@ -33,6 +41,7 @@ public class Request
         public bool IsPublic { get; set; }
         public List<ScheduleInline> Schedules { get; set; } = new();
         public List<ImportantInforInline> ImportantInfors { get; set; } = new();
+        public List<DepartureScheduleInline> DepartureSchedules { get; set; } = new();
     }
 
     public class CreateComboRequest
