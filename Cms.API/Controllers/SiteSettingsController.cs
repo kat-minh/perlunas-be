@@ -18,9 +18,9 @@ public class SiteSettingsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> GetAll([FromQuery] Guid? id, [FromQuery] string? name, [FromQuery] string? tagline)
     {
-        var result = await _siteSettingService.GetAllAsync(pageIndex, pageSize);
+        var result = await _siteSettingService.GetAllAsync(id, name, tagline);
         result.TraceId = HttpContext.TraceIdentifier;
         return Ok(result);
     }

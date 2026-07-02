@@ -59,5 +59,13 @@ public class UpdateServiceRequestValidator : AbstractValidator<Request.UpdateSer
             i.RuleFor(x => x.Title).NotEmpty().WithMessage("IMPORTANT_INFOR_TITLE_REQUIRED");
             i.RuleFor(x => x.Description).NotEmpty().WithMessage("IMPORTANT_INFOR_DESCRIPTION_REQUIRED");
         }).When(x => x.ImportantInfors != null && (x.Type == ServiceType.Tour || x.Type == ServiceType.Combo));
+
+        RuleFor(x => x.RoomCategories).NotEmpty().WithMessage("ROOM_CATEGORIES_REQUIRED")
+            .When(x => x.RoomCategories != null && (x.Type == ServiceType.Combo || x.Type == ServiceType.Hotel));
+        RuleForEach(x => x.RoomCategories).ChildRules(r =>
+        {
+            r.RuleFor(x => x.Titile).NotEmpty().WithMessage("ROOM_CATEGORY_TITLE_REQUIRED");
+            r.RuleFor(x => x.Feature).NotEmpty().WithMessage("ROOM_CATEGORY_FEATURE_REQUIRED");
+        }).When(x => x.RoomCategories != null && (x.Type == ServiceType.Combo || x.Type == ServiceType.Hotel));
     }
 }

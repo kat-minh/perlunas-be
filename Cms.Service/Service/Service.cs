@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using SchedResponse = Cms.Service.Schedule.Response.ScheduleResponse;
 using ImpInforResponse = Cms.Service.ImportantInfor.Response.ImportantInforResponse;
 using DepSchedResponse = Cms.Service.DepartureSchedule.Response.DepartureScheduleResponse;
+using RoomCatResponse = Cms.Service.RoomCategory.Response.RoomCategoryResponse;
 
 namespace Cms.Service.Service;
 
@@ -318,6 +319,25 @@ public class Service : IService
         }).ToList();
         _dbContext.ImportantInfors.AddRange(importantInfors);
 
+        var roomCategories = request.RoomCategories.Select(r => new Repository.Entities.RoomCategory
+        {
+            Id = Guid.NewGuid(),
+            ServiceId = serviceId,
+            Album = JsonSerializer.Serialize(r.Album),
+            Titile = r.Titile.Trim(),
+            NumberOfCustomer = r.NumberOfCustomer,
+            Acreage = r.Acreage.Trim(),
+            NumberOfBed = r.NumberOfBed.Trim(),
+            Description = r.Description.Trim(),
+            Feature = JsonSerializer.Serialize(r.Feature),
+            Price = null, // Combo → Price = null
+            OriginalPrice = r.OriginalPrice?.Trim(),
+            Unit = r.Unit?.Trim(),
+            CreatedAt = now,
+            UpdatedAt = now,
+        }).ToList();
+        _dbContext.RoomCategories.AddRange(roomCategories);
+
         await _dbContext.SaveChangesAsync();
 
         var response = ToResponse(service);
@@ -341,6 +361,23 @@ public class Service : IService
             Description = i.Description ?? string.Empty,
             CreatedAt = i.CreatedAt,
             UpdatedAt = i.UpdatedAt,
+        }).ToList();
+        response.RoomCategories = roomCategories.Select(r => new RoomCatResponse
+        {
+            Id = r.Id,
+            ServiceId = r.ServiceId,
+            Album = DeserializeAlbum(r.Album),
+            Titile = r.Titile ?? string.Empty,
+            NumberOfCustomer = r.NumberOfCustomer ?? 0,
+            Acreage = r.Acreage ?? string.Empty,
+            NumberOfBed = r.NumberOfBed ?? string.Empty,
+            Description = r.Description ?? string.Empty,
+            Feature = DeserializeFeature(r.Feature),
+            Price = r.Price,
+            OriginalPrice = r.OriginalPrice,
+            Unit = r.Unit,
+            CreatedAt = r.CreatedAt,
+            UpdatedAt = r.UpdatedAt,
         }).ToList();
         return response;
     }
@@ -369,9 +406,47 @@ public class Service : IService
         };
 
         _dbContext.Services.Add(service);
+
+        var roomCategories = request.RoomCategories.Select(r => new Repository.Entities.RoomCategory
+        {
+            Id = Guid.NewGuid(),
+            ServiceId = service.Id,
+            Album = JsonSerializer.Serialize(r.Album),
+            Titile = r.Titile.Trim(),
+            NumberOfCustomer = r.NumberOfCustomer,
+            Acreage = r.Acreage.Trim(),
+            NumberOfBed = r.NumberOfBed.Trim(),
+            Description = r.Description.Trim(),
+            Feature = JsonSerializer.Serialize(r.Feature),
+            Price = r.Price?.Trim(),
+            OriginalPrice = r.OriginalPrice?.Trim(),
+            Unit = r.Unit?.Trim(),
+            CreatedAt = now,
+            UpdatedAt = now,
+        }).ToList();
+        _dbContext.RoomCategories.AddRange(roomCategories);
+
         await _dbContext.SaveChangesAsync();
 
-        return ToResponse(service);
+        var response = ToResponse(service);
+        response.RoomCategories = roomCategories.Select(r => new RoomCatResponse
+        {
+            Id = r.Id,
+            ServiceId = r.ServiceId,
+            Album = DeserializeAlbum(r.Album),
+            Titile = r.Titile ?? string.Empty,
+            NumberOfCustomer = r.NumberOfCustomer ?? 0,
+            Acreage = r.Acreage ?? string.Empty,
+            NumberOfBed = r.NumberOfBed ?? string.Empty,
+            Description = r.Description ?? string.Empty,
+            Feature = DeserializeFeature(r.Feature),
+            Price = r.Price,
+            OriginalPrice = r.OriginalPrice,
+            Unit = r.Unit,
+            CreatedAt = r.CreatedAt,
+            UpdatedAt = r.UpdatedAt,
+        }).ToList();
+        return response;
     }
 
     public async Task<Response.ServiceResponse> UpdateAsync(Guid id, Request.UpdateServiceRequest request)
@@ -384,10 +459,10 @@ public class Service : IService
         var now = DateTime.UtcNow;
         var type = request.Type!.Value;
 
-        if (request.Title is not null) service.Title = request.Title.Trim();
-        if (request.Album is not null) service.Album = JsonSerializer.Serialize(request.Album);
-        if (request.Region is not null) service.Region = request.Region.Trim();
-        if (request.IsPublic.HasValue) service.IsPublic = request.IsPublic.Value;
+        service.Title = request.Title!.Trim();
+        service.Album = JsonSerializer.Serialize(request.Album!);
+        service.Region = request.Region!.Trim();
+        service.IsPublic = request.IsPublic ?? service.IsPublic;
 
         service.Type = type;
         ApplyTypeFields(service, type, request);
@@ -421,6 +496,40 @@ public class Service : IService
             }));
         }
 
+        if (request.DepartureSchedules is not null && type == ServiceType.Tour)
+        {
+            var oldDepScheds = await _dbContext.DepartureSchedules
+                .Where(x => x.ServiceId == id && !x.IsDeleted).ToListAsync();
+            foreach (var d in oldDepScheds) { d.IsDeleted = true; d.UpdatedAt = now; }
+
+            _dbContext.DepartureSchedules.AddRange(request.DepartureSchedules.Select(d => new Repository.Entities.DepartureSchedule
+            {
+                Id = Guid.NewGuid(), ServiceId = id,
+                StartTime = d.StartTime.Trim(), Code = d.Code.Trim(),
+                Price = d.Price.Trim(), AccommodationStandards = d.AccommodationStandards.Trim(),
+                CreatedAt = now, UpdatedAt = now,
+            }));
+        }
+
+        if (request.RoomCategories is not null && (type == ServiceType.Combo || type == ServiceType.Hotel))
+        {
+            var oldRoomCats = await _dbContext.RoomCategories
+                .Where(x => x.ServiceId == id && !x.IsDeleted).ToListAsync();
+            foreach (var r in oldRoomCats) { r.IsDeleted = true; r.UpdatedAt = now; }
+
+            _dbContext.RoomCategories.AddRange(request.RoomCategories.Select(r => new Repository.Entities.RoomCategory
+            {
+                Id = Guid.NewGuid(), ServiceId = id,
+                Album = JsonSerializer.Serialize(r.Album),
+                Titile = r.Titile.Trim(), NumberOfCustomer = r.NumberOfCustomer,
+                Acreage = r.Acreage.Trim(), NumberOfBed = r.NumberOfBed.Trim(),
+                Description = r.Description.Trim(), Feature = JsonSerializer.Serialize(r.Feature),
+                Price = type == ServiceType.Combo ? null : r.Price?.Trim(),
+                OriginalPrice = r.OriginalPrice?.Trim(), Unit = r.Unit?.Trim(),
+                CreatedAt = now, UpdatedAt = now,
+            }));
+        }
+
         service.UpdatedAt = now;
         await _dbContext.SaveChangesAsync();
 
@@ -444,6 +553,32 @@ public class Service : IService
                 Id = i.Id, ServiceId = i.ServiceId, Title = i.Title ?? string.Empty,
                 SubTitle = i.SubTitle ?? string.Empty, Description = i.Description ?? string.Empty,
                 CreatedAt = i.CreatedAt, UpdatedAt = i.UpdatedAt,
+            }).ToList();
+        response.DepartureSchedules = (await _dbContext.DepartureSchedules
+            .AsNoTracking()
+            .Where(x => x.ServiceId == id && !x.IsDeleted)
+            .ToListAsync())
+            .Select(d => new DepSchedResponse
+            {
+                Id = d.Id, ServiceId = d.ServiceId, StartTime = d.StartTime ?? string.Empty,
+                Code = d.Code ?? string.Empty, Price = d.Price ?? string.Empty,
+                AccommodationStandards = d.AccommodationStandards ?? string.Empty,
+                CreatedAt = d.CreatedAt, UpdatedAt = d.UpdatedAt,
+            }).ToList();
+        response.RoomCategories = (await _dbContext.RoomCategories
+            .AsNoTracking()
+            .Where(x => x.ServiceId == id && !x.IsDeleted)
+            .ToListAsync())
+            .Select(r => new RoomCatResponse
+            {
+                Id = r.Id, ServiceId = r.ServiceId,
+                Album = DeserializeAlbum(r.Album),
+                Titile = r.Titile ?? string.Empty, NumberOfCustomer = r.NumberOfCustomer ?? 0,
+                Acreage = r.Acreage ?? string.Empty, NumberOfBed = r.NumberOfBed ?? string.Empty,
+                Description = r.Description ?? string.Empty,
+                Feature = DeserializeFeature(r.Feature),
+                Price = r.Price, OriginalPrice = r.OriginalPrice, Unit = r.Unit,
+                CreatedAt = r.CreatedAt, UpdatedAt = r.UpdatedAt,
             }).ToList();
         return response;
     }
@@ -577,6 +712,13 @@ public class Service : IService
     {
         if (string.IsNullOrWhiteSpace(album)) return new();
         try { return JsonSerializer.Deserialize<List<string>>(album) ?? new(); }
+        catch { return new(); }
+    }
+
+    private static List<string> DeserializeFeature(string? feature)
+    {
+        if (string.IsNullOrWhiteSpace(feature)) return new();
+        try { return JsonSerializer.Deserialize<List<string>>(feature) ?? new(); }
         catch { return new(); }
     }
 }

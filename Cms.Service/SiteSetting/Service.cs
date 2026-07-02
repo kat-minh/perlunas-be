@@ -19,24 +19,27 @@ public class Service : IService
         _updateValidator = updateValidator;
     }
 
-    public async Task<BasePaginationResponse> GetAllAsync(int pageIndex, int pageSize)
+    public async Task<BaseResponse> GetAllAsync(Guid? id, string? name, string? tagline)
     {
-        pageIndex = pageIndex <= 0 ? 1 : pageIndex;
-        pageSize = pageSize <= 0 ? 10 : Math.Min(pageSize, 100);
-
         var query = _dbContext.SiteSettings
             .AsNoTracking()
             .Where(x => !x.IsDeleted);
 
-        var totalCount = await query.CountAsync();
+        if (id.HasValue)
+            query = query.Where(x => x.Id == id.Value);
+
+        if (!string.IsNullOrWhiteSpace(name))
+            query = query.Where(x => x.Name != null && x.Name.Contains(name));
+
+        if (!string.IsNullOrWhiteSpace(tagline))
+            query = query.Where(x => x.Tagline != null && x.Tagline.Contains(tagline));
+
         var items = await query
             .OrderByDescending(x => x.CreatedAt)
-            .Skip((pageIndex - 1) * pageSize)
-            .Take(pageSize)
             .Select(x => ToResponse(x))
             .ToListAsync();
 
-        return ApiResponseFactory.BasePagination(items, pageIndex, pageSize, totalCount);
+        return ApiResponseFactory.Base(items);
     }
 
     public async Task<Response.SiteSettingResponse> GetByIdAsync(Guid id)

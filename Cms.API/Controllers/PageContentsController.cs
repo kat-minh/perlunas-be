@@ -18,9 +18,9 @@ public class PageContentsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> GetAll([FromQuery] string? pageKey, [FromQuery] string? sectionKey)
     {
-        var result = await _pageContentService.GetAllAsync(pageIndex, pageSize);
+        var result = await _pageContentService.GetAllAsync(pageKey, sectionKey);
         result.TraceId = HttpContext.TraceIdentifier;
         return Ok(result);
     }

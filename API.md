@@ -276,6 +276,7 @@ Dưới đây là toàn bộ API cho Service.
 | `schedules` | array | Danh sách `ScheduleResponse` — chỉ có trong response của POST tạo Tour/Combo |
 | `importantInfors` | array | Danh sách `ImportantInforResponse` — chỉ có trong response của POST tạo Tour/Combo |
 | `departureSchedules` | array | Danh sách `DepartureScheduleResponse` — chỉ có trong response của POST tạo Tour |
+| `roomCategories` | array | Danh sách `RoomCategoryResponse` — chỉ có trong response của POST tạo Combo/Hotel |
 | `createdAt` | string (datetime) | |
 | `updatedAt` | string (datetime) or null | |
 
@@ -639,7 +640,7 @@ order by CreatedAt desc
 
 **Auth:** `[Authorize]` — cần JWT Bearer token (role Admin)
 
-**Mô tả:** Tạo mới một service loại Combo, **kèm schedules và importantInfors** trong cùng request. Các field Tour/Hotel không thuộc Combo sẽ tự động bỏ qua.
+**Mô tả:** Tạo mới một service loại Combo, **kèm schedules, importantInfors và roomCategories** trong cùng request. Các field Tour/Hotel không thuộc Combo sẽ tự động bỏ qua.
 
 **Request body:**
 | Field | Type | Bắt buộc | Mô tả |
@@ -660,6 +661,7 @@ order by CreatedAt desc
 | `isPublic` | bool | ❌ (optional, default false nếu không gửi) | Công khai |
 | `schedules` | array | ✅ | Danh sách lịch trình (tối thiểu 1 item). Mỗi item gồm: `day`, `titile`, `sumary`, `description` |
 | `importantInfors` | array | ✅ | Danh sách thông tin quan trọng (tối thiểu 1 item). Mỗi item gồm: `title`, `subTitle`, `description` |
+| `roomCategories` | array | ✅ | Danh sách hạng phòng (tối thiểu 1 item). Mỗi item gồm: `album`, `titile`, `numberOfCustomer`, `acreage`, `numberOfBed`, `description`, `feature`, `originalPrice`, `unit`. **Price tự động set null cho Combo.** |
 
 ```json
 {
@@ -691,6 +693,19 @@ order by CreatedAt desc
       "subTitle": "Hoàn tiền 50% nếu hủy trước 48h",
       "description": "Vui lòng liên hệ hotline để được hỗ trợ."
     }
+  ],
+  "roomCategories": [
+    {
+      "album": ["https://example.com/room1.jpg"],
+      "titile": "Deluxe Room",
+      "numberOfCustomer": 2,
+      "acreage": "35m2",
+      "numberOfBed": "1",
+      "description": "Phòng deluxe với ban công",
+      "feature": ["Ban công", "bữa sáng", "view biển"],
+      "originalPrice": "1500000",
+      "unit": "đêm"
+    }
   ]
 }
 ```
@@ -709,6 +724,20 @@ order by CreatedAt desc
 | `title` | string | ✅ | Tiêu đề |
 | `subTitle` | string | ❌ | Tiêu đề phụ |
 | `description` | string | ✅ | Mô tả chi tiết |
+
+**Cấu trúc item trong `roomCategories`:**
+| Field | Type | Bắt buộc | Mô tả |
+|---|---|---|---|
+| `album` | array string | ❌ | Danh sách URL ảnh |
+| `titile` | string | ✅ | Tên hạng phòng |
+| `numberOfCustomer` | int | ❌ | Số khách |
+| `acreage` | string | ❌ | Diện tích |
+| `numberOfBed` | string | ❌ | Số giường |
+| `description` | string | ❌ | Mô tả |
+| `feature` | array string | ✅ | Tiện nghi |
+| `price` | string or null | ❌ | **Bị ignore** (Combo → price = null) |
+| `originalPrice` | string or null | ❌ | Giá gốc |
+| `unit` | string or null | ❌ | Đơn vị |
 
 **Validation rules:**
 
@@ -733,6 +762,9 @@ order by CreatedAt desc
 | `ImportantInfors` | NotEmpty | `IMPORTANT_INFORS_REQUIRED` |
 | `ImportantInfors[*].Title` | NotEmpty | `IMPORTANT_INFOR_TITLE_REQUIRED` |
 | `ImportantInfors[*].Description` | NotEmpty | `IMPORTANT_INFOR_DESCRIPTION_REQUIRED` |
+| `RoomCategories` | NotEmpty | `ROOM_CATEGORIES_REQUIRED` |
+| `RoomCategories[*].Titile` | NotEmpty | `ROOM_CATEGORY_TITLE_REQUIRED` |
+| `RoomCategories[*].Feature` | NotEmpty | `ROOM_CATEGORY_FEATURE_REQUIRED` |
 
 **Response 200 — thành công:** `ServiceResponse` với `type = "Combo"`, các field Tour/Hotel = rỗng/null, kèm `schedules` và `importantInfors` như Tour.
 
@@ -750,7 +782,7 @@ order by CreatedAt desc
 
 **Auth:** `[Authorize]` — cần JWT Bearer token (role Admin)
 
-**Mô tả:** Tạo mới một service loại Hotel. Các field Tour/Combo không thuộc Hotel sẽ tự động bỏ qua.
+**Mô tả:** Tạo mới một service loại Hotel, **kèm roomCategories** trong cùng request. Các field Tour/Combo không thuộc Hotel sẽ tự động bỏ qua.
 
 **Request body:**
 | Field | Type | Bắt buộc | Mô tả |
@@ -765,6 +797,7 @@ order by CreatedAt desc
 | `destination` | string | ✅ | Điểm đến |
 | `form` | string | ✅ | Hình thức |
 | `isPublic` | bool | ❌ (optional, default false nếu không gửi) | Công khai |
+| `roomCategories` | array | ✅ | Danh sách hạng phòng (tối thiểu 1 item). Mỗi item gồm: `album`, `titile`, `numberOfCustomer`, `acreage`, `numberOfBed`, `description`, `feature`, `price`, `originalPrice`, `unit` |
 
 ```json
 {
@@ -777,9 +810,37 @@ order by CreatedAt desc
   "purposeOfTrip": "ResortVacation",
   "destination": "Da Nang Beach",
   "form": "Full-board",
-  "isPublic": true
+  "isPublic": true,
+  "roomCategories": [
+    {
+      "album": ["https://example.com/room1.jpg"],
+      "titile": "Deluxe Room",
+      "numberOfCustomer": 2,
+      "acreage": "35m2",
+      "numberOfBed": "1",
+      "description": "Phòng deluxe với ban công view biển",
+      "feature": ["Ban công", "bữa sáng", "minibar"],
+      "price": "1200000",
+      "originalPrice": "1500000",
+      "unit": "đêm"
+    }
+  ]
 }
 ```
+
+**Cấu trúc item trong `roomCategories`:**
+| Field | Type | Bắt buộc | Mô tả |
+|---|---|---|---|
+| `album` | array string | ❌ | Danh sách URL ảnh |
+| `titile` | string | ✅ | Tên hạng phòng |
+| `numberOfCustomer` | int | ❌ | Số khách |
+| `acreage` | string | ❌ | Diện tích |
+| `numberOfBed` | string | ❌ | Số giường |
+| `description` | string | ❌ | Mô tả |
+| `feature` | array string | ✅ | Tiện nghi |
+| `price` | string or null | ❌ | Giá |
+| `originalPrice` | string or null | ❌ | Giá gốc |
+| `unit` | string or null | ❌ | Đơn vị |
 
 **Validation rules:**
 
@@ -794,8 +855,11 @@ order by CreatedAt desc
 | `PurposeOfTrip` | IsInEnum | `PURPOSE_OF_TRIP_INVALID` |
 | `Destination` | NotEmpty | `DESTINATION_REQUIRED` |
 | `Form` | NotEmpty | `FORM_REQUIRED` |
+| `RoomCategories` | NotEmpty | `ROOM_CATEGORIES_REQUIRED` |
+| `RoomCategories[*].Titile` | NotEmpty | `ROOM_CATEGORY_TITLE_REQUIRED` |
+| `RoomCategories[*].Feature` | NotEmpty | `ROOM_CATEGORY_FEATURE_REQUIRED` |
 
-**Response 200 — thành công:** `ServiceResponse` với `type = "Hotel"`, các field Tour/Combo = rỗng/null.
+**Response 200 — thành công:** `ServiceResponse` với `type = "Hotel"`, các field Tour/Combo = rỗng/null, kèm `roomCategories`.
 
 **Errors:**
 | Status | MessageCode | detail |
@@ -846,6 +910,8 @@ order by CreatedAt desc
 | `classify` | string (enum) or null | ❌ (chỉ update nếu gửi, chỉ áp dụng cho Combo) | |
 | `schedules` | array | ❌ (chỉ update nếu gửi, chỉ áp dụng cho Tour/Combo) | Nếu gửi → xoá mềm cũ, tạo mới. Mỗi item gồm: `day`, `titile`, `sumary`, `description` |
 | `importantInfors` | array | ❌ (chỉ update nếu gửi, chỉ áp dụng cho Tour/Combo) | Nếu gửi → xoá mềm cũ, tạo mới. Mỗi item gồm: `title`, `subTitle`, `description` |
+| `departureSchedules` | array | ❌ (chỉ update nếu gửi, chỉ áp dụng cho Tour) | Nếu gửi → xoá mềm cũ, tạo mới. Mỗi item gồm: `startTime`, `code`, `price`, `accommodationStandards` |
+| `roomCategories` | array | ❌ (chỉ update nếu gửi, chỉ áp dụng cho Combo/Hotel) | Nếu gửi → xoá mềm cũ, tạo mới. Mỗi item gồm: `album`, `titile`, `numberOfCustomer`, `acreage`, `numberOfBed`, `description`, `feature`, `price`, `originalPrice`, `unit`. Combo → Price tự động set null |
 
 ```json
 {
@@ -914,6 +980,9 @@ order by CreatedAt desc
 | `ImportantInfors` | NotEmpty | `IMPORTANT_INFORS_REQUIRED` | Có gửi và Type = Tour/Combo |
 | `ImportantInfors[*].Title` | NotEmpty | `IMPORTANT_INFOR_TITLE_REQUIRED` | Có gửi và Type = Tour/Combo |
 | `ImportantInfors[*].Description` | NotEmpty | `IMPORTANT_INFOR_DESCRIPTION_REQUIRED` | Có gửi và Type = Tour/Combo |
+| `RoomCategories` | NotEmpty | `ROOM_CATEGORIES_REQUIRED` | Có gửi và Type = Combo/Hotel |
+| `RoomCategories[*].Titile` | NotEmpty | `ROOM_CATEGORY_TITLE_REQUIRED` | Có gửi và Type = Combo/Hotel |
+| `RoomCategories[*].Feature` | NotEmpty | `ROOM_CATEGORY_FEATURE_REQUIRED` | Có gửi và Type = Combo/Hotel |
 
 **Logic `ApplyTypeFields` — các field tự động bị set null khi đổi Type, và chỉ set lại nếu có gửi:**
 
@@ -1814,15 +1883,15 @@ order by CreatedAt desc
 
 **Auth:** `[AllowAnonymous]` — không cần token
 
-**Mô tả:** Lấy danh sách tất cả page contents (nội dung trang) dạng **phẳng** (không có cây children) có phân trang. Sắp xếp theo `PageKey` → `SectionKey` → `SoftOrder` tăng dần.
+**Mô tả:** Lấy danh sách tất cả page contents (nội dung trang) dạng **phẳng** (không có cây children). Có thể lọc theo `pageKey` và/hoặc `sectionKey`. Sắp xếp theo `PageKey` → `SectionKey` → `SoftOrder` tăng dần. **Không phân trang.**
 
 **Query parameters:**
 | Param | Type | Default | Mô tả |
 |---|---|---|---|
-| `pageIndex` | int | 1 | |
-| `pageSize` | int | 10 | |
+| `pageKey` | string | null (optional) | Lọc chính xác theo PageKey. Nếu null/trống → bỏ qua filter |
+| `sectionKey` | string | null (optional) | Lọc chính xác theo SectionKey. Nếu null/trống → bỏ qua filter |
 
-**Response 200 — thành công (pagination):** Mỗi item là `PageContentResponse`; danh sách phẳng vẫn có `children: []` do DTO khởi tạo mặc định.
+**Response 200 — thành công:** Trả về `BaseResponse` chứa toàn bộ danh sách dạng array. Mỗi item là `PageContentResponse`; danh sách phẳng vẫn có `children: []` do DTO khởi tạo mặc định.
 
 **Cấu trúc `PageContentResponse`:**
 | Field | Type | Mô tả |
@@ -2246,15 +2315,16 @@ order by CreatedAt desc
 
 **Auth:** `[AllowAnonymous]` — không cần token
 
-**Mô tả:** Lấy danh sách tất cả site settings (cấu hình site) có phân trang. Sắp xếp theo `CreatedAt` giảm dần.
+**Mô tả:** Lấy danh sách tất cả site settings (cấu hình site). Có thể lọc theo id, name (tìm gần đúng), tagline (tìm gần đúng). Sắp xếp theo `CreatedAt` giảm dần. **Không phân trang.**
 
 **Query parameters:**
 | Param | Type | Default | Mô tả |
 |---|---|---|---|
-| `pageIndex` | int | 1 | |
-| `pageSize` | int | 10 | |
+| `id` | string (guid) | null (optional) | Lọc chính xác theo Id |
+| `name` | string | null (optional) | Tìm trong Name (contains, case-insensitive) |
+| `tagline` | string | null (optional) | Tìm trong Tagline (contains, case-insensitive) |
 
-**Response 200 — thành công (pagination):** Mỗi item là `SiteSettingResponse`.
+**Response 200 — thành công:** Trả về `BaseResponse` chứa toàn bộ danh sách dạng array. Mỗi item là `SiteSettingResponse`.
 
 **Cấu trúc `SiteSettingResponse`:**
 | Field | Type | Mô tả |

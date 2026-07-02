@@ -29,6 +29,7 @@ public class Response
         public List<Schedule.Response.ScheduleResponse> Schedules { get; set; } = new();
         public List<ImportantInfor.Response.ImportantInforResponse> ImportantInfors { get; set; } = new();
         public List<DepartureSchedule.Response.DepartureScheduleResponse> DepartureSchedules { get; set; } = new();
+        public List<RoomCategory.Response.RoomCategoryResponse> RoomCategories { get; set; } = new();
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }
