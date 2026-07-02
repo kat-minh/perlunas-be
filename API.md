@@ -766,7 +766,7 @@ order by CreatedAt desc
 | `RoomCategories[*].Titile` | NotEmpty | `ROOM_CATEGORY_TITLE_REQUIRED` |
 | `RoomCategories[*].Feature` | NotEmpty | `ROOM_CATEGORY_FEATURE_REQUIRED` |
 
-**Response 200 — thành công:** `ServiceResponse` với `type = "Combo"`, các field Tour/Hotel = rỗng/null, kèm `schedules` và `importantInfors` như Tour.
+**Response 200 — thành công:** `ServiceResponse` với `type = "Combo"`, các field Tour/Hotel = rỗng/null, kèm `schedules`, `importantInfors` và `roomCategories`.
 
 **Errors:**
 | Status | MessageCode | detail |
@@ -879,7 +879,7 @@ order by CreatedAt desc
 
 **Hỗ trợ cập nhật một phần (partial update):** Chỉ cần gửi các field muốn thay đổi; các field không gửi sẽ giữ nguyên giá trị cũ. Tuy nhiên, các field không thuộc Type mới sẽ tự động bị reset về null khi gửi kèm `type`. Các field bắt buộc chung: `title`, `album`, `region`, `type`.
 
-**Đối với Tour/Combo:** Nếu gửi `schedules` hoặc `importantInfors`, hệ thống sẽ **xoá mềm** toàn bộ schedules/importantInfors cũ và tạo mới từ request. Nếu không gửi, giữ nguyên dữ liệu cũ.
+**Đối với child entities:** Nếu gửi `schedules` / `importantInfors` / `departureSchedules` / `roomCategories`, hệ thống sẽ **xoá mềm** toàn bộ các item cũ thuộc loại đó và tạo mới từ request. Nếu không gửi, giữ nguyên dữ liệu cũ. Mỗi loại child entity chỉ áp dụng cho type tương ứng (xem bảng dưới).
 
 **Path parameters:**
 | Param | Type | Mô tả |
@@ -903,7 +903,7 @@ order by CreatedAt desc
 | `instruct` | string | ❌ (chỉ update nếu gửi, chỉ áp dụng cho Hotel) | |
 | `feature` | string | ❌ (chỉ update nếu gửi, chỉ áp dụng cho Hotel) | |
 | `type` | string (enum) | ✅ | `Tour` / `Combo` / `Hotel` |
-| `isPublic` | bool | ❌ (optional, default false nếu không gửi) | |
+| `isPublic` | bool | ❌ (optional) | Nếu không gửi → giữ nguyên giá trị cũ |
 | `purposeOfTrip` | string (enum) or null | ❌ (chỉ update nếu gửi, chỉ áp dụng cho Combo/Hotel) | |
 | `destination` | string or null | ❌ (chỉ update nếu gửi, chỉ áp dụng cho Combo/Hotel) | |
 | `form` | string or null | ❌ (chỉ update nếu gửi, chỉ áp dụng cho Combo/Hotel) | |
@@ -1003,7 +1003,7 @@ order by CreatedAt desc
 | `Form` | → null | giữ nguyên (nếu có gửi) | giữ nguyên (nếu có gửi) |
 | `Classify` | → null | giữ nguyên (nếu có gửi) | → null |
 
-**Response 200 — thành công:** `ServiceResponse` với các field tương ứng Type đã được cập nhật. Nếu Type là Tour/Combo, response kèm `schedules` và `importantInfors` hiện tại (dù có gửi hay không).
+**Response 200 — thành công:** `ServiceResponse` với các field tương ứng Type đã được cập nhật. Response luôn kèm các child entities hiện tại (`schedules`, `importantInfors`, `departureSchedules`, `roomCategories`) tuỳ theo Type (dù có gửi child entities trong request hay không).
 
 **Errors:**
 | Status | MessageCode | detail |
