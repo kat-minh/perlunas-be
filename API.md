@@ -383,16 +383,16 @@ order by CreatedAt desc
 
 ---
 
-### GET `/api/services/{id}`
+### GET `/api/services/{key}`
 
 **Auth:** `[AllowAnonymous]` — không cần token
 
-**Mô tả:** Lấy chi tiết một service theo ID. ID phải là GUID hợp lệ. Trả về `ServiceResponse` đầy đủ. Nếu không tìm thấy hoặc đã bị soft delete → trả về lỗi 404.
+**Mô tả:** Lấy chi tiết một service theo `key`. `key` có thể là GUID `id` hoặc `slug`. Trả về `ServiceResponse` đầy đủ. Nếu không tìm thấy hoặc đã bị soft delete → trả về lỗi 404.
 
 **Path parameters:**
 | Param | Type | Mô tả |
 |---|---|---|
-| `id` | string (guid) | ID của service |
+| `key` | string | ID (GUID) hoặc slug của service |
 
 **Response 200 — thành công:**
 ```json
@@ -889,11 +889,11 @@ order by CreatedAt desc
 
 ---
 
-### PUT `/api/services/{id}`
+### PUT `/api/services/{key}`
 
 **Auth:** `[Authorize]` — cần JWT Bearer token (role Admin)
 
-**Mô tả:** Cập nhật service bất kỳ (Tour, Combo, Hotel) theo ID. Dùng chung một request body cho cả 3 loại.
+**Mô tả:** Cập nhật service bất kỳ (Tour, Combo, Hotel) theo ID hoặc slug. Dùng chung một request body cho cả 3 loại.
 
 **Hỗ trợ cập nhật một phần (partial update):** Chỉ cần gửi các field muốn thay đổi; các field không gửi sẽ giữ nguyên giá trị cũ. Tuy nhiên, các field không thuộc Type mới sẽ tự động bị reset về null khi gửi kèm `type`. Các field bắt buộc chung: `title`, `album`, `region`, `type`.
 
@@ -902,7 +902,7 @@ order by CreatedAt desc
 **Path parameters:**
 | Param | Type | Mô tả |
 |---|---|---|
-| `id` | string (guid) | ID của service cần cập nhật |
+| `id` | string (guid) | ID hoặc slug của service cần cập nhật |
 
 **Request body:**
 | Field | Type | Bắt buộc | Mô tả |
@@ -1034,7 +1034,7 @@ order by CreatedAt desc
 
 ---
 
-### DELETE `/api/services/{id}`
+### DELETE `/api/services/{key}`
 
 **Auth:** `[Authorize]` — cần JWT Bearer token (role Admin)
 
@@ -1045,7 +1045,7 @@ order by CreatedAt desc
 **Path parameters:**
 | Param | Type | Mô tả |
 |---|---|---|
-| `id` | string (guid) | ID của service cần xoá |
+| `id` | string (guid) | ID hoặc slug của service cần xoá |
 
 **Response 200 — thành công:**
 ```json
@@ -1107,7 +1107,7 @@ order by CreatedAt desc
 
 **Auth:** `[AllowAnonymous]` — không cần token
 
-**Mô tả:** Lấy chi tiết một schedule theo ID.
+**Mô tả:** Lấy chi tiết một schedule theo ID hoặc slug.
 
 **Path parameters:**
 | Param | Type | Mô tả |
@@ -1151,7 +1151,7 @@ order by CreatedAt desc
 **Request body:**
 | Field | Type | Bắt buộc | Mô tả |
 |---|---|---|---|
-| `serviceId` | string (guid) | ✅ | ID của service |
+| `serviceId` | string (guid) | ✅ | ID hoặc slug của service |
 | `day` | string | ✅ | Ngày thứ mấy (vd: "Day 1", "Ngày 1") |
 | `titile` | string | ✅ | Tiêu đề |
 | `sumary` | string | ✅ | Tóm tắt |
@@ -1196,7 +1196,7 @@ order by CreatedAt desc
 
 **Auth:** `[Authorize]` — cần JWT Bearer token (role Admin)
 
-**Mô tả:** Cập nhật schedule theo ID. Kiểm tra schedule tồn tại, kiểm tra service mới có tồn tại không.
+**Mô tả:** Cập nhật schedule theo ID hoặc slug. Kiểm tra schedule tồn tại, kiểm tra service mới có tồn tại không.
 
 **Path parameters:**
 | Param | Type | Mô tả |
@@ -1206,7 +1206,7 @@ order by CreatedAt desc
 **Request body:**
 | Field | Type | Bắt buộc | Mô tả |
 |---|---|---|---|
-| `serviceId` | string (guid) | ✅ | ID của service (có thể thay đổi) |
+| `serviceId` | string (guid) | ✅ | ID hoặc slug của service (có thể thay đổi) |
 | `day` | string | ✅ | |
 | `titile` | string | ✅ | |
 | `sumary` | string | ✅ | |
@@ -1319,7 +1319,7 @@ order by CreatedAt desc
 
 **Auth:** `[AllowAnonymous]` — không cần token
 
-**Mô tả:** Lấy chi tiết một room category theo ID.
+**Mô tả:** Lấy chi tiết một room category theo ID hoặc slug.
 
 **Path parameters:**
 | Param | Type | Mô tả |
@@ -1369,7 +1369,7 @@ order by CreatedAt desc
 **Request body:**
 | Field | Type | Bắt buộc | Mô tả |
 |---|---|---|---|
-| `serviceId` | string (guid) | ✅ | ID của service (Combo hoặc Hotel) |
+| `serviceId` | string (guid) | ✅ | ID hoặc slug của service (Combo hoặc Hotel) |
 | `album` | array string | ✅ | Danh sách URL ảnh |
 | `titile` | string | ✅ | Tên hạng phòng |
 | `numberOfCustomer` | int | ✅ | Số khách (> 0) |
@@ -1535,7 +1535,7 @@ order by CreatedAt desc
 
 **Auth:** `[AllowAnonymous]` — không cần token
 
-**Mô tả:** Lấy chi tiết một departure schedule theo ID.
+**Mô tả:** Lấy chi tiết một departure schedule theo ID hoặc slug.
 
 **Path parameters:**
 | Param | Type | Mô tả |
@@ -1579,7 +1579,7 @@ order by CreatedAt desc
 **Request body:**
 | Field | Type | Bắt buộc | Mô tả |
 |---|---|---|---|
-| `serviceId` | string (guid) | ✅ | ID của service (phải là Tour) |
+| `serviceId` | string (guid) | ✅ | ID hoặc slug của service (phải là Tour) |
 | `startTime` | string | ✅ | Giờ khởi hành |
 | `code` | string | ✅ | Mã chuyến |
 | `price` | string | ✅ | Giá |
@@ -1637,7 +1637,7 @@ order by CreatedAt desc
 **Request body:**
 | Field | Type | Bắt buộc | Mô tả |
 |---|---|---|---|
-| `serviceId` | string (guid) | ✅ | ID của service (phải là Tour) |
+| `serviceId` | string (guid) | ✅ | ID hoặc slug của service (phải là Tour) |
 | `startTime` | string | ✅ | |
 | `code` | string | ✅ | |
 | `price` | string | ✅ | |
@@ -1735,7 +1735,7 @@ order by CreatedAt desc
 
 **Auth:** `[AllowAnonymous]` — không cần token
 
-**Mô tả:** Lấy chi tiết một important infor theo ID.
+**Mô tả:** Lấy chi tiết một important infor theo ID hoặc slug.
 
 **Path parameters:**
 | Param | Type | Mô tả |
@@ -1778,7 +1778,7 @@ order by CreatedAt desc
 **Request body:**
 | Field | Type | Bắt buộc | Mô tả |
 |---|---|---|---|
-| `serviceId` | string (guid) | ✅ | ID của service (Tour hoặc Combo) |
+| `serviceId` | string (guid) | ✅ | ID hoặc slug của service (Tour hoặc Combo) |
 | `title` | string | ✅ | Tiêu đề |
 | `subTitle` | string | ✅ | Tiêu đề phụ |
 | `description` | string | ✅ | Mô tả |
@@ -1833,7 +1833,7 @@ order by CreatedAt desc
 **Request body:**
 | Field | Type | Bắt buộc | Mô tả |
 |---|---|---|---|
-| `serviceId` | string (guid) | ✅ | ID của service (phải là Tour/Combo) |
+| `serviceId` | string (guid) | ✅ | ID hoặc slug của service (phải là Tour/Combo) |
 | `title` | string | ✅ | |
 | `subTitle` | string | ✅ | |
 | `description` | string | ✅ | |
@@ -1935,7 +1935,7 @@ order by CreatedAt desc
 
 **Auth:** `[AllowAnonymous]` — không cần token
 
-**Mô tả:** Lấy chi tiết một page content theo ID, kèm theo cây `children` đệ quy. Hệ thống load tất cả page contents từ DB, tìm item theo id, sau đó build cây children bằng cách tìm tất cả các item có `ParentId` trùng với id hiện tại (đệ quy).
+**Mô tả:** Lấy chi tiết một page content theo ID hoặc slug, kèm theo cây `children` đệ quy. Hệ thống load tất cả page contents từ DB, tìm item theo id, sau đó build cây children bằng cách tìm tất cả các item có `ParentId` trùng với id hiện tại (đệ quy).
 
 **Path parameters:**
 | Param | Type | Mô tả |
@@ -2168,7 +2168,7 @@ order by CreatedAt desc
 
 **Auth:** `[AllowAnonymous]` — không cần token
 
-**Mô tả:** Lấy chi tiết một blog theo ID.
+**Mô tả:** Lấy chi tiết một blog theo ID hoặc slug.
 
 **Path parameters:**
 | Param | Type | Mô tả |
@@ -2369,7 +2369,7 @@ order by CreatedAt desc
 
 **Auth:** `[AllowAnonymous]` — không cần token
 
-**Mô tả:** Lấy chi tiết một site setting theo ID.
+**Mô tả:** Lấy chi tiết một site setting theo ID hoặc slug.
 
 **Path parameters:**
 | Param | Type | Mô tả |

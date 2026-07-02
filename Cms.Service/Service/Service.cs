@@ -155,15 +155,19 @@ public class Service : IService
         return ApiResponseFactory.BasePagination(items, pageIndex, pageSize, totalCount);
     }
 
-    public async Task<Response.ServiceResponse> GetByIdAsync(Guid id)
+    public async Task<Response.ServiceResponse> GetByKeyAsync(string key)
     {
+        var normalizedKey = key.Trim();
+        var idMatched = Guid.TryParse(normalizedKey, out var id);
+        var slug = normalizedKey.ToLower();
+
         var service = await _dbContext.Services
             .AsNoTracking()
             .Include(x => x.Schedules)
             .Include(x => x.ImportantInfors)
             .Include(x => x.DepartureSchedules)
             .Include(x => x.RoomCategories)
-            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+            .FirstOrDefaultAsync(x => !x.IsDeleted && (idMatched ? x.Id == id : x.Slug.ToLower() == slug));
 
         if (service is null) throw new NotFoundException("Service not found.");
 

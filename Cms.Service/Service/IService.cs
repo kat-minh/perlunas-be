@@ -8,7 +8,7 @@ public interface IService
     Task<BasePaginationResponse> GetToursAsync(string? keyword, int pageIndex, int pageSize);
     Task<BasePaginationResponse> GetCombosAsync(string? keyword, string? destination, string? form, string? classify, string? purposeOfTrip, int pageIndex, int pageSize);
     Task<BasePaginationResponse> GetHotelsAsync(string? keyword, string? destination, string? form, string? purposeOfTrip, int pageIndex, int pageSize);
-    Task<Response.ServiceResponse> GetByIdAsync(Guid id);
+    Task<Response.ServiceResponse> GetByKeyAsync(string key);
     Task<Response.ServiceResponse> CreateTourAsync(Request.CreateTourRequest request);
     Task<Response.ServiceResponse> CreateComboAsync(Request.CreateComboRequest request);
     Task<Response.ServiceResponse> CreateHotelAsync(Request.CreateHotelRequest request);

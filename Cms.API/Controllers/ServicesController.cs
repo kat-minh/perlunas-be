@@ -62,10 +62,10 @@ public class ServicesController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetById(Guid id)
+    [HttpGet("{key}")]
+    public async Task<IActionResult> GetByKey(string key)
     {
-        var result = await _serviceService.GetByIdAsync(id);
+        var result = await _serviceService.GetByKeyAsync(key);
         return Ok(ApiResponseFactory.Base(result, true, "", HttpContext.TraceIdentifier));
     }
 

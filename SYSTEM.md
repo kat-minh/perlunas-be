@@ -127,7 +127,7 @@ Fields: `Name`, `LegalName`, `Tagline`, `Manifesto`, `Description`, `Phone`, `Em
 ## 4. Service detail enrichments
 
 ### Tour related data
-`GET /api/services/{id}` nếu service là Tour:
+`GET /api/services/{key}` nếu service là Tour:
 - `relatedTours`: tối đa 3 Tour khác.
   - lấy Tour cùng `Region` trước, sort newest first.
   - nếu chưa đủ 3, lấy Tour khác region có giá gần nhất với Tour hiện tại.
@@ -155,7 +155,7 @@ Fields: `Name`, `LegalName`, `Tagline`, `Manifesto`, `Description`, `Phone`, `Em
 | GET | `/tours` | public |
 | GET | `/combos` | public |
 | GET | `/hotels` | public |
-| GET | `/{id:guid}` | public |
+| GET | `/{key}` | public |
 | POST | `/tours` | Bearer |
 | POST | `/combos` | Bearer |
 | POST | `/hotels` | Bearer |
