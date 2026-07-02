@@ -11,13 +11,21 @@ namespace Cms.Service.Service;
 public class Service : IService
 {
     private readonly AppDbContext _dbContext;
-    private readonly IValidator<Request.CreateServiceRequest> _createValidator;
+    private readonly IValidator<Request.CreateTourRequest> _createTourValidator;
+    private readonly IValidator<Request.CreateComboRequest> _createComboValidator;
+    private readonly IValidator<Request.CreateHotelRequest> _createHotelValidator;
     private readonly IValidator<Request.UpdateServiceRequest> _updateValidator;
 
-    public Service(AppDbContext dbContext, IValidator<Request.CreateServiceRequest> createValidator, IValidator<Request.UpdateServiceRequest> updateValidator)
+    public Service(AppDbContext dbContext,
+        IValidator<Request.CreateTourRequest> createTourValidator,
+        IValidator<Request.CreateComboRequest> createComboValidator,
+        IValidator<Request.CreateHotelRequest> createHotelValidator,
+        IValidator<Request.UpdateServiceRequest> updateValidator)
     {
         _dbContext = dbContext;
-        _createValidator = createValidator;
+        _createTourValidator = createTourValidator;
+        _createComboValidator = createComboValidator;
+        _createHotelValidator = createHotelValidator;
         _updateValidator = updateValidator;
     }
 
@@ -152,24 +160,90 @@ public class Service : IService
         return ToResponse(service);
     }
 
-    public async Task<Response.ServiceResponse> CreateAsync(Request.CreateServiceRequest request)
+    public async Task<Response.ServiceResponse> CreateTourAsync(Request.CreateTourRequest request)
     {
-        await _createValidator.ValidateAndThrowAsync(request);
+        await _createTourValidator.ValidateAndThrowAsync(request);
 
         var now = DateTime.UtcNow;
         var service = new Repository.Entities.Service
         {
             Id = Guid.NewGuid(),
             Title = request.Title.Trim(),
-            Type = request.Type!.Value,
+            Type = ServiceType.Tour,
+            Day = request.Day,
+            Night = request.Night,
             Album = JsonSerializer.Serialize(request.Album),
             Region = request.Region.Trim(),
+            Description = request.Description.Trim(),
+            Infor = request.Infor.Trim(),
+            Highlight = request.Highlight.Trim(),
+            Code = request.Code.Trim(),
             IsPublic = request.IsPublic,
             CreatedAt = now,
             UpdatedAt = now,
         };
 
-        ApplyTypeFields(service, request.Type.Value, request);
+        _dbContext.Services.Add(service);
+        await _dbContext.SaveChangesAsync();
+
+        return ToResponse(service);
+    }
+
+    public async Task<Response.ServiceResponse> CreateComboAsync(Request.CreateComboRequest request)
+    {
+        await _createComboValidator.ValidateAndThrowAsync(request);
+
+        var now = DateTime.UtcNow;
+        var service = new Repository.Entities.Service
+        {
+            Id = Guid.NewGuid(),
+            Title = request.Title.Trim(),
+            Type = ServiceType.Combo,
+            Night = request.Night,
+            Label = request.Label.Trim(),
+            Album = JsonSerializer.Serialize(request.Album),
+            Region = request.Region.Trim(),
+            Description = request.Description.Trim(),
+            Infor = request.Infor.Trim(),
+            Highlight = request.Highlight.Trim(),
+            Code = request.Code.Trim(),
+            PurposeOfTrip = request.PurposeOfTrip,
+            Destination = request.Destination.Trim(),
+            Form = request.Form.Trim(),
+            Classify = request.Classify,
+            IsPublic = request.IsPublic,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        _dbContext.Services.Add(service);
+        await _dbContext.SaveChangesAsync();
+
+        return ToResponse(service);
+    }
+
+    public async Task<Response.ServiceResponse> CreateHotelAsync(Request.CreateHotelRequest request)
+    {
+        await _createHotelValidator.ValidateAndThrowAsync(request);
+
+        var now = DateTime.UtcNow;
+        var service = new Repository.Entities.Service
+        {
+            Id = Guid.NewGuid(),
+            Title = request.Title.Trim(),
+            Type = ServiceType.Hotel,
+            Introducetion = request.Introducetion.Trim(),
+            Album = JsonSerializer.Serialize(request.Album),
+            Region = request.Region.Trim(),
+            Instruct = request.Instruct.Trim(),
+            Feature = request.Feature.Trim(),
+            PurposeOfTrip = request.PurposeOfTrip,
+            Destination = request.Destination.Trim(),
+            Form = request.Form.Trim(),
+            IsPublic = request.IsPublic,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
 
         _dbContext.Services.Add(service);
         await _dbContext.SaveChangesAsync();
@@ -265,12 +339,6 @@ public class Service : IService
                 break;
         }
     }
-
-    private static void ApplyTypeFields(Repository.Entities.Service service, ServiceType type, Request.CreateServiceRequest request) =>
-        ApplyTypeFields(service, type, request.Introducetion, request.Day, request.Night, request.Label,
-            request.Description, request.Infor, request.Highlight, request.Code,
-            request.Instruct, request.Feature,
-            request.PurposeOfTrip, request.Destination, request.Form, request.Classify);
 
     private static void ApplyTypeFields(Repository.Entities.Service service, ServiceType type, Request.UpdateServiceRequest request) =>
         ApplyTypeFields(service, type, request.Introducetion, request.Day, request.Night, request.Label,

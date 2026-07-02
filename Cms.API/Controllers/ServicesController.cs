@@ -69,11 +69,27 @@ public class ServicesController : ControllerBase
         return Ok(ApiResponseFactory.Base(result, true, "", HttpContext.TraceIdentifier));
     }
 
-    [HttpPost]
+    [HttpPost("tours")]
     [Authorize]
-    public async Task<IActionResult> Create([FromBody] ServiceService.Request.CreateServiceRequest request)
+    public async Task<IActionResult> CreateTour([FromBody] ServiceService.Request.CreateTourRequest request)
     {
-        var result = await _serviceService.CreateAsync(request);
+        var result = await _serviceService.CreateTourAsync(request);
+        return Ok(ApiResponseFactory.Base(result, true, "", HttpContext.TraceIdentifier));
+    }
+
+    [HttpPost("combos")]
+    [Authorize]
+    public async Task<IActionResult> CreateCombo([FromBody] ServiceService.Request.CreateComboRequest request)
+    {
+        var result = await _serviceService.CreateComboAsync(request);
+        return Ok(ApiResponseFactory.Base(result, true, "", HttpContext.TraceIdentifier));
+    }
+
+    [HttpPost("hotels")]
+    [Authorize]
+    public async Task<IActionResult> CreateHotel([FromBody] ServiceService.Request.CreateHotelRequest request)
+    {
+        var result = await _serviceService.CreateHotelAsync(request);
         return Ok(ApiResponseFactory.Base(result, true, "", HttpContext.TraceIdentifier));
     }
 
