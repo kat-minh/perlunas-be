@@ -58,7 +58,7 @@ public class Service : IService
         var service = await _dbContext.Services.FirstOrDefaultAsync(x => x.Id == request.ServiceId && !x.IsDeleted)
             ?? throw new NotFoundException("Service not found.");
 
-        if (service.Type != nameof(ServiceType.Tour) && service.Type != nameof(ServiceType.Combo))
+        if (service.Type != ServiceType.Tour && service.Type != ServiceType.Combo)
             throw new BadRequestException("Important information is only allowed for Tour or Combo services.");
 
         var now = DateTime.UtcNow;
@@ -89,7 +89,7 @@ public class Service : IService
         var service = await _dbContext.Services.FirstOrDefaultAsync(x => x.Id == request.ServiceId && !x.IsDeleted)
             ?? throw new NotFoundException("Service not found.");
 
-        if (service.Type != nameof(ServiceType.Tour) && service.Type != nameof(ServiceType.Combo))
+        if (service.Type != ServiceType.Tour && service.Type != ServiceType.Combo)
             throw new BadRequestException("Important information is only allowed for Tour or Combo services.");
 
         importantInfor.ServiceId = request.ServiceId;
@@ -110,7 +110,7 @@ public class Service : IService
             .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
         if (importantInfor is null) throw new NotFoundException("Important information not found.");
 
-        if (importantInfor.Service.Type != nameof(ServiceType.Tour) && importantInfor.Service.Type != nameof(ServiceType.Combo))
+        if (importantInfor.Service.Type != ServiceType.Tour && importantInfor.Service.Type != ServiceType.Combo)
             throw new BadRequestException("Important information is only allowed for Tour or Combo services.");
 
         importantInfor.IsDeleted = true;

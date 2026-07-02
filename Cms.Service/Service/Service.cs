@@ -48,7 +48,7 @@ public class Service : IService
 
         var query = _dbContext.Services
             .AsNoTracking()
-            .Where(x => !x.IsDeleted && x.Type == nameof(ServiceType.Tour));
+            .Where(x => !x.IsDeleted && x.Type == ServiceType.Tour);
 
         if (!string.IsNullOrWhiteSpace(keyword))
         {
@@ -56,6 +56,79 @@ public class Service : IService
             query = query.Where(x => x.Title != null && x.Title.ToLower().Contains(kw)
                                   || x.Region != null && x.Region.ToLower().Contains(kw));
         }
+
+        var totalCount = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(x => x.CreatedAt)
+            .Skip((pageIndex - 1) * pageSize)
+            .Take(pageSize)
+            .Select(x => ToResponse(x))
+            .ToListAsync();
+
+        return ApiResponseFactory.BasePagination(items, pageIndex, pageSize, totalCount);
+    }
+
+    public async Task<BasePaginationResponse> GetCombosAsync(string? keyword, string? destination, string? form, string? classify, string? purposeOfTrip, int pageIndex, int pageSize)
+    {
+        pageIndex = pageIndex <= 0 ? 1 : pageIndex;
+        pageSize = pageSize <= 0 ? 10 : Math.Min(pageSize, 100);
+
+        var query = _dbContext.Services
+            .AsNoTracking()
+            .Where(x => !x.IsDeleted && x.Type == ServiceType.Combo);
+
+        if (!string.IsNullOrWhiteSpace(keyword))
+        {
+            var kw = keyword.Trim().ToLower();
+            query = query.Where(x => x.Title != null && x.Title.ToLower().Contains(kw));
+        }
+
+        if (!string.IsNullOrWhiteSpace(destination))
+            query = query.Where(x => x.Destination != null && x.Destination.ToLower().Contains(destination.Trim().ToLower()));
+
+        if (!string.IsNullOrWhiteSpace(form))
+            query = query.Where(x => x.Form != null && x.Form.ToLower().Contains(form.Trim().ToLower()));
+
+        if (!string.IsNullOrWhiteSpace(classify) && Enum.TryParse<Classify>(classify.Trim(), ignoreCase: true, out var cls))
+            query = query.Where(x => x.Classify == cls);
+
+        if (!string.IsNullOrWhiteSpace(purposeOfTrip) && Enum.TryParse<PurposeOfTrip>(purposeOfTrip.Trim(), ignoreCase: true, out var pot))
+            query = query.Where(x => x.PurposeOfTrip == pot);
+
+        var totalCount = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(x => x.CreatedAt)
+            .Skip((pageIndex - 1) * pageSize)
+            .Take(pageSize)
+            .Select(x => ToResponse(x))
+            .ToListAsync();
+
+        return ApiResponseFactory.BasePagination(items, pageIndex, pageSize, totalCount);
+    }
+
+    public async Task<BasePaginationResponse> GetHotelsAsync(string? keyword, string? destination, string? form, string? purposeOfTrip, int pageIndex, int pageSize)
+    {
+        pageIndex = pageIndex <= 0 ? 1 : pageIndex;
+        pageSize = pageSize <= 0 ? 10 : Math.Min(pageSize, 100);
+
+        var query = _dbContext.Services
+            .AsNoTracking()
+            .Where(x => !x.IsDeleted && x.Type == ServiceType.Hotel);
+
+        if (!string.IsNullOrWhiteSpace(keyword))
+        {
+            var kw = keyword.Trim().ToLower();
+            query = query.Where(x => x.Title != null && x.Title.ToLower().Contains(kw));
+        }
+
+        if (!string.IsNullOrWhiteSpace(destination))
+            query = query.Where(x => x.Destination != null && x.Destination.ToLower().Contains(destination.Trim().ToLower()));
+
+        if (!string.IsNullOrWhiteSpace(form))
+            query = query.Where(x => x.Form != null && x.Form.ToLower().Contains(form.Trim().ToLower()));
+
+        if (!string.IsNullOrWhiteSpace(purposeOfTrip) && Enum.TryParse<PurposeOfTrip>(purposeOfTrip.Trim(), ignoreCase: true, out var pot))
+            query = query.Where(x => x.PurposeOfTrip == pot);
 
         var totalCount = await query.CountAsync();
         var items = await query
@@ -88,7 +161,7 @@ public class Service : IService
         {
             Id = Guid.NewGuid(),
             Title = request.Title.Trim(),
-            Type = request.Type.Trim(),
+            Type = request.Type!.Value,
             Album = JsonSerializer.Serialize(request.Album),
             Region = request.Region.Trim(),
             IsPublic = request.IsPublic,
@@ -96,7 +169,7 @@ public class Service : IService
             UpdatedAt = now,
         };
 
-        ApplyTypeFields(service, request.Type, request);
+        ApplyTypeFields(service, request.Type.Value, request);
 
         _dbContext.Services.Add(service);
         await _dbContext.SaveChangesAsync();
@@ -112,13 +185,13 @@ public class Service : IService
         if (service is null) throw new NotFoundException("Service not found.");
 
         service.Title = request.Title.Trim();
-        service.Type = request.Type.Trim();
+        service.Type = request.Type!.Value;
         service.Album = JsonSerializer.Serialize(request.Album);
         service.Region = request.Region.Trim();
         service.IsPublic = request.IsPublic;
         service.UpdatedAt = DateTime.UtcNow;
 
-        ApplyTypeFields(service, request.Type, request);
+        ApplyTypeFields(service, request.Type.Value, request);
 
         await _dbContext.SaveChangesAsync();
 
@@ -137,13 +210,12 @@ public class Service : IService
         return "Service deleted successfully.";
     }
 
-    private static void ApplyTypeFields(Repository.Entities.Service service, string type,
+    private static void ApplyTypeFields(Repository.Entities.Service service, ServiceType type,
         string? introducetion, int day, int night, string? label,
         string? description, string? infor, string? highlight, string? code,
         string? instruct, string? feature,
-        string? purposeOfTrip, string? destination, string? form, string? classify)
+        PurposeOfTrip? purposeOfTrip, string? destination, string? form, Classify? classify)
     {
-        // Reset all type-specific fields first
         service.Introducetion = null;
         service.Day = null;
         service.Night = null;
@@ -161,7 +233,7 @@ public class Service : IService
 
         switch (type)
         {
-            case nameof(ServiceType.Tour):
+            case ServiceType.Tour:
                 service.Day = day;
                 service.Night = night;
                 service.Description = description?.Trim();
@@ -170,37 +242,37 @@ public class Service : IService
                 service.Code = code?.Trim();
                 break;
 
-            case nameof(ServiceType.Combo):
+            case ServiceType.Combo:
                 service.Night = night;
                 service.Label = label?.Trim();
                 service.Description = description?.Trim();
                 service.Infor = infor?.Trim();
                 service.Highlight = highlight?.Trim();
                 service.Code = code?.Trim();
-                service.PurposeOfTrip = purposeOfTrip?.Trim();
+                service.PurposeOfTrip = purposeOfTrip;
                 service.Destination = destination?.Trim();
                 service.Form = form?.Trim();
-                service.Classify = classify?.Trim();
+                service.Classify = classify;
                 break;
 
-            case nameof(ServiceType.Hotel):
+            case ServiceType.Hotel:
                 service.Introducetion = introducetion?.Trim();
                 service.Instruct = instruct?.Trim();
                 service.Feature = feature?.Trim();
-                service.PurposeOfTrip = purposeOfTrip?.Trim();
+                service.PurposeOfTrip = purposeOfTrip;
                 service.Destination = destination?.Trim();
                 service.Form = form?.Trim();
                 break;
         }
     }
 
-    private static void ApplyTypeFields(Repository.Entities.Service service, string type, Request.CreateServiceRequest request) =>
+    private static void ApplyTypeFields(Repository.Entities.Service service, ServiceType type, Request.CreateServiceRequest request) =>
         ApplyTypeFields(service, type, request.Introducetion, request.Day, request.Night, request.Label,
             request.Description, request.Infor, request.Highlight, request.Code,
             request.Instruct, request.Feature,
             request.PurposeOfTrip, request.Destination, request.Form, request.Classify);
 
-    private static void ApplyTypeFields(Repository.Entities.Service service, string type, Request.UpdateServiceRequest request) =>
+    private static void ApplyTypeFields(Repository.Entities.Service service, ServiceType type, Request.UpdateServiceRequest request) =>
         ApplyTypeFields(service, type, request.Introducetion, request.Day, request.Night, request.Label,
             request.Description, request.Infor, request.Highlight, request.Code,
             request.Instruct, request.Feature,
@@ -224,7 +296,7 @@ public class Service : IService
             Code = service.Code ?? string.Empty,
             Instruct = service.Instruct ?? string.Empty,
             Feature = service.Feature ?? string.Empty,
-            Type = service.Type ?? string.Empty,
+            Type = service.Type,
             IsPublic = service.IsPublic,
             PurposeOfTrip = service.PurposeOfTrip,
             Destination = service.Destination,

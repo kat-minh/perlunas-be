@@ -1,3 +1,4 @@
+using Cms.Repository.Enums;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Cms.Repository.Configurations.Seeds;
@@ -23,7 +24,7 @@ public static class ServiceSeed
                 Code = "PLN-001",
                 Instruct = "Sample instructions.",
                 Feature = "Sample features.",
-                Type = "Tour",
+                Type = ServiceType.Tour,
                 IsPublic = true,
                 CreatedAt = SeedIds.CreatedAt,
                 UpdatedAt = SeedIds.CreatedAt,
@@ -40,9 +41,9 @@ public static class ServiceSeed
                 Infor = "Includes room and breakfast.",
                 Highlight = "Private beach, spa, local dining",
                 Code = "PLN-002",
-                Type = "Hotel",
+                Type = ServiceType.Hotel,
                 IsPublic = true,
-                PurposeOfTrip = "ResortVacation",
+                PurposeOfTrip = PurposeOfTrip.ResortVacation,
                 Destination = "Da Nang Beach",
                 Form = "Full-board",
                 CreatedAt = SeedIds.CreatedAt,
@@ -64,12 +65,12 @@ public static class ServiceSeed
                 Code = "PLN-003",
                 Instruct = "Confirm itinerary before departure.",
                 Feature = "Private guide, custom route",
-                Type = "Combo",
+                Type = ServiceType.Combo,
                 IsPublic = true,
-                PurposeOfTrip = "Sightseeing",
+                PurposeOfTrip = PurposeOfTrip.Sightseeing,
                 Destination = "Hoi An Ancient Town",
                 Form = "Half-board",
-                Classify = "Akoya",
+                Classify = Classify.Akoya,
                 CreatedAt = SeedIds.CreatedAt,
                 UpdatedAt = SeedIds.CreatedAt,
             });

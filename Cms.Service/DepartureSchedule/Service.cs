@@ -58,7 +58,7 @@ public class Service : IService
         var service = await _dbContext.Services.FirstOrDefaultAsync(x => x.Id == request.ServiceId && !x.IsDeleted)
             ?? throw new NotFoundException("Service not found.");
 
-        if (service.Type != nameof(ServiceType.Tour))
+        if (service.Type != ServiceType.Tour)
             throw new BadRequestException("Departure schedules are only allowed for Tour services.");
 
         var now = DateTime.UtcNow;
@@ -90,7 +90,7 @@ public class Service : IService
         var service = await _dbContext.Services.FirstOrDefaultAsync(x => x.Id == request.ServiceId && !x.IsDeleted)
             ?? throw new NotFoundException("Service not found.");
 
-        if (service.Type != nameof(ServiceType.Tour))
+        if (service.Type != ServiceType.Tour)
             throw new BadRequestException("Departure schedules are only allowed for Tour services.");
 
         departureSchedule.ServiceId = request.ServiceId;
@@ -112,7 +112,7 @@ public class Service : IService
             .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
         if (departureSchedule is null) throw new NotFoundException("Departure schedule not found.");
 
-        if (departureSchedule.Service.Type != nameof(ServiceType.Tour))
+        if (departureSchedule.Service.Type != ServiceType.Tour)
             throw new BadRequestException("Departure schedules are only allowed for Tour services.");
 
         departureSchedule.IsDeleted = true;

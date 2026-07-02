@@ -33,6 +33,35 @@ public class ServicesController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("combos")]
+    public async Task<IActionResult> GetCombos(
+        [FromQuery] string? keyword,
+        [FromQuery] string? destination,
+        [FromQuery] string? form,
+        [FromQuery] string? classify,
+        [FromQuery] string? purposeOfTrip,
+        [FromQuery] int pageIndex = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        var result = await _serviceService.GetCombosAsync(keyword, destination, form, classify, purposeOfTrip, pageIndex, pageSize);
+        result.TraceId = HttpContext.TraceIdentifier;
+        return Ok(result);
+    }
+
+    [HttpGet("hotels")]
+    public async Task<IActionResult> GetHotels(
+        [FromQuery] string? keyword,
+        [FromQuery] string? destination,
+        [FromQuery] string? form,
+        [FromQuery] string? purposeOfTrip,
+        [FromQuery] int pageIndex = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        var result = await _serviceService.GetHotelsAsync(keyword, destination, form, purposeOfTrip, pageIndex, pageSize);
+        result.TraceId = HttpContext.TraceIdentifier;
+        return Ok(result);
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {

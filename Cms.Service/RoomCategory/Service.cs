@@ -59,7 +59,7 @@ public class Service : IService
         var service = await _dbContext.Services.FirstOrDefaultAsync(x => x.Id == request.ServiceId && !x.IsDeleted)
             ?? throw new NotFoundException("Service not found.");
 
-        if (service.Type != nameof(ServiceType.Combo) && service.Type != nameof(ServiceType.Hotel))
+        if (service.Type != ServiceType.Combo && service.Type != ServiceType.Hotel)
             throw new BadRequestException("Room categories are only allowed for Combo or Hotel services.");
 
         var now = DateTime.UtcNow;
@@ -74,7 +74,7 @@ public class Service : IService
             NumberOfBed = request.NumberOfBed,
             Description = request.Description.Trim(),
             Feature = request.Feature.Trim(),
-            Price = service.Type == nameof(ServiceType.Combo) ? null : request.Price?.Trim(),
+            Price = service.Type == ServiceType.Combo ? null : request.Price?.Trim(),
             CreatedAt = now,
             UpdatedAt = now,
         };
@@ -95,7 +95,7 @@ public class Service : IService
         var service = await _dbContext.Services.FirstOrDefaultAsync(x => x.Id == request.ServiceId && !x.IsDeleted)
             ?? throw new NotFoundException("Service not found.");
 
-        if (service.Type != nameof(ServiceType.Combo) && service.Type != nameof(ServiceType.Hotel))
+        if (service.Type != ServiceType.Combo && service.Type != ServiceType.Hotel)
             throw new BadRequestException("Room categories are only allowed for Combo or Hotel services.");
 
         roomCategory.ServiceId = request.ServiceId;
@@ -106,7 +106,7 @@ public class Service : IService
         roomCategory.NumberOfBed = request.NumberOfBed;
         roomCategory.Description = request.Description.Trim();
         roomCategory.Feature = request.Feature.Trim();
-        roomCategory.Price = service.Type == nameof(ServiceType.Combo) ? null : request.Price?.Trim();
+        roomCategory.Price = service.Type == ServiceType.Combo ? null : request.Price?.Trim();
         roomCategory.UpdatedAt = DateTime.UtcNow;
 
         await _dbContext.SaveChangesAsync();
