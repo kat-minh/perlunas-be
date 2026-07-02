@@ -13,6 +13,9 @@ public class RoomCategoryConfiguration : IEntityTypeConfiguration<RoomCategory>
 
         builder.Property(x => x.Titile).HasMaxLength(255);
         builder.Property(x => x.Acreage).HasMaxLength(100);
+        builder.Property(x => x.NumberOfBed).HasMaxLength(50);
+        builder.Property(x => x.OriginalPrice).HasMaxLength(100);
+        builder.Property(x => x.Unit).HasMaxLength(100);
         builder.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
 
         builder.SeedRoomCategory();

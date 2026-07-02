@@ -64,7 +64,6 @@ public class Service : IService
             ServiceId = request.ServiceId,
             Day = request.Day.Trim(),
             Titile = request.Titile.Trim(),
-            SubTitile = request.SubTitile.Trim(),
             Sumary = request.Sumary.Trim(),
             Description = request.Description.Trim(),
             CreatedAt = now,
@@ -90,7 +89,6 @@ public class Service : IService
         schedule.ServiceId = request.ServiceId;
         schedule.Day = request.Day.Trim();
         schedule.Titile = request.Titile.Trim();
-        schedule.SubTitile = request.SubTitile.Trim();
         schedule.Sumary = request.Sumary.Trim();
         schedule.Description = request.Description.Trim();
         schedule.UpdatedAt = DateTime.UtcNow;
@@ -120,7 +118,6 @@ public class Service : IService
             ServiceId = schedule.ServiceId,
             Day = schedule.Day ?? string.Empty,
             Titile = schedule.Titile ?? string.Empty,
-            SubTitile = schedule.SubTitile ?? string.Empty,
             Sumary = schedule.Sumary ?? string.Empty,
             Description = schedule.Description ?? string.Empty,
             CreatedAt = schedule.CreatedAt,

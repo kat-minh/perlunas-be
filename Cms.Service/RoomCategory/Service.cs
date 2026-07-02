@@ -71,10 +71,12 @@ public class Service : IService
             Titile = request.Titile.Trim(),
             NumberOfCustomer = request.NumberOfCustomer,
             Acreage = request.Acreage.Trim(),
-            NumberOfBed = request.NumberOfBed,
+            NumberOfBed = request.NumberOfBed.Trim(),
             Description = request.Description.Trim(),
             Feature = request.Feature.Trim(),
             Price = service.Type == ServiceType.Combo ? null : request.Price?.Trim(),
+            OriginalPrice = request.OriginalPrice?.Trim(),
+            Unit = request.Unit?.Trim(),
             CreatedAt = now,
             UpdatedAt = now,
         };
@@ -103,10 +105,12 @@ public class Service : IService
         roomCategory.Titile = request.Titile.Trim();
         roomCategory.NumberOfCustomer = request.NumberOfCustomer;
         roomCategory.Acreage = request.Acreage.Trim();
-        roomCategory.NumberOfBed = request.NumberOfBed;
+        roomCategory.NumberOfBed = request.NumberOfBed.Trim();
         roomCategory.Description = request.Description.Trim();
         roomCategory.Feature = request.Feature.Trim();
         roomCategory.Price = service.Type == ServiceType.Combo ? null : request.Price?.Trim();
+        roomCategory.OriginalPrice = request.OriginalPrice?.Trim();
+        roomCategory.Unit = request.Unit?.Trim();
         roomCategory.UpdatedAt = DateTime.UtcNow;
 
         await _dbContext.SaveChangesAsync();
@@ -136,10 +140,12 @@ public class Service : IService
             Titile = roomCategory.Titile ?? string.Empty,
             NumberOfCustomer = roomCategory.NumberOfCustomer ?? 0,
             Acreage = roomCategory.Acreage ?? string.Empty,
-            NumberOfBed = roomCategory.NumberOfBed ?? 0,
+            NumberOfBed = roomCategory.NumberOfBed ?? string.Empty,
             Description = roomCategory.Description ?? string.Empty,
             Feature = roomCategory.Feature ?? string.Empty,
             Price = roomCategory.Price,
+            OriginalPrice = roomCategory.OriginalPrice,
+            Unit = roomCategory.Unit,
             CreatedAt = roomCategory.CreatedAt,
             UpdatedAt = roomCategory.UpdatedAt,
         };

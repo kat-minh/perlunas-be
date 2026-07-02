@@ -9,10 +9,12 @@ public class RoomCategory : BaseEntity<Guid>, IAuditableEntity
     public string? Titile { get; set; }
     public int? NumberOfCustomer { get; set; }
     public string? Acreage { get; set; }
-    public int? NumberOfBed { get; set; }
+    public string? NumberOfBed { get; set; }
     public string? Description { get; set; }
     public string? Feature { get; set; }
     public string? Price { get; set; }
+    public string? OriginalPrice { get; set; }
+    public string? Unit { get; set; }
 
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

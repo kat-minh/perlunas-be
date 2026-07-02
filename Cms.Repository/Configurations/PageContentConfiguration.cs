@@ -19,7 +19,7 @@ public class PageContentConfiguration : IEntityTypeConfiguration<PageContent>
         builder.Property(x => x.Kind).HasMaxLength(50);
         builder.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
 
-        builder.HasIndex(x => new { x.PageKey, x.SectionKey });
+        builder.HasIndex(x => new { x.PageKey, x.SectionKey, x.Key });
 
         builder.HasOne(x => x.Parent)
             .WithMany(x => x.Children)

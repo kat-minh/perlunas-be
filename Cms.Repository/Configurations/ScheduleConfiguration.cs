@@ -13,7 +13,6 @@ public class ScheduleConfiguration : IEntityTypeConfiguration<Schedule>
 
         builder.Property(x => x.Day).HasMaxLength(50);
         builder.Property(x => x.Titile).HasMaxLength(255);
-        builder.Property(x => x.SubTitile).HasMaxLength(255);
         builder.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
 
         builder.SeedSchedule();

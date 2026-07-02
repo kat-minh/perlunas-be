@@ -8,7 +8,6 @@ public class Response
         public Guid ServiceId { get; set; }
         public string Day { get; set; } = string.Empty;
         public string Titile { get; set; } = string.Empty;
-        public string SubTitile { get; set; } = string.Empty;
         public string Sumary { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
