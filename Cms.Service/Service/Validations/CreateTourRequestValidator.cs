@@ -15,5 +15,17 @@ public class CreateTourRequestValidator : AbstractValidator<Request.CreateTourRe
         RuleFor(x => x.Infor).NotEmpty().WithMessage("INFOR_REQUIRED");
         RuleFor(x => x.Highlight).NotEmpty().WithMessage("HIGHLIGHT_REQUIRED");
         RuleFor(x => x.Code).NotEmpty().WithMessage("CODE_REQUIRED");
+        RuleFor(x => x.Schedules).NotEmpty().WithMessage("SCHEDULES_REQUIRED");
+        RuleForEach(x => x.Schedules).ChildRules(s =>
+        {
+            s.RuleFor(x => x.Titile).NotEmpty().WithMessage("SCHEDULE_TITLE_REQUIRED");
+            s.RuleFor(x => x.Description).NotEmpty().WithMessage("SCHEDULE_DESCRIPTION_REQUIRED");
+        });
+        RuleFor(x => x.ImportantInfors).NotEmpty().WithMessage("IMPORTANT_INFORS_REQUIRED");
+        RuleForEach(x => x.ImportantInfors).ChildRules(i =>
+        {
+            i.RuleFor(x => x.Title).NotEmpty().WithMessage("IMPORTANT_INFOR_TITLE_REQUIRED");
+            i.RuleFor(x => x.Description).NotEmpty().WithMessage("IMPORTANT_INFOR_DESCRIPTION_REQUIRED");
+        });
     }
 }

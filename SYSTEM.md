@@ -131,7 +131,7 @@ Client → Controller → Service (Validate → Business Logic → DB) → Respo
 | Acreage | string? | |
 | NumberOfBed | string? | |
 | Description | string? | |
-| Feature | string? | |
+| Feature | string? | JSON array |
 | Price | string? | null nếu service là Combo |
 | OriginalPrice | string? | Giá gốc (hiển thị gạch ngang) |
 | Unit | string? | Đơn vị (vd: "đêm", "người") |
@@ -290,9 +290,9 @@ Base: `/api/room-categories`
 | PUT | `/{id}` | ✅ | Cập nhật | body | `RoomCategoryResponse` |
 | DELETE | `/{id}` | ✅ | Xoá mềm | — | `string` |
 
-**CreateRoomCategoryRequest:** ServiceId, Album[], Titile, NumberOfCustomer, Acreage, NumberOfBed (string), Description, Feature, Price?, OriginalPrice?, Unit?
+**CreateRoomCategoryRequest:** ServiceId, Album[], Titile, NumberOfCustomer, Acreage, NumberOfBed (string), Description, Feature[], Price?, OriginalPrice?, Unit?
 
-**RoomCategoryResponse:** Id, ServiceId, Album[], Titile, NumberOfCustomer, Acreage, NumberOfBed (string), Description, Feature, Price?, OriginalPrice?, Unit?, CreatedAt, UpdatedAt
+**RoomCategoryResponse:** Id, ServiceId, Album[], Titile, NumberOfCustomer, Acreage, NumberOfBed (string), Description, Feature[], Price?, OriginalPrice?, Unit?, CreatedAt, UpdatedAt
 
 ### 4.5. DepartureSchedules
 Base: `/api/departure-schedules`
@@ -434,7 +434,7 @@ System được seed với 3 services và các child tương ứng:
 
 **Child seeds:**
 - Schedule: 4 items (2→Tour, 1→Hotel, 1→Combo) — không SubTitile
-- RoomCategory: 3 items — NumberOfBed là string, có OriginalPrice + Unit, RoomSuite (Combo) Price=null
+- RoomCategory: 3 items — NumberOfBed là string, Feature là JSON array, có OriginalPrice + Unit, RoomSuite (Combo) Price=null
 - DepartureSchedule: 3 items (all→Tour)
 - ImportantInfor: 3 items (Policy→Tour, Resort→Combo, Private→Combo)
 - PageContent: 3 parents + 2 children (đệ quy)

@@ -26,6 +26,8 @@ public class Response
         public string? Destination { get; set; }
         public string? Form { get; set; }
         public Classify? Classify { get; set; }
+        public List<Schedule.Response.ScheduleResponse> Schedules { get; set; } = new();
+        public List<ImportantInfor.Response.ImportantInforResponse> ImportantInfors { get; set; } = new();
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }

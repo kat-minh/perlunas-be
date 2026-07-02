@@ -73,7 +73,7 @@ public class Service : IService
             Acreage = request.Acreage.Trim(),
             NumberOfBed = request.NumberOfBed.Trim(),
             Description = request.Description.Trim(),
-            Feature = request.Feature.Trim(),
+            Feature = JsonSerializer.Serialize(request.Feature),
             Price = service.Type == ServiceType.Combo ? null : request.Price?.Trim(),
             OriginalPrice = request.OriginalPrice?.Trim(),
             Unit = request.Unit?.Trim(),
@@ -107,7 +107,7 @@ public class Service : IService
         roomCategory.Acreage = request.Acreage.Trim();
         roomCategory.NumberOfBed = request.NumberOfBed.Trim();
         roomCategory.Description = request.Description.Trim();
-        roomCategory.Feature = request.Feature.Trim();
+        roomCategory.Feature = JsonSerializer.Serialize(request.Feature);
         roomCategory.Price = service.Type == ServiceType.Combo ? null : request.Price?.Trim();
         roomCategory.OriginalPrice = request.OriginalPrice?.Trim();
         roomCategory.Unit = request.Unit?.Trim();
@@ -142,7 +142,7 @@ public class Service : IService
             Acreage = roomCategory.Acreage ?? string.Empty,
             NumberOfBed = roomCategory.NumberOfBed ?? string.Empty,
             Description = roomCategory.Description ?? string.Empty,
-            Feature = roomCategory.Feature ?? string.Empty,
+            Feature = DeserializeFeature(roomCategory.Feature),
             Price = roomCategory.Price,
             OriginalPrice = roomCategory.OriginalPrice,
             Unit = roomCategory.Unit,
@@ -155,6 +155,13 @@ public class Service : IService
     {
         if (string.IsNullOrWhiteSpace(album)) return new();
         try { return JsonSerializer.Deserialize<List<string>>(album) ?? new(); }
+        catch { return new(); }
+    }
+
+    private static List<string> DeserializeFeature(string? feature)
+    {
+        if (string.IsNullOrWhiteSpace(feature)) return new();
+        try { return JsonSerializer.Deserialize<List<string>>(feature) ?? new(); }
         catch { return new(); }
     }
 }

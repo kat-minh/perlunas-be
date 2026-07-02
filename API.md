@@ -273,6 +273,8 @@ Dưới đây là toàn bộ API cho Service.
 | `destination` | string or null | Combo + Hotel mới có |
 | `form` | string or null | Combo + Hotel mới có |
 | `classify` | string (enum) or null | Chỉ Combo mới có |
+| `schedules` | array | Danh sách `ScheduleResponse` — chỉ có trong response của POST tạo Tour/Combo |
+| `importantInfors` | array | Danh sách `ImportantInforResponse` — chỉ có trong response của POST tạo Tour/Combo |
 | `createdAt` | string (datetime) | |
 | `updatedAt` | string (datetime) or null | |
 
@@ -430,7 +432,7 @@ order by CreatedAt desc
 
 **Auth:** `[Authorize]` — cần JWT Bearer token (role Admin)
 
-**Mô tả:** Tạo mới một service loại Tour. Các field thuộc về Combo/Hotel sẽ tự động được bỏ qua (không cần gửi). Album là danh sách URL ảnh, lưu dạng JSON trong DB.
+**Mô tả:** Tạo mới một service loại Tour, **kèm schedules và importantInfors** trong cùng request. Các field thuộc về Combo/Hotel sẽ tự động được bỏ qua (không cần gửi). Album là danh sách URL ảnh, lưu dạng JSON trong DB.
 
 **Request body:**
 | Field | Type | Bắt buộc | Mô tả |
@@ -445,6 +447,8 @@ order by CreatedAt desc
 | `highlight` | string | ✅ | Điểm nổi bật |
 | `code` | string | ✅ | Mã tour (ví dụ: PLN-001) |
 | `isPublic` | bool | ❌ (optional, default false nếu không gửi) | Công khai hay không |
+| `schedules` | array | ✅ | Danh sách lịch trình (tối thiểu 1 item). Mỗi item gồm: `day`, `titile`, `sumary`, `description` |
+| `importantInfors` | array | ✅ | Danh sách thông tin quan trọng (tối thiểu 1 item). Mỗi item gồm: `title`, `subTitle`, `description` |
 
 ```json
 {
@@ -457,9 +461,50 @@ order by CreatedAt desc
   "infor": "Bao gồm ăn sáng, khách sạn 3 sao",
   "highlight": "Tham quan vịnh, leo núi",
   "code": "PLN-001",
-  "isPublic": true
+  "isPublic": true,
+  "schedules": [
+    {
+      "day": "Day 1",
+      "titile": "Khởi hành",
+      "sumary": "Đón khách tại sân bay",
+      "description": "Đón khách, nhận phòng khách sạn, ăn tối chào mừng."
+    },
+    {
+      "day": "Day 2",
+      "titile": "Tham quan",
+      "sumary": "Khám phá danh lam thắng cảnh",
+      "description": "Tham quan vịnh, leo núi, ăn trưa tại nhà hàng địa phương."
+    }
+  ],
+  "importantInfors": [
+    {
+      "title": "Chính sách hủy",
+      "subTitle": "Hủy miễn phí trước 24h",
+      "description": "Nếu hủy trước 24 giờ khởi hành, bạn sẽ được hoàn lại toàn bộ chi phí."
+    },
+    {
+      "title": "Lưu ý sức khỏe",
+      "subTitle": "Yêu cầu sức khỏe tốt",
+      "description": "Tour này bao gồm leo núi, yêu cầu sức khỏe thể chất tốt."
+    }
+  ]
 }
 ```
+
+**Cấu trúc item trong `schedules`:**
+| Field | Type | Bắt buộc | Mô tả |
+|---|---|---|---|
+| `day` | string | ❌ | Ví dụ: "Day 1", "Ngày 1" |
+| `titile` | string | ✅ | Tiêu đề lịch trình |
+| `sumary` | string | ❌ | Tóm tắt |
+| `description` | string | ✅ | Mô tả chi tiết |
+
+**Cấu trúc item trong `importantInfors`:**
+| Field | Type | Bắt buộc | Mô tả |
+|---|---|---|---|
+| `title` | string | ✅ | Tiêu đề |
+| `subTitle` | string | ❌ | Tiêu đề phụ |
+| `description` | string | ✅ | Mô tả chi tiết |
 
 **Validation rules:**
 
@@ -474,6 +519,12 @@ order by CreatedAt desc
 | `Infor` | NotEmpty | `INFOR_REQUIRED` |
 | `Highlight` | NotEmpty | `HIGHLIGHT_REQUIRED` |
 | `Code` | NotEmpty | `CODE_REQUIRED` |
+| `Schedules` | NotEmpty | `SCHEDULES_REQUIRED` |
+| `Schedules[*].Titile` | NotEmpty | `SCHEDULE_TITLE_REQUIRED` |
+| `Schedules[*].Description` | NotEmpty | `SCHEDULE_DESCRIPTION_REQUIRED` |
+| `ImportantInfors` | NotEmpty | `IMPORTANT_INFORS_REQUIRED` |
+| `ImportantInfors[*].Title` | NotEmpty | `IMPORTANT_INFOR_TITLE_REQUIRED` |
+| `ImportantInfors[*].Description` | NotEmpty | `IMPORTANT_INFOR_DESCRIPTION_REQUIRED` |
 
 **Response 200 — thành công:**
 ```json
@@ -504,6 +555,29 @@ order by CreatedAt desc
     "destination": null,
     "form": null,
     "classify": null,
+    "schedules": [
+      {
+        "id": "guid",
+        "serviceId": "guid",
+        "day": "Day 1",
+        "titile": "Khởi hành",
+        "sumary": "Đón khách tại sân bay",
+        "description": "Đón khách, nhận phòng khách sạn, ăn tối chào mừng.",
+        "createdAt": "2026-07-02T10:00:00Z",
+        "updatedAt": "2026-07-02T10:00:00Z"
+      }
+    ],
+    "importantInfors": [
+      {
+        "id": "guid",
+        "serviceId": "guid",
+        "title": "Chính sách hủy",
+        "subTitle": "Hủy miễn phí trước 24h",
+        "description": "Nếu hủy trước 24 giờ khởi hành, bạn sẽ được hoàn lại toàn bộ chi phí.",
+        "createdAt": "2026-07-02T10:00:00Z",
+        "updatedAt": "2026-07-02T10:00:00Z"
+      }
+    ],
     "createdAt": "2026-07-02T10:00:00Z",
     "updatedAt": "2026-07-02T10:00:00Z"
   }
@@ -524,7 +598,7 @@ order by CreatedAt desc
 
 **Auth:** `[Authorize]` — cần JWT Bearer token (role Admin)
 
-**Mô tả:** Tạo mới một service loại Combo. Các field Tour/Hotel không thuộc Combo sẽ tự động bỏ qua.
+**Mô tả:** Tạo mới một service loại Combo, **kèm schedules và importantInfors** trong cùng request. Các field Tour/Hotel không thuộc Combo sẽ tự động bỏ qua.
 
 **Request body:**
 | Field | Type | Bắt buộc | Mô tả |
@@ -543,6 +617,8 @@ order by CreatedAt desc
 | `form` | string | ✅ | Hình thức (vd: Half-board, Full-board) |
 | `classify` | string (enum) | ✅ | `Akoya`, `Ahiti`, `SouthSea` |
 | `isPublic` | bool | ❌ (optional, default false nếu không gửi) | Công khai |
+| `schedules` | array | ✅ | Danh sách lịch trình (tối thiểu 1 item). Mỗi item gồm: `day`, `titile`, `sumary`, `description` |
+| `importantInfors` | array | ✅ | Danh sách thông tin quan trọng (tối thiểu 1 item). Mỗi item gồm: `title`, `subTitle`, `description` |
 
 ```json
 {
@@ -559,9 +635,39 @@ order by CreatedAt desc
   "destination": "Hoi An Ancient Town",
   "form": "Half-board",
   "classify": "Akoya",
-  "isPublic": true
+  "isPublic": true,
+  "schedules": [
+    {
+      "day": "Day 1",
+      "titile": "Đến Hội An",
+      "sumary": "Nhận phòng và tham quan phố cổ",
+      "description": "Đón khách, nhận phòng, dạo phố cổ về đêm."
+    }
+  ],
+  "importantInfors": [
+    {
+      "title": "Chính sách hoàn hủy",
+      "subTitle": "Hoàn tiền 50% nếu hủy trước 48h",
+      "description": "Vui lòng liên hệ hotline để được hỗ trợ."
+    }
+  ]
 }
 ```
+
+**Cấu trúc item trong `schedules`:**
+| Field | Type | Bắt buộc | Mô tả |
+|---|---|---|---|
+| `day` | string | ❌ | Ví dụ: "Day 1", "Ngày 1" |
+| `titile` | string | ✅ | Tiêu đề lịch trình |
+| `sumary` | string | ❌ | Tóm tắt |
+| `description` | string | ✅ | Mô tả chi tiết |
+
+**Cấu trúc item trong `importantInfors`:**
+| Field | Type | Bắt buộc | Mô tả |
+|---|---|---|---|
+| `title` | string | ✅ | Tiêu đề |
+| `subTitle` | string | ❌ | Tiêu đề phụ |
+| `description` | string | ✅ | Mô tả chi tiết |
 
 **Validation rules:**
 
@@ -580,8 +686,14 @@ order by CreatedAt desc
 | `Destination` | NotEmpty | `DESTINATION_REQUIRED` |
 | `Form` | NotEmpty | `FORM_REQUIRED` |
 | `Classify` | IsInEnum | `CLASSIFY_INVALID` |
+| `Schedules` | NotEmpty | `SCHEDULES_REQUIRED` |
+| `Schedules[*].Titile` | NotEmpty | `SCHEDULE_TITLE_REQUIRED` |
+| `Schedules[*].Description` | NotEmpty | `SCHEDULE_DESCRIPTION_REQUIRED` |
+| `ImportantInfors` | NotEmpty | `IMPORTANT_INFORS_REQUIRED` |
+| `ImportantInfors[*].Title` | NotEmpty | `IMPORTANT_INFOR_TITLE_REQUIRED` |
+| `ImportantInfors[*].Description` | NotEmpty | `IMPORTANT_INFOR_DESCRIPTION_REQUIRED` |
 
-**Response 200 — thành công:** `ServiceResponse` với `type = "Combo"`, các field Tour/Hotel = rỗng/null.
+**Response 200 — thành công:** `ServiceResponse` với `type = "Combo"`, các field Tour/Hotel = rỗng/null, kèm `schedules` và `importantInfors` như Tour.
 
 **Errors:**
 | Status | MessageCode | detail |
@@ -658,7 +770,11 @@ order by CreatedAt desc
 
 **Auth:** `[Authorize]` — cần JWT Bearer token (role Admin)
 
-**Mô tả:** Cập nhật service bất kỳ (Tour, Combo, Hotel) theo ID. Dùng chung một request body cho cả 3 loại. Hệ thống tự động reset các field không thuộc Type đó về null dựa vào `ApplyTypeFields`. Ví dụ: nếu cập nhật service Tour → field `label` (Combo) và `instruct` (Hotel) sẽ tự động bị set null.
+**Mô tả:** Cập nhật service bất kỳ (Tour, Combo, Hotel) theo ID. Dùng chung một request body cho cả 3 loại.
+
+**Hỗ trợ cập nhật một phần (partial update):** Chỉ cần gửi các field muốn thay đổi; các field không gửi sẽ giữ nguyên giá trị cũ. Tuy nhiên, các field không thuộc Type mới sẽ tự động bị reset về null khi gửi kèm `type`. Các field bắt buộc chung: `title`, `album`, `region`, `type`.
+
+**Đối với Tour/Combo:** Nếu gửi `schedules` hoặc `importantInfors`, hệ thống sẽ **xoá mềm** toàn bộ schedules/importantInfors cũ và tạo mới từ request. Nếu không gửi, giữ nguyên dữ liệu cũ.
 
 **Path parameters:**
 | Param | Type | Mô tả |
@@ -668,25 +784,27 @@ order by CreatedAt desc
 **Request body:**
 | Field | Type | Bắt buộc | Mô tả |
 |---|---|---|---|
-| `title` | string | ✅ | |
-| `introducetion` | string | ✅ nếu Type=Hotel, không thì ignored | |
-| `day` | int | ✅ nếu Type=Tour, không thì ignored | |
-| `night` | int | ✅ nếu Type≠Hotel, không thì ignored | |
-| `label` | string | ✅ nếu Type=Combo, không thì ignored | |
-| `album` | array string | ✅ | |
-| `region` | string | ✅ | |
-| `description` | string | ✅ nếu Type≠Hotel, không thì ignored | |
-| `infor` | string | ✅ nếu Type≠Hotel, không thì ignored | |
-| `highlight` | string | ✅ nếu Type≠Hotel, không thì ignored | |
-| `code` | string | ✅ nếu Type≠Hotel, không thì ignored | |
-| `instruct` | string | ✅ nếu Type=Hotel, không thì ignored | |
-| `feature` | string | ✅ nếu Type=Hotel, không thì ignored | |
+| `title` | string | ✅ | Luôn bắt buộc |
+| `introducetion` | string | ❌ (chỉ update nếu gửi, chỉ áp dụng cho Hotel) | Nếu không gửi → giữ nguyên |
+| `day` | int | ❌ (chỉ update nếu gửi, chỉ áp dụng cho Tour) | |
+| `night` | int | ❌ (chỉ update nếu gửi, chỉ áp dụng khi Type≠Hotel) | |
+| `label` | string | ❌ (chỉ update nếu gửi, chỉ áp dụng cho Combo) | |
+| `album` | array string | ✅ | Luôn bắt buộc |
+| `region` | string | ✅ | Luôn bắt buộc |
+| `description` | string | ❌ (chỉ update nếu gửi, chỉ áp dụng khi Type≠Hotel) | |
+| `infor` | string | ❌ (chỉ update nếu gửi, chỉ áp dụng khi Type≠Hotel) | |
+| `highlight` | string | ❌ (chỉ update nếu gửi, chỉ áp dụng khi Type≠Hotel) | |
+| `code` | string | ❌ (chỉ update nếu gửi, chỉ áp dụng khi Type≠Hotel) | |
+| `instruct` | string | ❌ (chỉ update nếu gửi, chỉ áp dụng cho Hotel) | |
+| `feature` | string | ❌ (chỉ update nếu gửi, chỉ áp dụng cho Hotel) | |
 | `type` | string (enum) | ✅ | `Tour` / `Combo` / `Hotel` |
 | `isPublic` | bool | ❌ (optional, default false nếu không gửi) | |
-| `purposeOfTrip` | string (enum) or null | ✅ nếu Type=Combo/Hotel | |
-| `destination` | string or null | ✅ nếu Type=Combo/Hotel | |
-| `form` | string or null | ✅ nếu Type=Combo/Hotel | |
-| `classify` | string (enum) or null | ✅ nếu Type=Combo | |
+| `purposeOfTrip` | string (enum) or null | ❌ (chỉ update nếu gửi, chỉ áp dụng cho Combo/Hotel) | |
+| `destination` | string or null | ❌ (chỉ update nếu gửi, chỉ áp dụng cho Combo/Hotel) | |
+| `form` | string or null | ❌ (chỉ update nếu gửi, chỉ áp dụng cho Combo/Hotel) | |
+| `classify` | string (enum) or null | ❌ (chỉ update nếu gửi, chỉ áp dụng cho Combo) | |
+| `schedules` | array | ❌ (chỉ update nếu gửi, chỉ áp dụng cho Tour/Combo) | Nếu gửi → xoá mềm cũ, tạo mới. Mỗi item gồm: `day`, `titile`, `sumary`, `description` |
+| `importantInfors` | array | ❌ (chỉ update nếu gửi, chỉ áp dụng cho Tour/Combo) | Nếu gửi → xoá mềm cũ, tạo mới. Mỗi item gồm: `title`, `subTitle`, `description` |
 
 ```json
 {
@@ -708,7 +826,22 @@ order by CreatedAt desc
   "purposeOfTrip": null,
   "destination": null,
   "form": null,
-  "classify": null
+  "classify": null,
+  "schedules": [
+    {
+      "day": "Day 1",
+      "titile": "Khởi hành",
+      "sumary": "Đón khách tại sân bay",
+      "description": "Đón khách, nhận phòng khách sạn, ăn tối chào mừng."
+    }
+  ],
+  "importantInfors": [
+    {
+      "title": "Chính sách hủy",
+      "subTitle": "Hủy miễn phí trước 24h",
+      "description": "Hoàn lại toàn bộ chi phí nếu hủy trước 24 giờ."
+    }
+  ]
 }
 ```
 
@@ -718,43 +851,49 @@ order by CreatedAt desc
 |---|---|---|---|
 | `Title` | NotEmpty | `TITLE_REQUIRED` | Luôn |
 | `Type` | NotEmpty, IsInEnum | `TYPE_REQUIRED`, `TYPE_MUST_BE_TOUR_COMBO_OR_HOTEL` | Luôn |
-| `Introducetion` | NotEmpty | `INTRODUCTION_REQUIRED` | Type = Hotel |
-| `Day` | GreaterThan(0) | `DAY_MUST_BE_GREATER_THAN_ZERO` | Type ≠ Combo và Type ≠ Hotel (tức Tour) |
-| `Night` | GreaterThan(0) | `NIGHT_MUST_BE_GREATER_THAN_ZERO` | Type ≠ Hotel (tức Tour hoặc Combo) |
-| `Label` | NotEmpty | `LABEL_REQUIRED` | Type ≠ Tour và Type ≠ Hotel (tức Combo) |
 | `Album` | NotEmpty | `ALBUM_REQUIRED` | Luôn |
 | `Region` | NotEmpty | `REGION_REQUIRED` | Luôn |
-| `Description` | NotEmpty | `DESCRIPTION_REQUIRED` | Type ≠ Hotel |
-| `Infor` | NotEmpty | `INFOR_REQUIRED` | Type ≠ Hotel |
-| `Highlight` | NotEmpty | `HIGHLIGHT_REQUIRED` | Type ≠ Hotel |
-| `Code` | NotEmpty | `CODE_REQUIRED` | Type ≠ Hotel |
-| `Instruct` | NotEmpty | `INSTRUCT_REQUIRED` | Type ≠ Tour và Type ≠ Combo (tức Hotel) |
-| `Feature` | NotEmpty | `FEATURE_REQUIRED` | Type ≠ Tour và Type ≠ Combo (tức Hotel) |
-| `PurposeOfTrip` | NotEmpty, IsInEnum | `PURPOSE_OF_TRIP_REQUIRED`, `PURPOSE_OF_TRIP_INVALID` | Type = Combo hoặc Hotel |
-| `Destination` | NotEmpty | `DESTINATION_REQUIRED` | Type = Combo hoặc Hotel |
-| `Form` | NotEmpty | `FORM_REQUIRED` | Type = Combo hoặc Hotel |
-| `Classify` | NotEmpty, IsInEnum | `CLASSIFY_REQUIRED`, `CLASSIFY_INVALID` | Type = Combo |
+| `Introducetion` | NotEmpty | `INTRODUCTION_REQUIRED` | Có gửi và Type = Hotel |
+| `Day` | GreaterThan(0) | `DAY_MUST_BE_GREATER_THAN_ZERO` | Có gửi và Type = Tour |
+| `Night` | GreaterThan(0) | `NIGHT_MUST_BE_GREATER_THAN_ZERO` | Có gửi và Type ≠ Hotel |
+| `Label` | NotEmpty | `LABEL_REQUIRED` | Có gửi và Type = Combo |
+| `Description` | NotEmpty | `DESCRIPTION_REQUIRED` | Có gửi và Type ≠ Hotel |
+| `Infor` | NotEmpty | `INFOR_REQUIRED` | Có gửi và Type ≠ Hotel |
+| `Highlight` | NotEmpty | `HIGHLIGHT_REQUIRED` | Có gửi và Type ≠ Hotel |
+| `Code` | NotEmpty | `CODE_REQUIRED` | Có gửi và Type ≠ Hotel |
+| `Instruct` | NotEmpty | `INSTRUCT_REQUIRED` | Có gửi và Type = Hotel |
+| `Feature` | NotEmpty | `FEATURE_REQUIRED` | Có gửi và Type = Hotel |
+| `PurposeOfTrip` | NotEmpty, IsInEnum | `PURPOSE_OF_TRIP_REQUIRED`, `PURPOSE_OF_TRIP_INVALID` | Có gửi và Type = Combo/Hotel |
+| `Destination` | NotEmpty | `DESTINATION_REQUIRED` | Có gửi và Type = Combo/Hotel |
+| `Form` | NotEmpty | `FORM_REQUIRED` | Có gửi và Type = Combo/Hotel |
+| `Classify` | NotEmpty, IsInEnum | `CLASSIFY_REQUIRED`, `CLASSIFY_INVALID` | Có gửi và Type = Combo |
+| `Schedules` | NotEmpty | `SCHEDULES_REQUIRED` | Có gửi và Type = Tour/Combo |
+| `Schedules[*].Titile` | NotEmpty | `SCHEDULE_TITLE_REQUIRED` | Có gửi và Type = Tour/Combo |
+| `Schedules[*].Description` | NotEmpty | `SCHEDULE_DESCRIPTION_REQUIRED` | Có gửi và Type = Tour/Combo |
+| `ImportantInfors` | NotEmpty | `IMPORTANT_INFORS_REQUIRED` | Có gửi và Type = Tour/Combo |
+| `ImportantInfors[*].Title` | NotEmpty | `IMPORTANT_INFOR_TITLE_REQUIRED` | Có gửi và Type = Tour/Combo |
+| `ImportantInfors[*].Description` | NotEmpty | `IMPORTANT_INFOR_DESCRIPTION_REQUIRED` | Có gửi và Type = Tour/Combo |
 
-**Logic `ApplyTypeFields` — các field tự động bị set null:**
+**Logic `ApplyTypeFields` — các field tự động bị set null khi đổi Type, và chỉ set lại nếu có gửi:**
 
 | Field | Tour | Combo | Hotel |
 |---|---|---|---|
-| `Introducetion` | → null | → null | giữ nguyên |
-| `Day` | giữ nguyên | → null | → null |
-| `Night` | giữ nguyên | giữ nguyên | → null |
-| `Label` | → null | giữ nguyên | → null |
-| `Description` | giữ nguyên | giữ nguyên | → null |
-| `Infor` | giữ nguyên | giữ nguyên | → null |
-| `Highlight` | giữ nguyên | giữ nguyên | → null |
-| `Code` | giữ nguyên | giữ nguyên | → null |
-| `Instruct` | → null | → null | giữ nguyên |
-| `Feature` | → null | → null | giữ nguyên |
-| `PurposeOfTrip` | → null | giữ nguyên | giữ nguyên |
-| `Destination` | → null | giữ nguyên | giữ nguyên |
-| `Form` | → null | giữ nguyên | giữ nguyên |
-| `Classify` | → null | giữ nguyên | → null |
+| `Introducetion` | → null | → null | giữ nguyên (nếu có gửi) |
+| `Day` | giữ nguyên (nếu có gửi) | → null | → null |
+| `Night` | giữ nguyên (nếu có gửi) | giữ nguyên (nếu có gửi) | → null |
+| `Label` | → null | giữ nguyên (nếu có gửi) | → null |
+| `Description` | giữ nguyên (nếu có gửi) | giữ nguyên (nếu có gửi) | → null |
+| `Infor` | giữ nguyên (nếu có gửi) | giữ nguyên (nếu có gửi) | → null |
+| `Highlight` | giữ nguyên (nếu có gửi) | giữ nguyên (nếu có gửi) | → null |
+| `Code` | giữ nguyên (nếu có gửi) | giữ nguyên (nếu có gửi) | → null |
+| `Instruct` | → null | → null | giữ nguyên (nếu có gửi) |
+| `Feature` | → null | → null | giữ nguyên (nếu có gửi) |
+| `PurposeOfTrip` | → null | giữ nguyên (nếu có gửi) | giữ nguyên (nếu có gửi) |
+| `Destination` | → null | giữ nguyên (nếu có gửi) | giữ nguyên (nếu có gửi) |
+| `Form` | → null | giữ nguyên (nếu có gửi) | giữ nguyên (nếu có gửi) |
+| `Classify` | → null | giữ nguyên (nếu có gửi) | → null |
 
-**Response 200 — thành công:** `ServiceResponse` với các field tương ứng Type đã được cập nhật.
+**Response 200 — thành công:** `ServiceResponse` với các field tương ứng Type đã được cập nhật. Nếu Type là Tour/Combo, response kèm `schedules` và `importantInfors` hiện tại (dù có gửi hay không).
 
 **Errors:**
 | Status | MessageCode | detail |
@@ -772,6 +911,8 @@ order by CreatedAt desc
 **Auth:** `[Authorize]` — cần JWT Bearer token (role Admin)
 
 **Mô tả:** Xoá mềm (soft delete) service. Không xoá vật lý khỏi DB, chỉ set `IsDeleted = true` và `UpdatedAt = now`. Service đã xoá sẽ không xuất hiện trong các GET list/detail.
+
+**Cascade soft delete:** Tất cả child entities thuộc service (Schedule, ImportantInfor, RoomCategory, DepartureSchedule) cũng bị soft delete theo.
 
 **Path parameters:**
 | Param | Type | Mô tả |
@@ -1035,7 +1176,7 @@ order by CreatedAt desc
 | `acreage` | string | Diện tích (vd: "35m2") |
 | `numberOfBed` | string | Số giường (kiểu string, vd: "1", "2", "1 double") |
 | `description` | string | Mô tả |
-| `feature` | string | Tiện nghi |
+| `feature` | array string | Tiện nghi |
 | `price` | string or null | Giá (string, null nếu service là Combo) |
 | `originalPrice` | string or null | Giá gốc (hiển thị gạch ngang) |
 | `unit` | string or null | Đơn vị (vd: "đêm", "người") |
@@ -1074,7 +1215,7 @@ order by CreatedAt desc
     "acreage": "35m2",
     "numberOfBed": "1",
     "description": "Phòng deluxe với ban công",
-    "feature": "Ban công, bữa sáng, view biển",
+    "feature": ["Ban công", "bữa sáng", "view biển"],
     "price": "1200000",
     "originalPrice": "1500000",
     "unit": "đêm",
@@ -1107,7 +1248,7 @@ order by CreatedAt desc
 | `acreage` | string | ✅ | Diện tích |
 | `numberOfBed` | string | ✅ | Số giường (vd: "1", "2", "1 double") |
 | `description` | string | ✅ | Mô tả |
-| `feature` | string | ✅ | Tiện nghi |
+| `feature` | array string | ✅ | Tiện nghi |
 | `price` | string or null | ❌ (optional) | Giá (sẽ bị ignore nếu service là Combo) |
 | `originalPrice` | string or null | ❌ (optional) | Giá gốc |
 | `unit` | string or null | ❌ (optional) | Đơn vị |
@@ -1121,7 +1262,7 @@ order by CreatedAt desc
   "acreage": "35m2",
   "numberOfBed": "1",
   "description": "Phòng deluxe với ban công view biển",
-  "feature": "Ban công, bữa sáng, minibar",
+  "feature": ["Ban công", "bữa sáng", "minibar"],
   "price": "1200000",
   "originalPrice": "1500000",
   "unit": "đêm"

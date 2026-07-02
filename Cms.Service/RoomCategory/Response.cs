@@ -12,7 +12,7 @@ public class Response
         public string Acreage { get; set; } = string.Empty;
         public string NumberOfBed { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public string Feature { get; set; } = string.Empty;
+        public List<string> Feature { get; set; } = new();
         public string? Price { get; set; }
         public string? OriginalPrice { get; set; }
         public string? Unit { get; set; }

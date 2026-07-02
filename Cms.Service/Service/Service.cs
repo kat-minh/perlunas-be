@@ -5,6 +5,8 @@ using Cms.Service.Exceptions;
 using Cms.Service.Models;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using SchedResponse = Cms.Service.Schedule.Response.ScheduleResponse;
+using ImpInforResponse = Cms.Service.ImportantInfor.Response.ImportantInforResponse;
 
 namespace Cms.Service.Service;
 
@@ -165,9 +167,10 @@ public class Service : IService
         await _createTourValidator.ValidateAndThrowAsync(request);
 
         var now = DateTime.UtcNow;
+        var serviceId = Guid.NewGuid();
         var service = new Repository.Entities.Service
         {
-            Id = Guid.NewGuid(),
+            Id = serviceId,
             Title = request.Title.Trim(),
             Type = ServiceType.Tour,
             Day = request.Day,
@@ -182,11 +185,58 @@ public class Service : IService
             CreatedAt = now,
             UpdatedAt = now,
         };
-
         _dbContext.Services.Add(service);
+
+        var schedules = request.Schedules.Select(s => new Repository.Entities.Schedule
+        {
+            Id = Guid.NewGuid(),
+            ServiceId = serviceId,
+            Day = s.Day.Trim(),
+            Titile = s.Titile.Trim(),
+            Sumary = s.Sumary.Trim(),
+            Description = s.Description.Trim(),
+            CreatedAt = now,
+            UpdatedAt = now,
+        }).ToList();
+        _dbContext.Schedules.AddRange(schedules);
+
+        var importantInfors = request.ImportantInfors.Select(i => new Repository.Entities.ImportantInfor
+        {
+            Id = Guid.NewGuid(),
+            ServiceId = serviceId,
+            Title = i.Title.Trim(),
+            SubTitle = i.SubTitle.Trim(),
+            Description = i.Description.Trim(),
+            CreatedAt = now,
+            UpdatedAt = now,
+        }).ToList();
+        _dbContext.ImportantInfors.AddRange(importantInfors);
+
         await _dbContext.SaveChangesAsync();
 
-        return ToResponse(service);
+        var response = ToResponse(service);
+        response.Schedules = schedules.Select(s => new SchedResponse
+        {
+            Id = s.Id,
+            ServiceId = s.ServiceId,
+            Day = s.Day ?? string.Empty,
+            Titile = s.Titile ?? string.Empty,
+            Sumary = s.Sumary ?? string.Empty,
+            Description = s.Description ?? string.Empty,
+            CreatedAt = s.CreatedAt,
+            UpdatedAt = s.UpdatedAt,
+        }).ToList();
+        response.ImportantInfors = importantInfors.Select(i => new ImpInforResponse
+        {
+            Id = i.Id,
+            ServiceId = i.ServiceId,
+            Title = i.Title ?? string.Empty,
+            SubTitle = i.SubTitle ?? string.Empty,
+            Description = i.Description ?? string.Empty,
+            CreatedAt = i.CreatedAt,
+            UpdatedAt = i.UpdatedAt,
+        }).ToList();
+        return response;
     }
 
     public async Task<Response.ServiceResponse> CreateComboAsync(Request.CreateComboRequest request)
@@ -194,9 +244,10 @@ public class Service : IService
         await _createComboValidator.ValidateAndThrowAsync(request);
 
         var now = DateTime.UtcNow;
+        var serviceId = Guid.NewGuid();
         var service = new Repository.Entities.Service
         {
-            Id = Guid.NewGuid(),
+            Id = serviceId,
             Title = request.Title.Trim(),
             Type = ServiceType.Combo,
             Night = request.Night,
@@ -215,11 +266,58 @@ public class Service : IService
             CreatedAt = now,
             UpdatedAt = now,
         };
-
         _dbContext.Services.Add(service);
+
+        var schedules = request.Schedules.Select(s => new Repository.Entities.Schedule
+        {
+            Id = Guid.NewGuid(),
+            ServiceId = serviceId,
+            Day = s.Day.Trim(),
+            Titile = s.Titile.Trim(),
+            Sumary = s.Sumary.Trim(),
+            Description = s.Description.Trim(),
+            CreatedAt = now,
+            UpdatedAt = now,
+        }).ToList();
+        _dbContext.Schedules.AddRange(schedules);
+
+        var importantInfors = request.ImportantInfors.Select(i => new Repository.Entities.ImportantInfor
+        {
+            Id = Guid.NewGuid(),
+            ServiceId = serviceId,
+            Title = i.Title.Trim(),
+            SubTitle = i.SubTitle.Trim(),
+            Description = i.Description.Trim(),
+            CreatedAt = now,
+            UpdatedAt = now,
+        }).ToList();
+        _dbContext.ImportantInfors.AddRange(importantInfors);
+
         await _dbContext.SaveChangesAsync();
 
-        return ToResponse(service);
+        var response = ToResponse(service);
+        response.Schedules = schedules.Select(s => new SchedResponse
+        {
+            Id = s.Id,
+            ServiceId = s.ServiceId,
+            Day = s.Day ?? string.Empty,
+            Titile = s.Titile ?? string.Empty,
+            Sumary = s.Sumary ?? string.Empty,
+            Description = s.Description ?? string.Empty,
+            CreatedAt = s.CreatedAt,
+            UpdatedAt = s.UpdatedAt,
+        }).ToList();
+        response.ImportantInfors = importantInfors.Select(i => new ImpInforResponse
+        {
+            Id = i.Id,
+            ServiceId = i.ServiceId,
+            Title = i.Title ?? string.Empty,
+            SubTitle = i.SubTitle ?? string.Empty,
+            Description = i.Description ?? string.Empty,
+            CreatedAt = i.CreatedAt,
+            UpdatedAt = i.UpdatedAt,
+        }).ToList();
+        return response;
     }
 
     public async Task<Response.ServiceResponse> CreateHotelAsync(Request.CreateHotelRequest request)
@@ -258,18 +356,71 @@ public class Service : IService
         var service = await _dbContext.Services.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
         if (service is null) throw new NotFoundException("Service not found.");
 
-        service.Title = request.Title.Trim();
-        service.Type = request.Type!.Value;
-        service.Album = JsonSerializer.Serialize(request.Album);
-        service.Region = request.Region.Trim();
-        service.IsPublic = request.IsPublic;
-        service.UpdatedAt = DateTime.UtcNow;
+        var now = DateTime.UtcNow;
+        var type = request.Type!.Value;
 
-        ApplyTypeFields(service, request.Type.Value, request);
+        if (request.Title is not null) service.Title = request.Title.Trim();
+        if (request.Album is not null) service.Album = JsonSerializer.Serialize(request.Album);
+        if (request.Region is not null) service.Region = request.Region.Trim();
+        if (request.IsPublic.HasValue) service.IsPublic = request.IsPublic.Value;
 
+        service.Type = type;
+        ApplyTypeFields(service, type, request);
+
+        if (request.Schedules is not null && (type == ServiceType.Tour || type == ServiceType.Combo))
+        {
+            var oldSchedules = await _dbContext.Schedules
+                .Where(x => x.ServiceId == id && !x.IsDeleted).ToListAsync();
+            foreach (var s in oldSchedules) { s.IsDeleted = true; s.UpdatedAt = now; }
+
+            _dbContext.Schedules.AddRange(request.Schedules.Select(s => new Repository.Entities.Schedule
+            {
+                Id = Guid.NewGuid(), ServiceId = id,
+                Day = s.Day.Trim(), Titile = s.Titile.Trim(),
+                Sumary = s.Sumary.Trim(), Description = s.Description.Trim(),
+                CreatedAt = now, UpdatedAt = now,
+            }));
+        }
+
+        if (request.ImportantInfors is not null && (type == ServiceType.Tour || type == ServiceType.Combo))
+        {
+            var oldInfors = await _dbContext.ImportantInfors
+                .Where(x => x.ServiceId == id && !x.IsDeleted).ToListAsync();
+            foreach (var i in oldInfors) { i.IsDeleted = true; i.UpdatedAt = now; }
+
+            _dbContext.ImportantInfors.AddRange(request.ImportantInfors.Select(i => new Repository.Entities.ImportantInfor
+            {
+                Id = Guid.NewGuid(), ServiceId = id,
+                Title = i.Title.Trim(), SubTitle = i.SubTitle.Trim(),
+                Description = i.Description.Trim(), CreatedAt = now, UpdatedAt = now,
+            }));
+        }
+
+        service.UpdatedAt = now;
         await _dbContext.SaveChangesAsync();
 
-        return ToResponse(service);
+        var response = ToResponse(service);
+        response.Schedules = (await _dbContext.Schedules
+            .AsNoTracking()
+            .Where(x => x.ServiceId == id && !x.IsDeleted)
+            .ToListAsync())
+            .Select(s => new SchedResponse
+            {
+                Id = s.Id, ServiceId = s.ServiceId, Day = s.Day ?? string.Empty,
+                Titile = s.Titile ?? string.Empty, Sumary = s.Sumary ?? string.Empty,
+                Description = s.Description ?? string.Empty, CreatedAt = s.CreatedAt, UpdatedAt = s.UpdatedAt,
+            }).ToList();
+        response.ImportantInfors = (await _dbContext.ImportantInfors
+            .AsNoTracking()
+            .Where(x => x.ServiceId == id && !x.IsDeleted)
+            .ToListAsync())
+            .Select(i => new ImpInforResponse
+            {
+                Id = i.Id, ServiceId = i.ServiceId, Title = i.Title ?? string.Empty,
+                SubTitle = i.SubTitle ?? string.Empty, Description = i.Description ?? string.Empty,
+                CreatedAt = i.CreatedAt, UpdatedAt = i.UpdatedAt,
+            }).ToList();
+        return response;
     }
 
     public async Task<string> DeleteAsync(Guid id)
@@ -277,65 +428,87 @@ public class Service : IService
         var service = await _dbContext.Services.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
         if (service is null) throw new NotFoundException("Service not found.");
 
+        var now = DateTime.UtcNow;
         service.IsDeleted = true;
-        service.UpdatedAt = DateTime.UtcNow;
+        service.UpdatedAt = now;
+
+        foreach (var s in await _dbContext.Schedules.Where(x => x.ServiceId == id && !x.IsDeleted).ToListAsync())
+        { s.IsDeleted = true; s.UpdatedAt = now; }
+
+        foreach (var i in await _dbContext.ImportantInfors.Where(x => x.ServiceId == id && !x.IsDeleted).ToListAsync())
+        { i.IsDeleted = true; i.UpdatedAt = now; }
+
+        foreach (var r in await _dbContext.RoomCategories.Where(x => x.ServiceId == id && !x.IsDeleted).ToListAsync())
+        { r.IsDeleted = true; r.UpdatedAt = now; }
+
+        foreach (var d in await _dbContext.DepartureSchedules.Where(x => x.ServiceId == id && !x.IsDeleted).ToListAsync())
+        { d.IsDeleted = true; d.UpdatedAt = now; }
+
         await _dbContext.SaveChangesAsync();
 
         return "Service deleted successfully.";
     }
 
     private static void ApplyTypeFields(Repository.Entities.Service service, ServiceType type,
-        string? introducetion, int day, int night, string? label,
+        string? introducetion, int? day, int? night, string? label,
         string? description, string? infor, string? highlight, string? code,
         string? instruct, string? feature,
         PurposeOfTrip? purposeOfTrip, string? destination, string? form, Classify? classify)
     {
-        service.Introducetion = null;
-        service.Day = null;
-        service.Night = null;
-        service.Label = null;
-        service.Description = null;
-        service.Infor = null;
-        service.Highlight = null;
-        service.Code = null;
-        service.Instruct = null;
-        service.Feature = null;
-        service.PurposeOfTrip = null;
-        service.Destination = null;
-        service.Form = null;
-        service.Classify = null;
-
         switch (type)
         {
             case ServiceType.Tour:
-                service.Day = day;
-                service.Night = night;
-                service.Description = description?.Trim();
-                service.Infor = infor?.Trim();
-                service.Highlight = highlight?.Trim();
-                service.Code = code?.Trim();
+                service.Introducetion = null;
+                service.Label = null;
+                service.Instruct = null;
+                service.Feature = null;
+                service.PurposeOfTrip = null;
+                service.Destination = null;
+                service.Form = null;
+                service.Classify = null;
+
+                if (day.HasValue) service.Day = day.Value;
+                if (night.HasValue) service.Night = night.Value;
+                if (description is not null) service.Description = description.Trim();
+                if (infor is not null) service.Infor = infor.Trim();
+                if (highlight is not null) service.Highlight = highlight.Trim();
+                if (code is not null) service.Code = code.Trim();
                 break;
 
             case ServiceType.Combo:
-                service.Night = night;
-                service.Label = label?.Trim();
-                service.Description = description?.Trim();
-                service.Infor = infor?.Trim();
-                service.Highlight = highlight?.Trim();
-                service.Code = code?.Trim();
-                service.PurposeOfTrip = purposeOfTrip;
-                service.Destination = destination?.Trim();
-                service.Form = form?.Trim();
-                service.Classify = classify;
+                service.Introducetion = null;
+                service.Day = null;
+                service.Instruct = null;
+                service.Feature = null;
+
+                if (night.HasValue) service.Night = night.Value;
+                if (label is not null) service.Label = label.Trim();
+                if (description is not null) service.Description = description.Trim();
+                if (infor is not null) service.Infor = infor.Trim();
+                if (highlight is not null) service.Highlight = highlight.Trim();
+                if (code is not null) service.Code = code.Trim();
+                if (purposeOfTrip.HasValue) service.PurposeOfTrip = purposeOfTrip.Value;
+                if (destination is not null) service.Destination = destination.Trim();
+                if (form is not null) service.Form = form.Trim();
+                if (classify.HasValue) service.Classify = classify.Value;
                 break;
 
             case ServiceType.Hotel:
-                service.Introducetion = introducetion?.Trim();
-                service.Instruct = instruct?.Trim();
-                service.Feature = feature?.Trim();
-                service.PurposeOfTrip = purposeOfTrip;
-                service.Destination = destination?.Trim();
-                service.Form = form?.Trim();
+                service.Day = null;
+                service.Night = null;
+                service.Label = null;
+                service.Description = null;
+                service.Infor = null;
+                service.Highlight = null;
+                service.Code = null;
+                service.Classify = null;
+
+                if (introducetion is not null) service.Introducetion = introducetion.Trim();
+                if (instruct is not null) service.Instruct = instruct.Trim();
+                if (feature is not null) service.Feature = feature.Trim();
+                if (purposeOfTrip.HasValue) service.PurposeOfTrip = purposeOfTrip.Value;
+                if (destination is not null) service.Destination = destination.Trim();
+                if (form is not null) service.Form = form.Trim();
                 break;
         }
     }
