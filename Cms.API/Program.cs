@@ -40,10 +40,6 @@ builder.Services.AddScoped<Cms.Service.Blog.IService, Cms.Service.Blog.Service>(
 builder.Services.AddScoped<Cms.Service.Taxonomy.IService, Cms.Service.Taxonomy.Service>();
 builder.Services.AddScoped<Cms.Service.PageContent.IService, Cms.Service.PageContent.Service>();
 builder.Services.AddScoped<Cms.Service.Service.IService, Cms.Service.Service.Service>();
-builder.Services.AddScoped<Cms.Service.Schedule.IService, Cms.Service.Schedule.Service>();
-builder.Services.AddScoped<Cms.Service.RoomCategory.IService, Cms.Service.RoomCategory.Service>();
-builder.Services.AddScoped<Cms.Service.DepartureSchedule.IService, Cms.Service.DepartureSchedule.Service>();
-builder.Services.AddScoped<Cms.Service.ImportantInfor.IService, Cms.Service.ImportantInfor.Service>();
 builder.Services.AddScoped<Cms.Service.SiteSetting.IService, Cms.Service.SiteSetting.Service>();
 builder.Services.AddValidatorsFromAssembly(Cms.Service.AssemblyReference.Assembly);
 
