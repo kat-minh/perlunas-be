@@ -8,6 +8,8 @@ public class Service : BaseEntity<Guid>, IAuditableEntity
     public string? Title { get; set; }
     public string Slug { get; set; } = string.Empty;
     public bool BestSeller { get; set; }
+    /// <summary>Tour: đánh dấu "Sắp ra mắt" — chưa cho xem chi tiết / hiện nhãn ở list.</summary>
+    public bool ComingSoon { get; set; }
     public string? Introducetion { get; set; }
     public int? Day { get; set; }
     public int? Night { get; set; }

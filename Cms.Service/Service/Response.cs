@@ -10,6 +10,8 @@ public class Response
         public string Title { get; set; } = string.Empty;
         public string Slug { get; set; } = string.Empty;
         public bool BestSeller { get; set; }
+        /// <summary>Tour: "Sắp ra mắt" — chưa cho xem chi tiết.</summary>
+        public bool ComingSoon { get; set; }
         public string Introducetion { get; set; } = string.Empty;
         public int Day { get; set; }
         public int Night { get; set; }

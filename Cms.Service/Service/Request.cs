@@ -64,6 +64,8 @@ public class Request
         public string Code { get; set; } = string.Empty;
         public bool IsPublic { get; set; }
         public bool BestSeller { get; set; }
+        /// <summary>Tour: đánh dấu "Sắp ra mắt".</summary>
+        public bool ComingSoon { get; set; }
         public List<ScheduleInline> Schedules { get; set; } = new();
         public List<ImportantInforInline> ImportantInfors { get; set; } = new();
         public List<DepartureScheduleInline> DepartureSchedules { get; set; } = new();
@@ -152,6 +154,8 @@ public class Request
         public ServiceType? Type { get; set; }
         public bool? IsPublic { get; set; }
         public bool? BestSeller { get; set; }
+        /// <summary>Tour: đánh dấu "Sắp ra mắt".</summary>
+        public bool? ComingSoon { get; set; }
         public string? PurposeOfTrip { get; set; }
         public string? Destination { get; set; }
         public string? Form { get; set; }

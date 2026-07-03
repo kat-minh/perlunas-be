@@ -304,6 +304,7 @@ public class Service : IService
             Title = request.Title.Trim(),
             Slug = Slug.GenerateSlug(request.Title),
             BestSeller = request.BestSeller,
+            ComingSoon = request.ComingSoon,
             Type = ServiceType.Tour,
             Day = request.Day,
             Night = request.Night,
@@ -620,6 +621,10 @@ public class Service : IService
         {
             service.BestSeller = request.BestSeller.Value;
         }
+        if (request.ComingSoon.HasValue)
+        {
+            service.ComingSoon = request.ComingSoon.Value;
+        }
 
         service.Type = type;
         ApplyTypeFields(service, type, request);
@@ -879,6 +884,7 @@ public class Service : IService
             Title = service.Title ?? string.Empty,
             Slug = service.Slug ?? string.Empty,
             BestSeller = service.BestSeller,
+            ComingSoon = service.ComingSoon,
             Introducetion = service.Introducetion ?? string.Empty,
             Day = service.Day ?? 0,
             Night = service.Night ?? 0,
