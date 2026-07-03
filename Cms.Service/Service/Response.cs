@@ -13,6 +13,8 @@ public class Response
         public string Introducetion { get; set; } = string.Empty;
         public int Day { get; set; }
         public int Night { get; set; }
+        /// <summary>Thời lượng chuỗi tự do (vd "3 ngày 2 đêm", "1 tuần") — hiển thị nguyên văn.</summary>
+        public string DurationText { get; set; } = string.Empty;
         public string Label { get; set; } = string.Empty;
         public List<string> Album { get; set; } = new();
         public string Region { get; set; } = string.Empty;
@@ -25,8 +27,16 @@ public class Response
         public List<string> Facilities { get; set; } = new();
         /// <summary>Tour: "Điểm nổi bật" dạng richtext (HTML) admin tự soạn.</summary>
         public string HighlightContent { get; set; } = string.Empty;
+        /// <summary>Tour: JSON 4 ô "Thông tin chính về chuyến đi" {"stay","sightsee","food","transport"}.</summary>
+        public string TripInfoJson { get; set; } = string.Empty;
         /// <summary>Giá hiển thị dạng chuỗi (vd "từ 2.890.000đ").</summary>
         public string PriceText { get; set; } = string.Empty;
+        /// <summary>Tour: đơn vị giá (vd "/ khách") admin nhập.</summary>
+        public string PriceUnit { get; set; } = string.Empty;
+        /// <summary>Combo: giá bán gói (chuỗi số). Rỗng với tour/khách sạn.</summary>
+        public string Price { get; set; } = string.Empty;
+        /// <summary>Combo: giá gốc trước giảm (để gạch + tính % giảm). Rỗng nếu không giảm.</summary>
+        public string OriginalPrice { get; set; } = string.Empty;
         public string Code { get; set; } = string.Empty;
         public string Instruct { get; set; } = string.Empty;
         public string Feature { get; set; } = string.Empty;

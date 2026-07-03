@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Cms.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Cms.Repository.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260703070428_SeedHotelRoomsAndDetails")]
+    partial class SeedHotelRoomsAndDetails
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -199,9 +202,6 @@ namespace Cms.Repository.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
-
-                    b.Property<string>("OriginalPrice")
-                        .HasColumnType("text");
 
                     b.Property<string>("Price")
                         .HasColumnType("text");
@@ -7014,9 +7014,6 @@ namespace Cms.Repository.Migrations
                         .IsRequired()
                         .HasColumnType("text[]");
 
-                    b.Property<string>("DurationText")
-                        .HasColumnType("text");
-
                     b.Property<List<string>>("Facilities")
                         .IsRequired()
                         .HasColumnType("text[]");
@@ -7057,16 +7054,7 @@ namespace Cms.Repository.Migrations
                     b.Property<int?>("Night")
                         .HasColumnType("integer");
 
-                    b.Property<string>("OriginalPrice")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Price")
-                        .HasColumnType("text");
-
                     b.Property<string>("PriceText")
-                        .HasColumnType("text");
-
-                    b.Property<string>("PriceUnit")
                         .HasColumnType("text");
 
                     b.Property<string>("PurposeOfTrip")
@@ -7085,9 +7073,6 @@ namespace Cms.Repository.Migrations
                     b.Property<string>("Title")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
-
-                    b.Property<string>("TripInfoJson")
-                        .HasColumnType("text");
 
                     b.Property<string>("Type")
                         .IsRequired()

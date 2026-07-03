@@ -6,6 +6,25 @@
 
 Ngày tổng hợp: 2026-07-03. Toàn bộ thay đổi nằm trong repo `be-v2` (đã có sẵn migration).
 
+> **Bổ sung 2026-07-03 (chiều) — Combo có GIÁ GÓI riêng:** thêm 2 cột `Services.Price` +
+> `Services.OriginalPrice` (string, nullable) — combo bán theo GÓI nên giá nằm ở cấp dịch vụ,
+> KHÔNG ở hạng phòng. Migration viết tay `20260703130000_AddComboPackagePrice` (đã cập nhật
+> snapshot). Thay đổi kèm theo trong `Cms.Service/Service`:
+> - `Request`: `CreateComboRequest` + `UpdateServiceRequest` thêm `Price`, `OriginalPrice`.
+> - `Service.cs`: CreateCombo/Update set `service.Price/OriginalPrice`; **hạng phòng của combo
+>   ép `Price=OriginalPrice=Unit=null`** (chỉ mô tả, không giá); `ApplyTypeFields` combo set giá
+>   gói, tour/hotel null 2 cột này; `ComputePriceFrom` với combo = `Price` (fallback `OriginalPrice`)
+>   thay vì gộp từ hạng phòng; `ToResponse` trả thêm 2 field.
+> - "Gói gồm có" của combo tái dụng field sẵn có: `Label` = tagline, `Highlight[]` = danh sách mục
+>   (KHÔNG cần đổi BE — Create/Update đã lưu sẵn).
+>
+> **Bổ sung 2 — Thời lượng là CHUỖI TỰ DO:** thêm cột `Services.DurationText` (string, nullable)
+> — admin nhập tự do ("3 ngày 2 đêm", "1 tuần", "cuối tuần"), hiển thị nguyên văn. Migration
+> `20260703140000_AddServiceDurationText`. `Day/Night` giờ chỉ parse phụ trợ. **ĐÃ BỎ ràng buộc
+> `Day/Night > 0`** ở CreateTour/CreateCombo + UpdateService validator (cho phép night=0). Request
+> (Create tour/combo + Update) + Response + ToResponse + ApplyTypeFields (tour/combo set, hotel null)
+> đều thêm DurationText. Combo cũng bật lại `HighlightContent` (Điểm nổi bật) + giữ `Day`.
+
 ---
 
 ## 0. Tóm tắt nhanh (TL;DR)

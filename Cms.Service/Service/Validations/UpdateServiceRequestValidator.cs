@@ -15,24 +15,13 @@ public class UpdateServiceRequestValidator : AbstractValidator<Request.UpdateSer
 
         RuleFor(x => x.Introducetion).NotEmpty().WithMessage("INTRODUCTION_REQUIRED")
             .When(x => x.Introducetion != null && x.Type != ServiceType.Tour && x.Type != ServiceType.Combo);
-        RuleFor(x => x.Day).GreaterThan(0).WithMessage("DAY_MUST_BE_GREATER_THAN_ZERO")
-            .When(x => x.Day != null && x.Type != ServiceType.Combo && x.Type != ServiceType.Hotel);
-        RuleFor(x => x.Night).GreaterThan(0).WithMessage("NIGHT_MUST_BE_GREATER_THAN_ZERO")
-            .When(x => x.Night != null && x.Type != ServiceType.Hotel);
-        RuleFor(x => x.Label).NotEmpty().WithMessage("LABEL_REQUIRED")
-            .When(x => x.Label != null && x.Type != ServiceType.Tour && x.Type != ServiceType.Hotel);
+        // Thời lượng giờ là chuỗi tự do (DurationText) → Day/Night chỉ phụ trợ,
+        // KHÔNG còn bắt buộc > 0 (cho phép "1 tuần", "cuối tuần"…).
+        // Description chỉ bắt buộc cho Tour (ô "Vì sao có hành trình này").
         RuleFor(x => x.Description).NotEmpty().WithMessage("DESCRIPTION_REQUIRED")
-            .When(x => x.Description != null && x.Type != ServiceType.Hotel);
-        RuleFor(x => x.Infor).NotEmpty().WithMessage("INFOR_REQUIRED")
-            .When(x => x.Infor != null && x.Type != ServiceType.Hotel);
-        RuleFor(x => x.Highlight).NotEmpty().WithMessage("HIGHLIGHT_REQUIRED")
-            .When(x => x.Highlight != null && x.Type != ServiceType.Hotel);
-        RuleFor(x => x.Code).NotEmpty().WithMessage("CODE_REQUIRED")
-            .When(x => x.Code != null && x.Type != ServiceType.Hotel);
-        RuleFor(x => x.Instruct).NotEmpty().WithMessage("INSTRUCT_REQUIRED")
-            .When(x => x.Instruct != null && x.Type != ServiceType.Tour && x.Type != ServiceType.Combo);
-        RuleFor(x => x.Feature).NotEmpty().WithMessage("FEATURE_REQUIRED")
-            .When(x => x.Feature != null && x.Type != ServiceType.Tour && x.Type != ServiceType.Combo);
+            .When(x => x.Description != null && x.Type == ServiceType.Tour);
+        // Label / Infor / Highlight / Code: không còn bắt buộc cho loại nào
+        // (tour & combo đã bỏ khỏi form; hotel vốn không có).
 
         RuleFor(x => x.PurposeOfTrip).NotEmpty().WithMessage("PURPOSE_OF_TRIP_REQUIRED")
             .When(x => x.PurposeOfTrip != null && (x.Type == ServiceType.Combo || x.Type == ServiceType.Hotel));

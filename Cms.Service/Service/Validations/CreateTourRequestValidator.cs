@@ -7,14 +7,12 @@ public class CreateTourRequestValidator : AbstractValidator<Request.CreateTourRe
     public CreateTourRequestValidator()
     {
         RuleFor(x => x.Title).NotEmpty().WithMessage("TITLE_REQUIRED");
-        RuleFor(x => x.Day).GreaterThan(0).WithMessage("DAY_MUST_BE_GREATER_THAN_ZERO");
-        RuleFor(x => x.Night).GreaterThan(0).WithMessage("NIGHT_MUST_BE_GREATER_THAN_ZERO");
+        // Thời lượng giờ là chuỗi tự do (DurationText) → KHÔNG bắt buộc Day/Night > 0.
         RuleFor(x => x.Album).NotEmpty().WithMessage("ALBUM_REQUIRED");
         RuleFor(x => x.Region).NotEmpty().WithMessage("REGION_REQUIRED");
         RuleFor(x => x.Description).NotEmpty().WithMessage("DESCRIPTION_REQUIRED");
-        RuleFor(x => x.Infor).NotEmpty().WithMessage("INFOR_REQUIRED");
-        RuleFor(x => x.Highlight).NotEmpty().WithMessage("HIGHLIGHT_REQUIRED");
-        RuleFor(x => x.Code).NotEmpty().WithMessage("CODE_REQUIRED");
+        // Bỏ bắt buộc Infor / Highlight / Code cho tour: các field này không hiển thị
+        // trên trang tour (không nhập ở form nữa) — xem admin ServiceForm.
         RuleFor(x => x.Schedules).NotEmpty().WithMessage("SCHEDULES_REQUIRED");
         RuleForEach(x => x.Schedules).ChildRules(s =>
         {
@@ -33,7 +31,7 @@ public class CreateTourRequestValidator : AbstractValidator<Request.CreateTourRe
             d.RuleFor(x => x.StartTime).NotEmpty().WithMessage("DEPARTURE_START_TIME_REQUIRED");
             d.RuleFor(x => x.Code).NotEmpty().WithMessage("DEPARTURE_CODE_REQUIRED");
             d.RuleFor(x => x.Price).NotEmpty().WithMessage("DEPARTURE_PRICE_REQUIRED");
-            d.RuleFor(x => x.AccommodationStandards).NotEmpty().WithMessage("DEPARTURE_ACCOMMODATION_STANDARDS_REQUIRED");
+            // "Chuẩn lưu trú" (AccommodationStandards) không bắt buộc — có thể để trống.
         });
     }
 }
