@@ -80,7 +80,10 @@ public class Service : IService
         var item = await _dbContext.Taxonomies.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
         if (item is null) throw new NotFoundException("Taxonomy not found.");
 
-        item.Name = request.Name.Trim();
+        var oldName = item.Name;
+        var newName = request.Name.Trim();
+
+        item.Name = newName;
         item.Slug = string.IsNullOrWhiteSpace(request.Slug) ? null : request.Slug.Trim();
         item.Color = string.IsNullOrWhiteSpace(request.Color) ? null : request.Color.Trim();
         item.SortOrder = request.SortOrder;
@@ -88,7 +91,42 @@ public class Service : IService
 
         await _dbContext.SaveChangesAsync();
 
+        // Tham chiếu theo Name → khi ĐỔI TÊN, cascade cập nhật vào mọi Service đang
+        // dùng tên cũ (đúng field theo Group) để dữ liệu không bị lệch.
+        if (!string.IsNullOrEmpty(oldName) && oldName != newName)
+            await CascadeRenameAsync(item.Group, oldName, newName);
+
         return ToResponse(item);
+    }
+
+    /// <summary>Đổi tên danh mục cũ→mới trên đúng field Service (bulk update).</summary>
+    private async Task CascadeRenameAsync(string group, string oldName, string newName)
+    {
+        var now = DateTime.UtcNow;
+        var q = _dbContext.Services.Where(x => !x.IsDeleted);
+        switch (group?.Trim().ToLower())
+        {
+            case "region":
+                await q.Where(x => x.Region == oldName)
+                    .ExecuteUpdateAsync(s => s.SetProperty(x => x.Region, newName).SetProperty(x => x.UpdatedAt, now));
+                break;
+            case "city":
+                await q.Where(x => x.Destination == oldName)
+                    .ExecuteUpdateAsync(s => s.SetProperty(x => x.Destination, newName).SetProperty(x => x.UpdatedAt, now));
+                break;
+            case "stay-type":
+                await q.Where(x => x.Form == oldName)
+                    .ExecuteUpdateAsync(s => s.SetProperty(x => x.Form, newName).SetProperty(x => x.UpdatedAt, now));
+                break;
+            case "tier":
+                await q.Where(x => x.Classify == oldName)
+                    .ExecuteUpdateAsync(s => s.SetProperty(x => x.Classify, newName).SetProperty(x => x.UpdatedAt, now));
+                break;
+            case "purpose":
+                await q.Where(x => x.PurposeOfTrip == oldName)
+                    .ExecuteUpdateAsync(s => s.SetProperty(x => x.PurposeOfTrip, newName).SetProperty(x => x.UpdatedAt, now));
+                break;
+        }
     }
 
     public async Task<string> DeleteAsync(Guid id)
