@@ -96,11 +96,39 @@ public class Service : IService
         var item = await _dbContext.Taxonomies.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
         if (item is null) throw new NotFoundException("Taxonomy not found.");
 
+        // Tham chiếu theo GIÁ TRỊ (Name) chứ không phải FK → không dựa vào ràng buộc
+        // DB được. Vì vậy chặn ở tầng service: không cho xoá danh mục đang được một
+        // Service nào đó dùng (khớp Name theo đúng field ứng với Group).
+        var inUse = await CountServicesUsingAsync(item.Group, item.Name);
+        if (inUse > 0)
+            throw new ConflictException(
+                $"Không thể xoá danh mục \"{item.Name}\": đang được {inUse} dịch vụ sử dụng. " +
+                "Hãy đổi các dịch vụ đó sang danh mục khác trước khi xoá.");
+
         item.IsDeleted = true;
         item.UpdatedAt = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
 
         return "Taxonomy deleted successfully.";
+    }
+
+    /// <summary>
+    /// Đếm số Service (chưa xoá) đang tham chiếu tới taxonomy này. Mỗi Group ứng
+    /// với một field string trên Service: region→Region, city→Destination,
+    /// stay-type→Form, tier→Classify, purpose→PurposeOfTrip.
+    /// </summary>
+    private Task<int> CountServicesUsingAsync(string group, string name)
+    {
+        var q = _dbContext.Services.AsNoTracking().Where(x => !x.IsDeleted);
+        return (group?.Trim().ToLower()) switch
+        {
+            "region" => q.Where(x => x.Region == name).CountAsync(),
+            "city" => q.Where(x => x.Destination == name).CountAsync(),
+            "stay-type" => q.Where(x => x.Form == name).CountAsync(),
+            "tier" => q.Where(x => x.Classify == name).CountAsync(),
+            "purpose" => q.Where(x => x.PurposeOfTrip == name).CountAsync(),
+            _ => Task.FromResult(0),
+        };
     }
 
     private static Response.TaxonomyResponse ToResponse(Repository.Entities.Taxonomy item)
