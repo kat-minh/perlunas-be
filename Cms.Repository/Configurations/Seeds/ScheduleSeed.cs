@@ -73,5 +73,45 @@ public static class ScheduleSeed
             Day("cccc0005-0000-0000-0000-000000000003", NhaTrang, "Ngày 3", "Tháp Bà – tiễn sân bay", "Ăn sáng",
                 "Tham quan Tháp Bà Ponagar, nhà thờ Núi. Trả phòng, mua đặc sản biển và ra sân bay, kết thúc chuyến đi.")
         );
+
+        // ── Combo: lịch trình nghỉ dưỡng theo số ngày mỗi combo ──
+        var comboScheds = new System.Collections.Generic.List<Schedule>();
+        foreach (var c in ComboSeedData.All)
+        {
+            for (int d = 1; d <= c.Days; d++)
+            {
+                string title, meals, desc;
+                if (d == 1)
+                {
+                    title = $"Đến {c.City} – nhận phòng";
+                    meals = "Ăn theo tiêu chuẩn gói";
+                    desc = $"Quý khách đến {c.City}, làm thủ tục nhận phòng tại {c.Hotel}. Tự do nghỉ ngơi, tận hưởng tiện ích và dùng bữa theo tiêu chuẩn gói.";
+                }
+                else if (d == c.Days)
+                {
+                    title = $"{c.City} – trả phòng";
+                    meals = "Ăn sáng tại khách sạn";
+                    desc = "Tự do ăn sáng, thư giãn và mua sắm đặc sản làm quà. Quý khách làm thủ tục trả phòng, kết thúc kỳ nghỉ. Hẹn gặp lại quý khách.";
+                }
+                else
+                {
+                    title = $"Tự do tại {c.City}";
+                    meals = "Ăn sáng tại khách sạn";
+                    desc = $"Tự do tận hưởng {c.Hotel} hoặc khám phá {c.City} theo sở thích. Perlunas sẵn sàng gợi ý điểm tham quan, ẩm thực và trải nghiệm địa phương.";
+                }
+                comboScheds.Add(new Schedule
+                {
+                    Id = System.Guid.Parse($"cbbb00{c.Ci:D2}-0000-0000-0000-0000000000{d:D2}"),
+                    ServiceId = c.Id,
+                    Day = $"Ngày {d}",
+                    Titile = title,
+                    Sumary = meals,
+                    Description = desc,
+                    CreatedAt = SeedIds.CreatedAt,
+                    UpdatedAt = SeedIds.CreatedAt,
+                });
+            }
+        }
+        builder.HasData(comboScheds);
     }
 }

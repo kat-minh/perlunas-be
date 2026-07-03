@@ -52,6 +52,37 @@ public static class ImportantInforSeed
             "Huỷ trong vòng 7 ngày: phí huỷ 100% giá tour"),
     };
 
+    private static readonly (string Title, string Desc)[] ComboBlocks =
+    {
+        ("Giá gói bao gồm",
+            "Phòng nghỉ tại khách sạn/resort theo tiêu chuẩn gói\n" +
+            "Ăn sáng mỗi ngày tại khách sạn\n" +
+            "Các dịch vụ và tiện ích theo chương trình gói\n" +
+            "Ưu đãi/quà tặng đi kèm gói (nếu có)"),
+        ("Giá gói chưa bao gồm",
+            "Vé máy bay/di chuyển đến điểm đến (nếu không nêu trong gói)\n" +
+            "Chi phí cá nhân, giặt ủi, đồ uống ngoài chương trình\n" +
+            "Các bữa ăn và dịch vụ không liệt kê trong gói\n" +
+            "Phụ thu nâng hạng phòng, ngày lễ, Tết và cao điểm\n" +
+            "Thuế VAT xuất hoá đơn (nếu khách yêu cầu)"),
+        ("Chính sách trẻ em",
+            "Trẻ dưới 5 tuổi: miễn phí, ngủ chung giường với bố mẹ; 2 người lớn kèm tối đa 1 trẻ\n" +
+            "Trẻ 5 – dưới 12 tuổi: phụ thu suất ăn/giường phụ theo quy định khách sạn\n" +
+            "Trẻ từ 12 tuổi: tính tiêu chuẩn như người lớn"),
+        ("Điều kiện đăng ký & thanh toán",
+            "Đặt cọc 50% giá gói khi đăng ký để giữ chỗ\n" +
+            "Thanh toán phần còn lại trước ngày nhận phòng tối thiểu 7 ngày\n" +
+            "Cung cấp đầy đủ họ tên, số điện thoại, email khi đăng ký"),
+        ("Điều kiện đổi & huỷ",
+            "Huỷ trước ngày nhận phòng từ 15 ngày: phí 30% giá gói\n" +
+            "Huỷ trước 7 – 14 ngày: phí 50% giá gói\n" +
+            "Huỷ trong vòng 6 ngày hoặc không nhận phòng (no-show): phí 100% giá gói\n" +
+            "Ngày lễ, Tết áp dụng chính sách riêng, phí huỷ cao hơn"),
+        ("Trường hợp bất khả kháng",
+            "Bất khả kháng (thiên tai, dịch bệnh, thời tiết xấu, chuyến bay delay/huỷ…): hai bên không bồi thường mà cùng thương lượng hợp lý, đảm bảo quyền lợi tối đa cho khách\n" +
+            "Perlunas có quyền điều chỉnh dịch vụ tương đương vì lý do khách quan nhưng vẫn đảm bảo tiêu chuẩn của gói"),
+    };
+
     public static void SeedImportantInfor(this EntityTypeBuilder<ImportantInfor> builder)
     {
         var rows = new System.Collections.Generic.List<ImportantInfor>();
@@ -71,6 +102,24 @@ public static class ImportantInforSeed
                 });
             }
         }
+        // ── Combo: 6 khối điều khoản chuẩn cho mỗi combo ──
+        foreach (var c in ComboSeedData.All)
+        {
+            for (int b = 0; b < ComboBlocks.Length; b++)
+            {
+                rows.Add(new ImportantInfor
+                {
+                    Id = System.Guid.Parse($"cccf00{c.Ci:D2}-0000-0000-0000-0000000000{b + 1:D2}"),
+                    ServiceId = c.Id,
+                    Title = ComboBlocks[b].Title,
+                    SubTitle = null,
+                    Description = ComboBlocks[b].Desc,
+                    CreatedAt = SeedIds.CreatedAt,
+                    UpdatedAt = SeedIds.CreatedAt,
+                });
+            }
+        }
+
         builder.HasData(rows);
     }
 }

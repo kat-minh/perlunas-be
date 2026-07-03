@@ -54,5 +54,30 @@ public static class RoomCategorySeed
             new RoomCategory { Id = Guid.Parse("6a4f7b2f-5a2c-87a5-620f-a7551777ca7d"), ServiceId = Guid.Parse("e50a45c4-40d6-316f-0e40-2e58860b0f8e"), Titile = @"Standard", NumberOfCustomer = 2, Acreage = @"24 m²", NumberOfBed = @"1 giường đôi hoặc 2 giường đơn", Description = @"Phòng tiêu chuẩn ấm cúng, đầy đủ tiện nghi cơ bản cho 2 khách.", Feature = @"[""Wifi miễn phí"",""Điều hòa"",""TV màn hình phẳng"",""Minibar""]", Album = @"[""https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1400&q=70"",""https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1400&q=70"",""https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1400&q=70""]", Price = @"1900000", OriginalPrice = @"2400000", Unit = @"/ đêm", CreatedAt = SeedIds.CreatedAt, UpdatedAt = SeedIds.CreatedAt },
             new RoomCategory { Id = Guid.Parse("d205a310-226e-8ef9-19f5-a4b2b08bcf54"), ServiceId = Guid.Parse("e50a45c4-40d6-316f-0e40-2e58860b0f8e"), Titile = @"Deluxe", NumberOfCustomer = 2, Acreage = @"32 m²", NumberOfBed = @"1 giường đôi lớn", Description = @"Rộng rãi hơn với ban công riêng và góc thư giãn.", Feature = @"[""Ban công riêng"",""Bồn tắm"",""Wifi miễn phí"",""Bàn làm việc""]", Album = @"[""https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1400&q=70"",""https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=1400&q=70"",""https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=1400&q=70""]", Price = @"2500000", OriginalPrice = @"3600000", Unit = @"/ đêm", CreatedAt = SeedIds.CreatedAt, UpdatedAt = SeedIds.CreatedAt },
             new RoomCategory { Id = Guid.Parse("dd22ef47-b31f-0842-94e6-7e3a794e01b3"), ServiceId = Guid.Parse("e50a45c4-40d6-316f-0e40-2e58860b0f8e"), Titile = @"Suite", NumberOfCustomer = 3, Acreage = @"48 m²", NumberOfBed = @"1 giường King + sofa", Description = @"Hạng phòng cao cấp nhất với phòng khách riêng và tầm nhìn đẹp.", Feature = @"[""Phòng khách riêng"",""View đẹp"",""Bồn tắm nằm"",""Đưa đón sân bay""]", Album = @"[""https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=1400&q=70"",""https://images.unsplash.com/photo-1590490360182-c33d57733427?w=1400&q=70"",""https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=1400&q=70""]", Price = @"3400000", OriginalPrice = @"5400000", Unit = @"/ đêm", CreatedAt = SeedIds.CreatedAt, UpdatedAt = SeedIds.CreatedAt });
+
+        // ── Combo: mỗi combo 1 hạng phòng cố định theo hạng ngọc trai ──
+        var comboRooms = new System.Collections.Generic.List<RoomCategory>();
+        foreach (var c in ComboSeedData.All)
+        {
+            var r = ComboSeedData.RoomOf(c.Tier);
+            comboRooms.Add(new RoomCategory
+            {
+                Id = System.Guid.Parse($"caaa00{c.Ci:D2}-0000-0000-0000-000000000001"),
+                ServiceId = c.Id,
+                Titile = r.Name,
+                NumberOfCustomer = r.Guests,
+                Acreage = r.Size,
+                NumberOfBed = r.Bed,
+                Description = r.Desc,
+                Feature = r.Feature,
+                Album = ComboSeedData.RoomAlbum,
+                Price = r.Price,
+                OriginalPrice = r.OriginalPrice,
+                Unit = "/ đêm",
+                CreatedAt = SeedIds.CreatedAt,
+                UpdatedAt = SeedIds.CreatedAt,
+            });
+        }
+        builder.HasData(comboRooms);
     }
 }
