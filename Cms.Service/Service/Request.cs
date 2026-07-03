@@ -51,6 +51,8 @@ public class Request
         public string Description { get; set; } = string.Empty;
         public string Infor { get; set; } = string.Empty;
         public List<string> Highlight { get; set; } = new();
+        public List<string> Destinations { get; set; } = new();
+        public string HighlightContent { get; set; } = string.Empty;
         public string Code { get; set; } = string.Empty;
         public bool IsPublic { get; set; }
         public bool BestSeller { get; set; }
@@ -70,10 +72,10 @@ public class Request
         public string Infor { get; set; } = string.Empty;
         public List<string> Highlight { get; set; } = new();
         public string Code { get; set; } = string.Empty;
-        public PurposeOfTrip PurposeOfTrip { get; set; }
+        public string PurposeOfTrip { get; set; } = string.Empty;
         public string Destination { get; set; } = string.Empty;
         public string Form { get; set; } = string.Empty;
-        public Classify Classify { get; set; }
+        public string Classify { get; set; } = string.Empty;
         public bool IsPublic { get; set; }
         public bool BestSeller { get; set; }
         public List<ScheduleInline> Schedules { get; set; } = new();
@@ -89,7 +91,8 @@ public class Request
         public string Region { get; set; } = string.Empty;
         public string Instruct { get; set; } = string.Empty;
         public string Feature { get; set; } = string.Empty;
-        public PurposeOfTrip PurposeOfTrip { get; set; }
+        public List<string> Facilities { get; set; } = new();
+        public string PurposeOfTrip { get; set; } = string.Empty;
         public string Destination { get; set; } = string.Empty;
         public string Form { get; set; } = string.Empty;
         public bool IsPublic { get; set; }
@@ -109,16 +112,19 @@ public class Request
         public string? Description { get; set; }
         public string? Infor { get; set; }
         public List<string>? Highlight { get; set; }
+        public List<string>? Destinations { get; set; }
+        public List<string>? Facilities { get; set; }
+        public string? HighlightContent { get; set; }
         public string? Code { get; set; }
         public string? Instruct { get; set; }
         public string? Feature { get; set; }
         public ServiceType? Type { get; set; }
         public bool? IsPublic { get; set; }
         public bool? BestSeller { get; set; }
-        public PurposeOfTrip? PurposeOfTrip { get; set; }
+        public string? PurposeOfTrip { get; set; }
         public string? Destination { get; set; }
         public string? Form { get; set; }
-        public Classify? Classify { get; set; }
+        public string? Classify { get; set; }
         public List<ScheduleInline>? Schedules { get; set; }
         public List<ImportantInforInline>? ImportantInfors { get; set; }
         public List<DepartureScheduleInline>? DepartureSchedules { get; set; }

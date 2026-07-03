@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Cms.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Cms.Repository.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260703024418_EnrichBlogSlugCoverContent")]
+    partial class EnrichBlogSlugCoverContent
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -5995,62 +5998,6 @@ namespace Cms.Repository.Migrations
                             PageKey = "Trang Liên hệ",
                             SectionKey = "",
                             SoftOrder = 405,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("c62cfe08-2059-2c14-dc76-a6bc48ae5e87"),
-                            ContentValue = "Tour trọn gói\nKhách sạn\nGói du lịch\nTour đoàn\nTour riêng",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "lf.opts.services",
-                            Kind = "list",
-                            Label = "LeadForm options: dịch vụ quan tâm",
-                            PageKey = "Form liên hệ / đặt",
-                            SectionKey = "",
-                            SoftOrder = 406,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("57a61f6f-7b89-2f21-183d-b0f4c3be804a"),
-                            ContentValue = "1 người\n2 người\n3 - 5 người\n6 - 10 người\nTrên 10 người",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "lf.opts.group",
-                            Kind = "list",
-                            Label = "LeadForm options: số người",
-                            PageKey = "Form liên hệ / đặt",
-                            SectionKey = "",
-                            SoftOrder = 407,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("c6c59c34-9511-fba9-97bf-258ad50f1405"),
-                            ContentValue = "Dưới 3 triệu\n3 - 5 triệu\n5 - 10 triệu\nTrên 10 triệu",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "lf.opts.budget",
-                            Kind = "list",
-                            Label = "LeadForm options: ngân sách",
-                            PageKey = "Form liên hệ / đặt",
-                            SectionKey = "",
-                            SoftOrder = 408,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("6bc4f3b8-af9d-745b-a9af-0ddf0ac47953"),
-                            ContentValue = "Facebook / Instagram\nGoogle\nBạn bè giới thiệu\nĐã đi cùng Perlunas\nKhác",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "lf.opts.sources",
-                            Kind = "list",
-                            Label = "LeadForm options: biết qua đâu",
-                            PageKey = "Form liên hệ / đặt",
-                            SectionKey = "",
-                            SoftOrder = 409,
                             UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });

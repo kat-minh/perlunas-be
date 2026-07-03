@@ -32,6 +32,13 @@ public class BlogsController : ControllerBase
         return Ok(ApiResponseFactory.Base(result, true, "", HttpContext.TraceIdentifier));
     }
 
+    [HttpGet("slug/{slug}")]
+    public async Task<IActionResult> GetBySlug(string slug)
+    {
+        var result = await _blogService.GetBySlugAsync(slug);
+        return Ok(ApiResponseFactory.Base(result, true, "", HttpContext.TraceIdentifier));
+    }
+
     [HttpPost]
     [Authorize]
     public async Task<IActionResult> Create([FromBody] BlogService.Request.CreateBlogRequest request)

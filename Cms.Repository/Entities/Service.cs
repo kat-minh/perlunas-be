@@ -17,15 +17,27 @@ public class Service : BaseEntity<Guid>, IAuditableEntity
     public string? Description { get; set; }
     public string? Infor { get; set; }
     public List<string> Highlight { get; set; } = new();
+    /// <summary>Tour: các điểm đến (tên/slug tỉnh) — để gợi ý khách sạn tại nơi đến.</summary>
+    public List<string> Destinations { get; set; } = new();
+    /// <summary>Hotel: tiện nghi nổi bật (Wifi, Hồ bơi…) cấp khách sạn.</summary>
+    public List<string> Facilities { get; set; } = new();
+    /// <summary>Tour: nội dung "Điểm nổi bật" dạng richtext (HTML) admin tự soạn.</summary>
+    public string? HighlightContent { get; set; }
+    /// <summary>Giá hiển thị dạng chuỗi (vd "từ 2.890.000đ") — dùng cho thẻ/vé.</summary>
+    public string? PriceText { get; set; }
     public string? Code { get; set; }
     public string? Instruct { get; set; }
     public string? Feature { get; set; }
     public ServiceType Type { get; set; }
     public bool IsPublic { get; set; }
-    public PurposeOfTrip? PurposeOfTrip { get; set; }
+    /// <summary>Tham chiếu danh mục nhóm "purpose" (theo Name). Trước là enum.</summary>
+    public string? PurposeOfTrip { get; set; }
+    /// <summary>Tham chiếu danh mục nhóm "city" (theo Name).</summary>
     public string? Destination { get; set; }
+    /// <summary>Tham chiếu danh mục nhóm "stay-type" (theo Name).</summary>
     public string? Form { get; set; }
-    public Classify? Classify { get; set; }
+    /// <summary>Tham chiếu danh mục nhóm "tier" (theo Name). Trước là enum.</summary>
+    public string? Classify { get; set; }
 
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

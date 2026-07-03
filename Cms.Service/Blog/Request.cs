@@ -10,6 +10,9 @@ public class Request
         public string ReadingTime { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string Tag { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty;
+        public string Cover { get; set; } = string.Empty;
+        public string Content { get; set; } = string.Empty;
     }
 
     public class UpdateBlogRequest
@@ -20,5 +23,8 @@ public class Request
         public string ReadingTime { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string Tag { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty;
+        public string Cover { get; set; } = string.Empty;
+        public string Content { get; set; } = string.Empty;
     }
 }

@@ -74,6 +74,9 @@ public class Service : IService
             ReadingTime = request.ReadingTime.Trim(),
             Description = request.Description.Trim(),
             Tag = request.Tag.Trim(),
+            Slug = request.Slug.Trim(),
+            Cover = request.Cover.Trim(),
+            Content = request.Content,
             CreatedAt = now,
             UpdatedAt = now,
         };
@@ -97,6 +100,9 @@ public class Service : IService
         blog.ReadingTime = request.ReadingTime.Trim();
         blog.Description = request.Description.Trim();
         blog.Tag = request.Tag.Trim();
+        blog.Slug = request.Slug.Trim();
+        blog.Cover = request.Cover.Trim();
+        blog.Content = request.Content;
         blog.UpdatedAt = DateTime.UtcNow;
 
         await _dbContext.SaveChangesAsync();
@@ -127,8 +133,31 @@ public class Service : IService
             ReadingTime = blog.ReadingTime ?? string.Empty,
             Description = blog.Description ?? string.Empty,
             Tag = blog.Tag ?? string.Empty,
+            Slug = blog.Slug ?? string.Empty,
+            Cover = blog.Cover ?? string.Empty,
+            Content = blog.Content ?? string.Empty,
             CreatedAt = blog.CreatedAt,
             UpdatedAt = blog.UpdatedAt,
         };
+    }
+
+    public async Task<Response.BlogResponse> GetBySlugAsync(string slug)
+    {
+        var blog = await _dbContext.Blogs
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Slug == slug && !x.IsDeleted);
+
+        if (blog is null) throw new NotFoundException("Blog not found.");
+
+        var response = ToResponse(blog);
+        response.RecentBlogs = await _dbContext.Blogs
+            .AsNoTracking()
+            .Where(x => !x.IsDeleted && x.Id != blog.Id)
+            .OrderByDescending(x => x.CreatedAt)
+            .Take(3)
+            .Select(x => ToResponse(x))
+            .ToListAsync();
+
+        return response;
     }
 }

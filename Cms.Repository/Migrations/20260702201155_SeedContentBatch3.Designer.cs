@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Cms.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Cms.Repository.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260702201155_SeedContentBatch3")]
+    partial class SeedContentBatch3
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -33,13 +36,6 @@ namespace Cms.Repository.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<string>("Content")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Cover")
-                        .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
-
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -54,10 +50,6 @@ namespace Cms.Repository.Migrations
                     b.Property<string>("ReadingTime")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
-
-                    b.Property<string>("Slug")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
 
                     b.Property<string>("SubTitile")
                         .HasMaxLength(255)
@@ -76,8 +68,6 @@ namespace Cms.Repository.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Slug");
-
                     b.ToTable("Blogs", (string)null);
 
                     b.HasData(
@@ -85,13 +75,10 @@ namespace Cms.Repository.Migrations
                         {
                             Id = new Guid("01b1cff1-b779-6962-501d-d1fad40823d1"),
                             Author = "Perlunas Team",
-                            Content = "<p>Nằm trên cao nguyên Lâm Viên ở độ cao hơn 1.500m, Đà Lạt giữ cho mình khí hậu ôn hoà quanh năm. Nhưng để chọn đúng thời điểm cho chuyến đi, bạn nên cân nhắc mục đích: săn hoa, săn mây, hay đơn giản là tránh nóng.</p><h2>Mùa khô (tháng 11 đến tháng 4)</h2><p>Đây là mùa đẹp nhất để ghé Đà Lạt: trời trong, nắng nhẹ, rất hợp cho việc dạo phố và chụp ảnh. Cuối năm còn là mùa hoa dã quỳ nhuộm vàng các triền đồi, rồi mai anh đào nở rộ vào khoảng tháng 1 - 2.</p><p>Nếu thích săn mây, hãy dậy sớm và tìm tới Cầu Đất hay đồi Đa Phú lúc bình minh. Mang theo áo ấm vì sáng sớm nhiệt độ có thể xuống 10°C.</p><figure><img src=\"https://images.unsplash.com/photo-1528127269322-539801943592?fm=jpg&amp;q=60&amp;w=1600&amp;auto=format&amp;fit=crop\" alt=\"Bình minh săn mây trên cao nguyên Đà Lạt.\"/><figcaption>Bình minh săn mây trên cao nguyên Đà Lạt.</figcaption></figure><h2>Mùa mưa (tháng 5 đến tháng 10)</h2><p>Mưa Đà Lạt thường đến vào buổi chiều và nhanh tạnh, nên bạn vẫn có cả buổi sáng để khám phá. Bù lại, cảnh vật xanh mướt, thác đổ mạnh và giá phòng dễ chịu hơn hẳn.</p><h2>Gợi ý từ Perlunas</h2><p>Với gia đình có trẻ nhỏ, tháng 12 đến tháng 2 là lựa chọn an toàn và nhiều hoa. Với các cặp đôi muốn không gian riêng tư, mùa mưa lại mang đến một Đà Lạt trầm lắng, lãng mạn đúng chất.</p>",
-                            Cover = "https://hoanghamobile.com/tin-tuc/wp-content/uploads/2024/07/anh-da-lat-2.jpg",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Đà Lạt đẹp quanh năm, nhưng mỗi mùa lại có một sắc thái riêng. Cùng Perlunas chọn thời điểm hợp với chuyến đi của bạn.",
                             IsDeleted = false,
                             ReadingTime = "6 phút đọc",
-                            Slug = "kinh-nghiem-du-lich-da-lat-mua-dep-nhat",
                             SubTitile = "Đà Lạt đẹp quanh năm, nhưng mỗi mùa lại có một sắc thái riêng. Cùng Perlunas chọn thời điểm hợp với chuyến đi của bạn.",
                             Tag = "Cẩm nang điểm đến",
                             Titile = "Kinh nghiệm du lịch Đà Lạt: đi mùa nào đẹp nhất?",
@@ -101,13 +88,10 @@ namespace Cms.Repository.Migrations
                         {
                             Id = new Guid("8e471a7e-6ce1-0fca-3a68-c77dc221ff30"),
                             Author = "Perlunas Team",
-                            Content = "<p>Bí quyết để vali gọn nhẹ là chọn đồ đa năng và ưu tiên chất liệu nhanh khô. Dưới đây là những món Perlunas khuyên bạn luôn mang theo cho một chuyến biển đảo.</p><h2>Trang phục</h2><p>Hai bộ đồ bơi để thay đổi, một chiếc áo khoác mỏng chống nắng, vài bộ cotton thoáng mát và một đôi sandal đi được cả ngày. Đừng quên mũ rộng vành và kính râm.</p><h2>Bảo vệ và sức khoẻ</h2><p>Kem chống nắng chỉ số cao, kem chống nắng vật lý nếu bạn đi lặn ngắm san hô (thân thiện với rạn san hô), thuốc say sóng, và một túi y tế nhỏ với băng cá nhân, thuốc cơ bản.</p><h2>Đồ điện tử</h2><p>Túi chống nước cho điện thoại, sạc dự phòng và một chiếc khăn microfiber gọn nhẹ là đủ cho hầu hết các chuyến đi ngắn ngày.</p>",
-                            Cover = "https://res.klook.com/image/upload/w_750,h_469,c_fill,q_85/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/tm5ypc6mpiamhf3aamqu.jpg",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Đi biển không cần mang cả tủ đồ. Đây là danh sách tối giản giúp bạn nhẹ vali mà vẫn đủ đầy.",
                             IsDeleted = false,
                             ReadingTime = "4 phút đọc",
-                            Slug = "checklist-hanh-ly-cho-chuyen-bien-dao",
                             SubTitile = "Đi biển không cần mang cả tủ đồ. Đây là danh sách tối giản giúp bạn nhẹ vali mà vẫn đủ đầy.",
                             Tag = "Mẹo chuẩn bị",
                             Titile = "Checklist hành lý gọn nhẹ cho chuyến biển đảo",
@@ -117,13 +101,10 @@ namespace Cms.Repository.Migrations
                         {
                             Id = new Guid("41d9c601-dad8-03a5-ef3d-005d5d83212d"),
                             Author = "Perlunas Team",
-                            Content = "<p>Miền Trung là nơi ẩm thực đậm đà nhất Việt Nam — cay hơn, mặn mà hơn và rất giàu câu chuyện. Mỗi món ăn gắn với một vùng đất, một thói quen, một ký ức.</p><h2>Huế — tinh tế và cầu kỳ</h2><p>Bún bò Huế với nước dùng thơm sả và ruốc, bánh bèo - nậm - lọc nhỏ xinh, và chè Huế nhiều màu. Ẩm thực cố đô mang dáng dấp cung đình: cầu kỳ trong từng chi tiết.</p><figure><img src=\"https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?fm=jpg&amp;q=60&amp;w=1600&amp;auto=format&amp;fit=crop\" alt=\"Một tô bún bò Huế nóng hổi, đậm vị cố đô.\"/><figcaption>Một tô bún bò Huế nóng hổi, đậm vị cố đô.</figcaption></figure><h2>Đà Nẵng - Hội An — phóng khoáng và đậm đà</h2><p>Mì Quảng trộn với tôm thịt và bánh tráng nướng, cao lầu Hội An sợi dai đặc trưng, bánh mì Phượng nổi tiếng. Đừng bỏ lỡ một tô bún chả cá Đà Nẵng buổi sáng.</p>",
-                            Cover = "https://plus.unsplash.com/premium_photo-1690960644375-6f2399a08ebc?fm=jpg&q=60&w=2000&auto=format&fit=crop",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Từ mì Quảng, bún bò Huế đến cao lầu Hội An — bản đồ vị giác miền Trung qua từng món ăn.",
                             IsDeleted = false,
                             ReadingTime = "5 phút đọc",
-                            Slug = "am-thuc-mien-trung-nhat-dinh-phai-thu",
                             SubTitile = "Từ mì Quảng, bún bò Huế đến cao lầu Hội An — bản đồ vị giác miền Trung qua từng món ăn.",
                             Tag = "Ẩm thực",
                             Titile = "Ẩm thực miền Trung nhất định phải thử một lần",
@@ -133,13 +114,10 @@ namespace Cms.Repository.Migrations
                         {
                             Id = new Guid("75590804-8743-67aa-5ef8-0a59b7a1cdf3"),
                             Author = "Perlunas Team",
-                            Content = "<p>Du lịch bền vững không phải là từ bỏ tiện nghi, mà là những lựa chọn có ý thức hơn. Một vài thay đổi nhỏ cũng đủ tạo nên khác biệt lớn cho điểm đến.</p><h2>Giảm rác thải nhựa</h2><p>Mang theo bình nước cá nhân, túi vải và ống hút dùng lại. Nhiều khách sạn đối tác của Perlunas đã có trạm tiếp nước miễn phí cho khách.</p><h2>Ủng hộ cộng đồng địa phương</h2><p>Chọn ăn ở hàng quán địa phương, mua sản vật vùng miền và tham gia trải nghiệm do chính người dân tổ chức. Đồng tiền bạn chi tiêu sẽ ở lại với cộng đồng nơi bạn ghé qua.</p>",
-                            Cover = "https://images.unsplash.com/photo-1528127269322-539801943592?fm=jpg&q=60&w=2000&auto=format&fit=crop",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Những thói quen nhỏ giúp chuyến đi của bạn nhẹ nhàng hơn với thiên nhiên và cộng đồng địa phương.",
                             IsDeleted = false,
                             ReadingTime = "5 phút đọc",
-                            Slug = "du-lich-ben-vung-di-tu-te-hon",
                             SubTitile = "Những thói quen nhỏ giúp chuyến đi của bạn nhẹ nhàng hơn với thiên nhiên và cộng đồng địa phương.",
                             Tag = "Cảm hứng",
                             Titile = "Du lịch bền vững: đi tử tế hơn với điểm đến",
@@ -149,13 +127,10 @@ namespace Cms.Repository.Migrations
                         {
                             Id = new Guid("3ba1c9ca-b087-f6ad-53f7-6661263927dd"),
                             Author = "Perlunas Team",
-                            Content = "<p>Một chuyến đi cùng trẻ nhỏ thành công thường bắt đầu từ việc hạ kỳ vọng và tăng sự linh hoạt. Đừng cố nhồi nhét lịch trình — hãy để mỗi ngày có khoảng thở.</p><h2>Chọn điểm đến và nhịp đi phù hợp</h2><p>Ưu tiên điểm đến di chuyển ngắn, có chỗ nghỉ tốt và nhiều hoạt động ngoài trời. Resort có hồ bơi và khu vui chơi thường là lựa chọn an toàn cho gia đình.</p><h2>Hành lý cho bé</h2><p>Mang theo đồ ăn vặt quen thuộc, vài món đồ chơi nhỏ, thuốc cơ bản và quần áo dự phòng. Một chiếc xe đẩy gọn sẽ cứu bạn trong những ngày đi bộ nhiều.</p>",
-                            Cover = "https://images.unsplash.com/photo-1475503572774-15a45e5d60b9?fm=jpg&q=60&w=2000&auto=format&fit=crop",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Đi cùng con không hề đáng sợ nếu bạn chuẩn bị đúng cách. Vài bí quyết để cả nhà cùng vui.",
                             IsDeleted = false,
                             ReadingTime = "6 phút đọc",
-                            Slug = "cam-nang-du-lich-cung-tre-nho",
                             SubTitile = "Đi cùng con không hề đáng sợ nếu bạn chuẩn bị đúng cách. Vài bí quyết để cả nhà cùng vui.",
                             Tag = "Mẹo chuẩn bị",
                             Titile = "Cẩm nang du lịch cùng trẻ nhỏ không căng thẳng",
@@ -165,13 +140,10 @@ namespace Cms.Repository.Migrations
                         {
                             Id = new Guid("930bcada-e714-1e4e-a23f-9922481c6a46"),
                             Author = "Perlunas Team",
-                            Content = "<p>Mùa săn mây miền Bắc thường rơi vào khoảng tháng 10 đến tháng 3, khi trời hanh khô và chênh lệch nhiệt độ ngày đêm lớn. Bí quyết là dậy thật sớm và kiên nhẫn chờ bình minh.</p><h2>Tà Xùa (Sơn La)</h2><p>Được mệnh danh là 'thiên đường mây', Tà Xùa có sống lưng khủng long và cây cô đơn nổi tiếng. Biển mây ở đây dày và bồng bềnh, đặc biệt đẹp sau một đêm lạnh.</p><figure><img src=\"https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?fm=jpg&amp;q=60&amp;w=1600&amp;auto=format&amp;fit=crop\" alt=\"Biển mây bồng bềnh nhìn từ sống lưng khủng long Tà Xùa.\"/><figcaption>Biển mây bồng bềnh nhìn từ sống lưng khủng long Tà Xùa.</figcaption></figure><h2>Y Tý (Lào Cai)</h2><p>Y Tý hoang sơ hơn, ít khách hơn và mây đến rất sớm. Kết hợp với ruộng bậc thang mùa nước đổ, đây là điểm đến cho người thích sự yên tĩnh và nguyên bản.</p>",
-                            Cover = "https://pystravel.vn/_next/image?url=https%3A%2F%2Fbooking.pystravel.vn%2Fuploads%2Fposts%2Favatar%2F1740370327.jpg&w=3840&q=75",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Tà Xùa, Y Tý, Fansipan — bản đồ săn mây cho người mê biển mây bồng bềnh mỗi sớm.",
                             IsDeleted = false,
                             ReadingTime = "7 phút đọc",
-                            Slug = "san-may-mien-bac-nhung-diem-dep-nhat",
                             SubTitile = "Tà Xùa, Y Tý, Fansipan — bản đồ săn mây cho người mê biển mây bồng bềnh mỗi sớm.",
                             Tag = "Cẩm nang điểm đến",
                             Titile = "Săn mây miền Bắc: những điểm đẹp nhất đầu đông",
@@ -5995,62 +5967,6 @@ namespace Cms.Repository.Migrations
                             PageKey = "Trang Liên hệ",
                             SectionKey = "",
                             SoftOrder = 405,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("c62cfe08-2059-2c14-dc76-a6bc48ae5e87"),
-                            ContentValue = "Tour trọn gói\nKhách sạn\nGói du lịch\nTour đoàn\nTour riêng",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "lf.opts.services",
-                            Kind = "list",
-                            Label = "LeadForm options: dịch vụ quan tâm",
-                            PageKey = "Form liên hệ / đặt",
-                            SectionKey = "",
-                            SoftOrder = 406,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("57a61f6f-7b89-2f21-183d-b0f4c3be804a"),
-                            ContentValue = "1 người\n2 người\n3 - 5 người\n6 - 10 người\nTrên 10 người",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "lf.opts.group",
-                            Kind = "list",
-                            Label = "LeadForm options: số người",
-                            PageKey = "Form liên hệ / đặt",
-                            SectionKey = "",
-                            SoftOrder = 407,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("c6c59c34-9511-fba9-97bf-258ad50f1405"),
-                            ContentValue = "Dưới 3 triệu\n3 - 5 triệu\n5 - 10 triệu\nTrên 10 triệu",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "lf.opts.budget",
-                            Kind = "list",
-                            Label = "LeadForm options: ngân sách",
-                            PageKey = "Form liên hệ / đặt",
-                            SectionKey = "",
-                            SoftOrder = 408,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("6bc4f3b8-af9d-745b-a9af-0ddf0ac47953"),
-                            ContentValue = "Facebook / Instagram\nGoogle\nBạn bè giới thiệu\nĐã đi cùng Perlunas\nKhác",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "lf.opts.sources",
-                            Kind = "list",
-                            Label = "LeadForm options: biết qua đâu",
-                            PageKey = "Form liên hệ / đặt",
-                            SectionKey = "",
-                            SoftOrder = 409,
                             UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });

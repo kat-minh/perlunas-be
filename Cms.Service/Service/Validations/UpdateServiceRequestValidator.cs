@@ -35,14 +35,12 @@ public class UpdateServiceRequestValidator : AbstractValidator<Request.UpdateSer
             .When(x => x.Feature != null && x.Type != ServiceType.Tour && x.Type != ServiceType.Combo);
 
         RuleFor(x => x.PurposeOfTrip).NotEmpty().WithMessage("PURPOSE_OF_TRIP_REQUIRED")
-            .IsInEnum().WithMessage("PURPOSE_OF_TRIP_INVALID")
             .When(x => x.PurposeOfTrip != null && (x.Type == ServiceType.Combo || x.Type == ServiceType.Hotel));
         RuleFor(x => x.Destination).NotEmpty().WithMessage("DESTINATION_REQUIRED")
             .When(x => x.Destination != null && (x.Type == ServiceType.Combo || x.Type == ServiceType.Hotel));
         RuleFor(x => x.Form).NotEmpty().WithMessage("FORM_REQUIRED")
             .When(x => x.Form != null && (x.Type == ServiceType.Combo || x.Type == ServiceType.Hotel));
         RuleFor(x => x.Classify).NotEmpty().WithMessage("CLASSIFY_REQUIRED")
-            .IsInEnum().WithMessage("CLASSIFY_INVALID")
             .When(x => x.Classify != null && x.Type == ServiceType.Combo);
 
         RuleFor(x => x.Schedules).NotEmpty().WithMessage("SCHEDULES_REQUIRED")

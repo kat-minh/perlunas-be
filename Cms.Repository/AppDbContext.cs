@@ -17,6 +17,7 @@ public class AppDbContext : DbContext
     public DbSet<PageContent> PageContents => Set<PageContent>();
     public DbSet<SiteSetting> SiteSettings => Set<SiteSetting>();
     public DbSet<Blog> Blogs => Set<Blog>();
+    public DbSet<Taxonomy> Taxonomies => Set<Taxonomy>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

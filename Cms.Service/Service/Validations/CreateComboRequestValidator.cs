@@ -16,10 +16,10 @@ public class CreateComboRequestValidator : AbstractValidator<Request.CreateCombo
         RuleFor(x => x.Infor).NotEmpty().WithMessage("INFOR_REQUIRED");
         RuleFor(x => x.Highlight).NotEmpty().WithMessage("HIGHLIGHT_REQUIRED");
         RuleFor(x => x.Code).NotEmpty().WithMessage("CODE_REQUIRED");
-        RuleFor(x => x.PurposeOfTrip).IsInEnum().WithMessage("PURPOSE_OF_TRIP_INVALID");
+        RuleFor(x => x.PurposeOfTrip).NotEmpty().WithMessage("PURPOSE_OF_TRIP_REQUIRED");
         RuleFor(x => x.Destination).NotEmpty().WithMessage("DESTINATION_REQUIRED");
         RuleFor(x => x.Form).NotEmpty().WithMessage("FORM_REQUIRED");
-        RuleFor(x => x.Classify).IsInEnum().WithMessage("CLASSIFY_INVALID");
+        RuleFor(x => x.Classify).NotEmpty().WithMessage("CLASSIFY_REQUIRED");
         RuleFor(x => x.Schedules).NotEmpty().WithMessage("SCHEDULES_REQUIRED");
         RuleForEach(x => x.Schedules).ChildRules(s =>
         {
