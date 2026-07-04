@@ -434,7 +434,9 @@ public class Service : IService
         {
             Id = serviceId,
             Title = request.Title.Trim(),
-            Slug = Slug.GenerateSlug(request.Title),
+            // Đảm bảo slug duy nhất (thêm hậu tố -2, -3… khi trùng) như tour/hotel;
+            // slug cố định sau khi tạo (UpdateAsync không regenerate).
+            Slug = await GenerateUniqueSlugAsync(request.Title),
             BestSeller = request.BestSeller,
             Type = ServiceType.Combo,
             Day = request.Day > 0 ? request.Day : (int?)null,
