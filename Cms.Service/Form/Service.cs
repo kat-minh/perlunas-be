@@ -62,25 +62,20 @@ public class Service : IService
         {
             To = request.Email,
             Subject = "Xác nhận đăng ký tư vấn thành công",
-            Body = $@"
-                <!DOCTYPE html>
-                <html lang=""vi"">
-                <head><meta charset=""UTF-8""></head>
-                <body style=""font-family: Arial, sans-serif; padding: 20px;"">
-                    <h2>Cảm ơn bạn đã đăng ký tư vấn!</h2>
-                    <p>Chào {request.FullName},</p>
-                    <p>Chúng tôi đã nhận được yêu cầu tư vấn của bạn. Thông tin chi tiết:</p>
-                    <ul>
-                        <li><strong>Họ tên:</strong> {request.FullName}</li>
-                        <li><strong>Số điện thoại:</strong> {request.Phone}</li>
-                        <li><strong>Email:</strong> {request.Email}</li>
-                        <li><strong>Địa điểm:</strong> {request.Where}</li>
-                        <li><strong>Thời gian:</strong> {request.Month}/{request.Year}</li>
-                    </ul>
-                    <p>Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất.</p>
-                    <p>Trân trọng,<br>Đội ngũ hỗ trợ khách hàng</p>
-                </body>
-                </html>"
+            Body = MailService.MailTemplate.Confirmation(
+                heading: "Đã nhận yêu cầu tư vấn",
+                fullName: request.FullName,
+                intro: "Cảm ơn bạn đã gửi yêu cầu tư vấn cho Perlunas. Chúng tôi đã ghi nhận các thông tin sau:",
+                rows: new (string, string?)[]
+                {
+                    ("Họ tên", request.FullName),
+                    ("Số điện thoại", request.Phone),
+                    ("Email", request.Email),
+                    ("Địa điểm", request.Where),
+                    ("Thời gian", $"{request.Month}/{request.Year}"),
+                    ("Ghi chú", request.Note),
+                },
+                closing: "Đội ngũ Perlunas sẽ liên hệ với bạn trong thời gian sớm nhất.")
         });
 
         return "CREATE_ADVISE_FORM_SUCCESS";
@@ -114,23 +109,19 @@ public class Service : IService
         {
             To = request.Email,
             Subject = "Xác nhận đăng ký tour thành công",
-            Body = $@"
-                <!DOCTYPE html>
-                <html lang=""vi"">
-                <head><meta charset=""UTF-8""></head>
-                <body style=""font-family: Arial, sans-serif; padding: 20px;"">
-                    <h2>Cảm ơn bạn đã đăng ký tour!</h2>
-                    <p>Chào {request.FullName},</p>
-                    <p>Chúng tôi đã nhận được yêu cầu đăng ký tour của bạn. Thông tin chi tiết:</p>
-                    <ul>
-                        <li><strong>Họ tên:</strong> {request.FullName}</li>
-                        <li><strong>Số điện thoại:</strong> {request.Phone}</li>
-                        <li><strong>Email:</strong> {request.Email}</li>
-                    </ul>
-                    <p>Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận tour.</p>
-                    <p>Trân trọng,<br>Đội ngũ hỗ trợ khách hàng</p>
-                </body>
-                </html>"
+            Body = MailService.MailTemplate.Confirmation(
+                heading: "Đã nhận đăng ký tour",
+                fullName: request.FullName,
+                intro: "Cảm ơn bạn đã đăng ký tour cùng Perlunas. Chúng tôi đã nhận được yêu cầu của bạn với thông tin sau:",
+                rows: new (string, string?)[]
+                {
+                    ("Họ tên", request.FullName),
+                    ("Số điện thoại", request.Phone),
+                    ("Email", request.Email),
+                    ("Tour", request.Title),
+                    ("Chi tiết đặt", request.Note),
+                },
+                closing: "Đội ngũ Perlunas sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận tour.")
         });
 
         return "CREATE_TOUR_FORM_SUCCESS";
@@ -200,24 +191,18 @@ public class Service : IService
         {
             To = request.Email,
             Subject = "Xác nhận đặt combo thành công",
-            Body = $@"
-                <!DOCTYPE html>
-                <html lang=""vi"">
-                <head><meta charset=""UTF-8""></head>
-                <body style=""font-family: Arial, sans-serif; padding: 20px;"">
-                    <h2>Cảm ơn bạn đã đặt combo!</h2>
-                    <p>Chào {request.FullName},</p>
-                    <p>Chúng tôi đã nhận được yêu cầu đặt combo của bạn. Thông tin chi tiết:</p>
-                    <ul>
-                        <li><strong>Họ tên:</strong> {request.FullName}</li>
-                        <li><strong>Số điện thoại:</strong> {request.Phone}</li>
-                        <li><strong>Email:</strong> {request.Email}</li>
-                        <li><strong>Tổng tiền:</strong> {request.TotalPrice:N0} VNĐ</li>
-                    </ul>
-                    <p>Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận.</p>
-                    <p>Trân trọng,<br>Đội ngũ hỗ trợ khách hàng</p>
-                </body>
-                </html>"
+            Body = MailService.MailTemplate.Confirmation(
+                heading: "Đã nhận đặt combo",
+                fullName: request.FullName,
+                intro: "Cảm ơn bạn đã đặt gói combo cùng Perlunas. Chúng tôi đã ghi nhận yêu cầu với thông tin sau:",
+                rows: new (string, string?)[]
+                {
+                    ("Họ tên", request.FullName),
+                    ("Số điện thoại", request.Phone),
+                    ("Email", request.Email),
+                    ("Tổng tiền", $"{request.TotalPrice:N0} VNĐ"),
+                },
+                closing: "Đội ngũ Perlunas sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận.")
         });
 
         return "CREATE_COMBO_FORM_SUCCESS";
@@ -287,24 +272,18 @@ public class Service : IService
         {
             To = request.Email,
             Subject = "Xác nhận đặt phòng thành công",
-            Body = $@"
-                <!DOCTYPE html>
-                <html lang=""vi"">
-                <head><meta charset=""UTF-8""></head>
-                <body style=""font-family: Arial, sans-serif; padding: 20px;"">
-                    <h2>Cảm ơn bạn đã đặt phòng!</h2>
-                    <p>Chào {request.FullName},</p>
-                    <p>Chúng tôi đã nhận được yêu cầu đặt phòng của bạn. Thông tin chi tiết:</p>
-                    <ul>
-                        <li><strong>Họ tên:</strong> {request.FullName}</li>
-                        <li><strong>Số điện thoại:</strong> {request.Phone}</li>
-                        <li><strong>Email:</strong> {request.Email}</li>
-                        <li><strong>Tổng tiền:</strong> {request.TotalPrice:N0} VNĐ</li>
-                    </ul>
-                    <p>Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận.</p>
-                    <p>Trân trọng,<br>Đội ngũ hỗ trợ khách hàng</p>
-                </body>
-                </html>"
+            Body = MailService.MailTemplate.Confirmation(
+                heading: "Đã nhận đặt phòng",
+                fullName: request.FullName,
+                intro: "Cảm ơn bạn đã đặt phòng qua Perlunas. Chúng tôi đã ghi nhận yêu cầu với thông tin sau:",
+                rows: new (string, string?)[]
+                {
+                    ("Họ tên", request.FullName),
+                    ("Số điện thoại", request.Phone),
+                    ("Email", request.Email),
+                    ("Tổng tiền", $"{request.TotalPrice:N0} VNĐ"),
+                },
+                closing: "Đội ngũ Perlunas sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận.")
         });
 
         return "CREATE_HOTEL_FORM_SUCCESS";
