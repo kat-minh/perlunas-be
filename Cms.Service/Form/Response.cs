@@ -11,6 +11,8 @@ public class Response
         public string? Title { get; set; }
         public string? Slug { get; set; }
         public Guid? ServiceId { get; set; }
+        /// <summary>Tên dịch vụ liên kết (tour/khách sạn/combo) — để admin biết đặt cái nào.</summary>
+        public string? ServiceName { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }

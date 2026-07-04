@@ -297,6 +297,7 @@ public class Service : IService
         var query = _dbContext.Forms
             .AsNoTracking()
             .Include(x => x.FormDetails)
+            .Include(x => x.Service)
             .Where(x => !x.IsDeleted);
 
         if (type.HasValue)
@@ -323,6 +324,7 @@ public class Service : IService
         var form = await _dbContext.Forms
             .AsNoTracking()
             .Include(x => x.FormDetails)
+            .Include(x => x.Service)
             .FirstOrDefaultAsync(x => !x.IsDeleted && ((isGuid && x.Id == id) || x.Slug == key));
 
         if (form is null) throw new NotFoundException("Form not found.");
@@ -354,6 +356,7 @@ public class Service : IService
                 PromotionalInformation = form.PromotionalInformation,
                 PricePerPerson = form.PricePerPerson,
                 ServiceId = form.ServiceId,
+                ServiceName = form.Service != null ? form.Service.Title : null,
                 CreatedAt = form.CreatedAt,
                 UpdatedAt = form.UpdatedAt
             };
@@ -371,6 +374,7 @@ public class Service : IService
                 Phone = form.Phone,
                 Email = form.Email,
                 ServiceId = form.ServiceId,
+                ServiceName = form.Service != null ? form.Service.Title : null,
                 CreatedAt = form.CreatedAt,
                 UpdatedAt = form.UpdatedAt
             };
@@ -389,6 +393,7 @@ public class Service : IService
                 TotalPrice = form.TotalPrice,
                 Region = form.Region,
                 ServiceId = form.ServiceId,
+                ServiceName = form.Service != null ? form.Service.Title : null,
                 FormDetails = form.FormDetails.Select(d => new Response.FormDetailsResponse
                 {
                     Id = d.Id,
