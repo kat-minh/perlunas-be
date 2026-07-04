@@ -58,7 +58,7 @@ public class Service : IService
         return ApiResponseFactory.BasePagination(items, pageIndex, pageSize, totalCount);
     }
 
-    public async Task<BasePaginationResponse> GetToursAsync(string? keyword, int pageIndex, int pageSize)
+    public async Task<BasePaginationResponse> GetToursAsync(string? keyword, string? destination, int pageIndex, int pageSize)
     {
         pageIndex = pageIndex <= 0 ? 1 : pageIndex;
         pageSize = pageSize <= 0 ? 10 : Math.Min(pageSize, 100);
@@ -72,6 +72,13 @@ public class Service : IService
             var kw = keyword.Trim().ToLower();
             query = query.Where(x => x.Title != null && x.Title.ToLower().Contains(kw)
                                   || x.Region != null && x.Region.ToLower().Contains(kw));
+        }
+
+        // Vùng miền là danh mục → khớp CHÍNH XÁC (giống filter lưu trú).
+        if (!string.IsNullOrWhiteSpace(destination))
+        {
+            var region = destination.Trim().ToLower();
+            query = query.Where(x => x.Region != null && x.Region.ToLower() == region);
         }
 
         var totalCount = await query.CountAsync();
