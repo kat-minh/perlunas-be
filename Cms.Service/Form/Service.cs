@@ -289,7 +289,7 @@ public class Service : IService
         return "CREATE_HOTEL_FORM_SUCCESS";
     }
 
-    public async Task<BasePaginationResponse> GetAllAsync(int pageIndex, int pageSize, FormType? type)
+    public async Task<BasePaginationResponse> GetAllAsync(int pageIndex, int pageSize, FormType? type, string? search)
     {
         pageIndex = pageIndex <= 0 ? 1 : pageIndex;
         pageSize = pageSize <= 0 ? 10 : Math.Min(pageSize, 100);
@@ -303,6 +303,15 @@ public class Service : IService
         if (type.HasValue)
         {
             query = query.Where(x => x.Type == type.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var s = search.Trim().ToLower();
+            query = query.Where(x =>
+                (x.Email != null && x.Email.ToLower().Contains(s)) ||
+                (x.FullName != null && x.FullName.ToLower().Contains(s)) ||
+                (x.Phone != null && x.Phone.Contains(s)));
         }
 
         var totalCount = await query.CountAsync();
