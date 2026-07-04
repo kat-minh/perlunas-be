@@ -18,7 +18,7 @@ public class BlogConfiguration : IEntityTypeConfiguration<Blog>
         builder.Property(x => x.Tag).HasMaxLength(255);
         builder.Property(x => x.Slug).HasMaxLength(255);
         builder.Property(x => x.Cover).HasMaxLength(1024);
-        builder.HasIndex(x => x.Slug);
+        builder.HasIndex(x => x.Slug).IsUnique();
         builder.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
 
         builder.SeedBlog();

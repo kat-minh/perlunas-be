@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Cms.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Cms.Repository.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260704034612_UniqueBlogSlug")]
+    partial class UniqueBlogSlug
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -331,7 +334,7 @@ namespace Cms.Repository.Migrations
                         new
                         {
                             Id = new Guid("135e3ed1-aa61-30e8-7dbf-7e00a49451ba"),
-                            ContentValue = "Mỗi hành trình\nlà một viên ngọc.",
+                            ContentValue = "Mỗi hành trình\r\nlà một viên ngọc.",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsDeleted = false,
                             Key = "home.hero.title",
@@ -863,7 +866,7 @@ namespace Cms.Repository.Migrations
                         new
                         {
                             Id = new Guid("ccafaff8-20a4-2da6-ea22-9a6ecdfd94eb"),
-                            ContentValue = "Vietnam Airlines\nVietravel\nSaigontourist\nMường Thanh\nVinpearl\nBamboo Airways\nAccor Hotels\nSun World\nVietjet Air\nMarriott",
+                            ContentValue = "Vietnam Airlines\r\nVietravel\r\nSaigontourist\r\nMường Thanh\r\nVinpearl\r\nBamboo Airways\r\nAccor Hotels\r\nSun World\r\nVietjet Air\r\nMarriott",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsDeleted = false,
                             Key = "home.partners.list",
@@ -3579,7 +3582,7 @@ namespace Cms.Repository.Migrations
                         new
                         {
                             Id = new Guid("dd94173c-d963-3be5-fe7d-04bf8d607e7f"),
-                            ContentValue = "Khách sạn 3-4 sao trung tâm\nXe đưa đón và di chuyển theo lịch trình\nĂn sáng mỗi ngày\nHướng dẫn viên ở các điểm chính\nVé tham quan cơ bản",
+                            ContentValue = "Khách sạn 3-4 sao trung tâm\r\nXe đưa đón và di chuyển theo lịch trình\r\nĂn sáng mỗi ngày\r\nHướng dẫn viên ở các điểm chính\r\nVé tham quan cơ bản",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsDeleted = false,
                             Key = "tier.akoya.includes",
@@ -3635,7 +3638,7 @@ namespace Cms.Repository.Migrations
                         new
                         {
                             Id = new Guid("61d98f5d-dc3c-fe11-a09c-833983fb40ba"),
-                            ContentValue = "Khách sạn 4-5 sao\nXe riêng cho nhóm\nĂn sáng và một số bữa đặc sản\nHướng dẫn viên xuyên suốt\nTrải nghiệm địa phương riêng (lớp nấu ăn, làng nghề…)",
+                            ContentValue = "Khách sạn 4-5 sao\r\nXe riêng cho nhóm\r\nĂn sáng và một số bữa đặc sản\r\nHướng dẫn viên xuyên suốt\r\nTrải nghiệm địa phương riêng (lớp nấu ăn, làng nghề…)",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsDeleted = false,
                             Key = "tier.tahiti.includes",
@@ -3691,7 +3694,7 @@ namespace Cms.Repository.Migrations
                         new
                         {
                             Id = new Guid("6cb5cb99-ca03-8462-0dc3-2868083e33a5"),
-                            ContentValue = "Resort/khách sạn 5 sao\nXe riêng và tài xế suốt hành trình\nTrọn bữa, nhà hàng chọn lọc\nTrải nghiệm độc quyền, vé ưu tiên\nHỗ trợ concierge 24/7",
+                            ContentValue = "Resort/khách sạn 5 sao\r\nXe riêng và tài xế suốt hành trình\r\nTrọn bữa, nhà hàng chọn lọc\r\nTrải nghiệm độc quyền, vé ưu tiên\r\nHỗ trợ concierge 24/7",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsDeleted = false,
                             Key = "tier.south-sea.includes",
@@ -5749,7 +5752,7 @@ namespace Cms.Repository.Migrations
                         new
                         {
                             Id = new Guid("53d75004-09ea-c91f-9c92-c0161608a706"),
-                            ContentValue = "Vị trí thuận tiện, an toàn.\nChất lượng và tiện nghi đạt chuẩn 4 - 5 sao.\nDịch vụ tận tâm, không gian tinh tế.",
+                            ContentValue = "Vị trí thuận tiện, an toàn.\r\nChất lượng và tiện nghi đạt chuẩn 4 - 5 sao.\r\nDịch vụ tận tâm, không gian tinh tế.",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsDeleted = false,
                             Key = "hotelspage.criteria.items",
@@ -6001,7 +6004,7 @@ namespace Cms.Repository.Migrations
                         new
                         {
                             Id = new Guid("c62cfe08-2059-2c14-dc76-a6bc48ae5e87"),
-                            ContentValue = "Tour trọn gói\nKhách sạn\nGói du lịch\nTour đoàn\nTour riêng",
+                            ContentValue = "Tour trọn gói\r\nKhách sạn\r\nGói du lịch\r\nTour đoàn\r\nTour riêng",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsDeleted = false,
                             Key = "lf.opts.services",
@@ -6015,7 +6018,7 @@ namespace Cms.Repository.Migrations
                         new
                         {
                             Id = new Guid("57a61f6f-7b89-2f21-183d-b0f4c3be804a"),
-                            ContentValue = "1 người\n2 người\n3 - 5 người\n6 - 10 người\nTrên 10 người",
+                            ContentValue = "1 người\r\n2 người\r\n3 - 5 người\r\n6 - 10 người\r\nTrên 10 người",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsDeleted = false,
                             Key = "lf.opts.group",
@@ -6029,7 +6032,7 @@ namespace Cms.Repository.Migrations
                         new
                         {
                             Id = new Guid("c6c59c34-9511-fba9-97bf-258ad50f1405"),
-                            ContentValue = "Dưới 3 triệu\n3 - 5 triệu\n5 - 10 triệu\nTrên 10 triệu",
+                            ContentValue = "Dưới 3 triệu\r\n3 - 5 triệu\r\n5 - 10 triệu\r\nTrên 10 triệu",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsDeleted = false,
                             Key = "lf.opts.budget",
@@ -6043,7 +6046,7 @@ namespace Cms.Repository.Migrations
                         new
                         {
                             Id = new Guid("6bc4f3b8-af9d-745b-a9af-0ddf0ac47953"),
-                            ContentValue = "Facebook / Instagram\nGoogle\nBạn bè giới thiệu\nĐã đi cùng Perlunas\nKhác",
+                            ContentValue = "Facebook / Instagram\r\nGoogle\r\nBạn bè giới thiệu\r\nĐã đi cùng Perlunas\r\nKhác",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsDeleted = false,
                             Key = "lf.opts.sources",
@@ -7099,9 +7102,6 @@ namespace Cms.Repository.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Group");
-
-                    b.HasIndex("Slug")
-                        .IsUnique();
 
                     b.HasIndex("Group", "Name")
                         .IsUnique();

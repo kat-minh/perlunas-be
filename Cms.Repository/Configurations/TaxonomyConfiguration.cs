@@ -14,6 +14,7 @@ public class TaxonomyConfiguration : IEntityTypeConfiguration<Taxonomy>
         builder.Property(x => x.Group).HasMaxLength(50).IsRequired();
         builder.Property(x => x.Name).HasMaxLength(255).IsRequired();
         builder.Property(x => x.Slug).HasMaxLength(255);
+        builder.HasIndex(x => x.Slug).IsUnique();
         builder.Property(x => x.Color).HasMaxLength(50);
         builder.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
 

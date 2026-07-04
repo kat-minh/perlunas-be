@@ -7,7 +7,6 @@ public class Request
         /// <summary>city | region | stay-type | tier | purpose.</summary>
         public string Group { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
-        public string? Slug { get; set; }
         public string? Color { get; set; }
         public int SortOrder { get; set; }
     }
@@ -15,7 +14,6 @@ public class Request
     public class UpdateTaxonomyRequest
     {
         public string Name { get; set; } = string.Empty;
-        public string? Slug { get; set; }
         public string? Color { get; set; }
         public int SortOrder { get; set; }
     }

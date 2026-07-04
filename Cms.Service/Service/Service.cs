@@ -184,7 +184,7 @@ public class Service : IService
             .Include(x => x.ImportantInfors)
             .Include(x => x.DepartureSchedules)
             .Include(x => x.RoomCategories)
-            .FirstOrDefaultAsync(x => !x.IsDeleted && (idMatched ? x.Id == id : x.Slug.ToLower() == slug));
+            .FirstOrDefaultAsync(x => !x.IsDeleted && (x.Slug == slug || (idMatched && x.Id == id)));
 
         if (service is null) throw new NotFoundException("Service not found.");
 
@@ -280,7 +280,7 @@ public class Service : IService
         {
             Id = serviceId,
             Title = request.Title.Trim(),
-            Slug = Slug.GenerateSlug(request.Title),
+            Slug = await GenerateUniqueSlugAsync(request.Title),
             BestSeller = request.BestSeller,
             Type = ServiceType.Tour,
             Day = request.Day,
@@ -385,7 +385,7 @@ public class Service : IService
         {
             Id = serviceId,
             Title = request.Title.Trim(),
-            Slug = Slug.GenerateSlug(request.Title),
+            Slug = await GenerateUniqueSlugAsync(request.Title),
             BestSeller = request.BestSeller,
             Type = ServiceType.Combo,
             Night = request.Night,
@@ -503,7 +503,7 @@ public class Service : IService
         {
             Id = Guid.NewGuid(),
             Title = request.Title.Trim(),
-            Slug = Slug.GenerateSlug(request.Title),
+            Slug = await GenerateUniqueSlugAsync(request.Title),
             BestSeller = request.BestSeller,
             Type = ServiceType.Hotel,
             Introducetion = request.Introducetion.Trim(),
@@ -575,7 +575,7 @@ public class Service : IService
         var type = request.Type!.Value;
 
         service.Title = request.Title!.Trim();
-        service.Slug = Slug.GenerateSlug(service.Title);
+        service.Slug = await GenerateUniqueSlugAsync(service.Title, id);
         service.Album = JsonSerializer.Serialize(request.Album!);
         service.Region = request.Region!.Trim();
         service.IsPublic = request.IsPublic ?? service.IsPublic;
@@ -971,5 +971,22 @@ public class Service : IService
         if (string.IsNullOrWhiteSpace(feature)) return new();
         try { return JsonSerializer.Deserialize<List<string>>(feature) ?? new(); }
         catch { return new(); }
+    }
+
+    private async Task<string> GenerateUniqueSlugAsync(string title, Guid? excludedServiceId = null)
+    {
+        var baseSlug = Slug.GenerateSlug(title.Trim());
+        if (string.IsNullOrWhiteSpace(baseSlug)) baseSlug = Guid.NewGuid().ToString("N");
+
+        var slug = baseSlug;
+        var suffix = 1;
+
+        while (await _dbContext.Services.AnyAsync(x => !x.IsDeleted && x.Slug == slug && (!excludedServiceId.HasValue || x.Id != excludedServiceId.Value)))
+        {
+            slug = $"{baseSlug}-{suffix}";
+            suffix++;
+        }
+
+        return slug;
     }
 }

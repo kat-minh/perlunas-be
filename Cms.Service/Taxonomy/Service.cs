@@ -1,4 +1,5 @@
 using Cms.Repository;
+using Cms.Service.Configurations;
 using Cms.Service.Exceptions;
 using Cms.Service.Models;
 using FluentValidation;
@@ -54,13 +55,19 @@ public class Service : IService
     {
         await _createValidator.ValidateAndThrowAsync(request);
 
+        var group = request.Group.Trim().ToLower();
+        var name = request.Name.Trim();
+
+        if (await _dbContext.Taxonomies.AnyAsync(x => !x.IsDeleted && x.Group == group && x.Name == name))
+            throw new ConflictException($"Danh mục \"{name}\" đã tồn tại trong nhóm \"{group}\".");
+
         var now = DateTime.UtcNow;
         var item = new Repository.Entities.Taxonomy
         {
             Id = Guid.NewGuid(),
-            Group = request.Group.Trim().ToLower(),
-            Name = request.Name.Trim(),
-            Slug = string.IsNullOrWhiteSpace(request.Slug) ? null : request.Slug.Trim(),
+            Group = group,
+            Name = name,
+            Slug = await GenerateUniqueSlugAsync(request.Name),
             Color = string.IsNullOrWhiteSpace(request.Color) ? null : request.Color.Trim(),
             SortOrder = request.SortOrder,
             CreatedAt = now,
@@ -83,8 +90,11 @@ public class Service : IService
         var oldName = item.Name;
         var newName = request.Name.Trim();
 
+        if (item.Name != newName && await _dbContext.Taxonomies.AnyAsync(x => !x.IsDeleted && x.Id != id && x.Group == item.Group && x.Name == newName))
+            throw new ConflictException($"Danh mục \"{newName}\" đã tồn tại trong nhóm \"{item.Group}\".");
+
         item.Name = newName;
-        item.Slug = string.IsNullOrWhiteSpace(request.Slug) ? null : request.Slug.Trim();
+        item.Slug = await GenerateUniqueSlugAsync(request.Name, id);
         item.Color = string.IsNullOrWhiteSpace(request.Color) ? null : request.Color.Trim();
         item.SortOrder = request.SortOrder;
         item.UpdatedAt = DateTime.UtcNow;
@@ -167,6 +177,23 @@ public class Service : IService
             "purpose" => q.Where(x => x.PurposeOfTrip == name).CountAsync(),
             _ => Task.FromResult(0),
         };
+    }
+
+    private async Task<string> GenerateUniqueSlugAsync(string name, Guid? excludedId = null)
+    {
+        var baseSlug = Slug.GenerateSlug(name.Trim());
+        if (string.IsNullOrWhiteSpace(baseSlug)) baseSlug = Guid.NewGuid().ToString("N");
+
+        var slug = baseSlug;
+        var suffix = 1;
+
+        while (await _dbContext.Taxonomies.AnyAsync(x => !x.IsDeleted && x.Slug == slug && (!excludedId.HasValue || x.Id != excludedId.Value)))
+        {
+            slug = $"{baseSlug}-{suffix}";
+            suffix++;
+        }
+
+        return slug;
     }
 
     private static Response.TaxonomyResponse ToResponse(Repository.Entities.Taxonomy item)

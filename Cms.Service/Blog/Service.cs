@@ -1,4 +1,5 @@
 using Cms.Repository;
+using Cms.Service.Configurations;
 using Cms.Service.Exceptions;
 using Cms.Service.Models;
 using FluentValidation;
@@ -74,7 +75,7 @@ public class Service : IService
             ReadingTime = request.ReadingTime.Trim(),
             Description = request.Description.Trim(),
             Tag = request.Tag.Trim(),
-            Slug = request.Slug.Trim(),
+            Slug = await GenerateUniqueSlugAsync(request.Titile),
             Cover = request.Cover.Trim(),
             Content = request.Content,
             CreatedAt = now,
@@ -100,7 +101,7 @@ public class Service : IService
         blog.ReadingTime = request.ReadingTime.Trim();
         blog.Description = request.Description.Trim();
         blog.Tag = request.Tag.Trim();
-        blog.Slug = request.Slug.Trim();
+        blog.Slug = await GenerateUniqueSlugAsync(request.Titile, id);
         blog.Cover = request.Cover.Trim();
         blog.Content = request.Content;
         blog.UpdatedAt = DateTime.UtcNow;
@@ -120,6 +121,23 @@ public class Service : IService
         await _dbContext.SaveChangesAsync();
 
         return "Blog deleted successfully.";
+    }
+
+    private async Task<string> GenerateUniqueSlugAsync(string title, Guid? excludedBlogId = null)
+    {
+        var baseSlug = Slug.GenerateSlug(title.Trim());
+        if (string.IsNullOrWhiteSpace(baseSlug)) baseSlug = Guid.NewGuid().ToString("N");
+
+        var slug = baseSlug;
+        var suffix = 1;
+
+        while (await _dbContext.Blogs.AnyAsync(x => !x.IsDeleted && x.Slug == slug && (!excludedBlogId.HasValue || x.Id != excludedBlogId.Value)))
+        {
+            slug = $"{baseSlug}-{suffix}";
+            suffix++;
+        }
+
+        return slug;
     }
 
     private static Response.BlogResponse ToResponse(Repository.Entities.Blog blog)
