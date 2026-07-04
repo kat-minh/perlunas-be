@@ -18,6 +18,8 @@ public class AppDbContext : DbContext
     public DbSet<SiteSetting> SiteSettings => Set<SiteSetting>();
     public DbSet<Blog> Blogs => Set<Blog>();
     public DbSet<Taxonomy> Taxonomies => Set<Taxonomy>();
+    public DbSet<Form> Forms => Set<Form>();
+    public DbSet<FormDetails> FormDetails => Set<FormDetails>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

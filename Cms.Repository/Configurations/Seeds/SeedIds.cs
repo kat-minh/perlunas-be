@@ -38,4 +38,20 @@ public static class SeedIds
     public static readonly Guid BlogMain = Guid.Parse("88888888-8888-8888-8888-888888888881");
     public static readonly Guid BlogResort = Guid.Parse("88888888-8888-8888-8888-888888888882");
     public static readonly Guid BlogPrivate = Guid.Parse("88888888-8888-8888-8888-888888888883");
+
+    // Form Seeds
+    public static readonly Guid Form1 = Guid.Parse("99999999-9999-9999-9999-999999999991");
+    public static readonly Guid Form2 = Guid.Parse("99999999-9999-9999-9999-999999999992");
+    public static readonly Guid Form3 = Guid.Parse("99999999-9999-9999-9999-999999999993");
+    public static readonly Guid Form4 = Guid.Parse("99999999-9999-9999-9999-999999999994");
+    public static readonly Guid Form5 = Guid.Parse("99999999-9999-9999-9999-999999999995");
+    public static readonly Guid Form6 = Guid.Parse("99999999-9999-9999-9999-999999999996");
+
+    // FormDetails Seeds
+    public static readonly Guid FormDetails1 = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1");
+    public static readonly Guid FormDetails2 = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2");
+    public static readonly Guid FormDetails3 = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3");
+    public static readonly Guid FormDetails4 = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa4");
+    public static readonly Guid FormDetails5 = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa5");
+    public static readonly Guid FormDetails6 = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa6");
 }

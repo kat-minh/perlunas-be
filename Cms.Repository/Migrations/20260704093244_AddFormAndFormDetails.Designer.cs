@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Cms.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Cms.Repository.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260704093244_AddFormAndFormDetails")]
+    partial class AddFormAndFormDetails
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -318,15 +321,15 @@ namespace Cms.Repository.Migrations
                             IsDeleted = false,
                             LongTime = "3 ngày 2 đêm",
                             Month = "08",
-                            Note = "Cần phòng hướng biển",
+                            Note = "Cần phòng hướng đồi núi",
                             Phone = "0901234567",
                             PromotionalInformation = true,
-                            ServiceId = new Guid("11111111-1111-1111-1111-111111111111"),
-                            Slug = "signature-tour-booking",
+                            ServiceId = new Guid("af94c02c-15b7-9e87-ba8e-9f5266c55668"),
+                            Slug = "dalat-booking-1",
                             TotalPrice = 5780000,
                             Type = "Tour",
                             UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Where = "Đà Nẵng",
+                            Where = "Đà Lạt",
                             Year = "2026"
                         },
                         new
@@ -341,12 +344,12 @@ namespace Cms.Repository.Migrations
                             Note = "Xin chuẩn bị nôi em bé",
                             Phone = "0912345678",
                             PromotionalInformation = false,
-                            ServiceId = new Guid("11111111-1111-1111-1111-111111111112"),
-                            Slug = "beach-resort-booking",
+                            ServiceId = new Guid("6a695375-8160-a254-bce4-37be78bdbe63"),
+                            Slug = "lunar-bay-booking",
                             TotalPrice = 10500000,
                             Type = "Hotel",
                             UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Where = "Đà Nẵng",
+                            Where = "Phú Quốc",
                             Year = "2026"
                         },
                         new
@@ -358,15 +361,15 @@ namespace Cms.Repository.Migrations
                             IsDeleted = false,
                             LongTime = "2 ngày 1 đêm",
                             Month = "10",
-                            Note = "Kỷ niệm ngày cưới",
+                            Note = "Kỷ niệm ngày cưới, cần set up hoa hồng",
                             Phone = "0923456789",
                             PromotionalInformation = true,
-                            ServiceId = new Guid("11111111-1111-1111-1111-111111111113"),
-                            Slug = "private-journey-booking",
+                            ServiceId = new Guid("6fc490b0-6501-7066-2716-f195529f23d3"),
+                            Slug = "intercontinental-combo",
                             TotalPrice = 5000000,
                             Type = "Combo",
                             UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Where = "Hội An",
+                            Where = "Đà Nẵng",
                             Year = "2026"
                         },
                         new
@@ -381,11 +384,11 @@ namespace Cms.Repository.Migrations
                             Note = "Muốn tư vấn tour ghép cho gia đình 4 người lớn",
                             Phone = "0934567890",
                             PromotionalInformation = false,
-                            ServiceId = new Guid("11111111-1111-1111-1111-111111111111"),
-                            Slug = "signature-tour-advise",
+                            ServiceId = new Guid("af94c02c-15b7-9e87-ba8e-9f5266c55668"),
+                            Slug = "dalat-advise",
                             Type = "Advise",
                             UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Where = "Đà Nẵng",
+                            Where = "Đà Lạt",
                             Year = "2026"
                         },
                         new
@@ -397,15 +400,15 @@ namespace Cms.Repository.Migrations
                             IsDeleted = false,
                             LongTime = "3 ngày 2 đêm",
                             Month = "11",
-                            Note = "Phòng yên tĩnh hướng núi",
+                            Note = "Có người già đi cùng, hạn chế đi bộ xa",
                             Phone = "0945678901",
                             PromotionalInformation = true,
-                            ServiceId = new Guid("11111111-1111-1111-1111-222222222211"),
-                            Slug = "eco-lodge-booking",
+                            ServiceId = new Guid("6b16f002-c173-9ada-ef84-72abcdda571b"),
+                            Slug = "phu-quoc-tour-booking",
                             TotalPrice = 7380000,
-                            Type = "Hotel",
+                            Type = "Tour",
                             UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Where = "Sa Pa Valley",
+                            Where = "Phú Quốc",
                             Year = "2026"
                         },
                         new
@@ -417,15 +420,15 @@ namespace Cms.Repository.Migrations
                             IsDeleted = false,
                             LongTime = "2 ngày 1 đêm",
                             Month = "12",
-                            Note = "Thanh toán trả trước",
+                            Note = "Thanh toán bằng thẻ Visa",
                             Phone = "0956789012",
                             PromotionalInformation = false,
-                            ServiceId = new Guid("11111111-1111-1111-1111-222222222212"),
-                            Slug = "royal-palace-booking",
+                            ServiceId = new Guid("6a695375-8160-a254-bce4-37be78bdbe63"),
+                            Slug = "lunar-bay-booking-2",
                             TotalPrice = 3500000,
                             Type = "Hotel",
                             UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Where = "Hanoi Old Quarter",
+                            Where = "Phú Quốc",
                             Year = "2026"
                         });
                 });
@@ -501,10 +504,10 @@ namespace Cms.Repository.Migrations
                             FormId = new Guid("99999999-9999-9999-9999-999999999991"),
                             IsDeleted = false,
                             NumberOfRooms = 1,
-                            Price = 800000,
+                            Price = 2890000,
                             ReceiveTime = "2026-08-15 14:00",
                             RoomCategory = new List<string> { "Standard Tour Room" },
-                            ServiceId = new Guid("11111111-1111-1111-1111-111111111111"),
+                            ServiceId = new Guid("af94c02c-15b7-9e87-ba8e-9f5266c55668"),
                             UnitPrice = "VNĐ",
                             UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
@@ -519,10 +522,10 @@ namespace Cms.Repository.Migrations
                             FormId = new Guid("99999999-9999-9999-9999-999999999992"),
                             IsDeleted = false,
                             NumberOfRooms = 1,
-                            Price = 1200000,
+                            Price = 3500000,
                             ReceiveTime = "2026-09-10 14:00",
-                            RoomCategory = new List<string> { "Deluxe Room" },
-                            ServiceId = new Guid("11111111-1111-1111-1111-111111111112"),
+                            RoomCategory = new List<string> { "Deluxe Sea View Bungalow" },
+                            ServiceId = new Guid("6a695375-8160-a254-bce4-37be78bdbe63"),
                             UnitPrice = "VNĐ",
                             UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
@@ -537,10 +540,10 @@ namespace Cms.Repository.Migrations
                             FormId = new Guid("99999999-9999-9999-9999-999999999993"),
                             IsDeleted = false,
                             NumberOfRooms = 1,
-                            Price = 2200000,
+                            Price = 5000000,
                             ReceiveTime = "2026-10-05 14:00",
-                            RoomCategory = new List<string> { "Heritage Suite" },
-                            ServiceId = new Guid("11111111-1111-1111-1111-111111111113"),
+                            RoomCategory = new List<string> { "Ocean Front Villa" },
+                            ServiceId = new Guid("6fc490b0-6501-7066-2716-f195529f23d3"),
                             UnitPrice = "VNĐ",
                             UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
@@ -555,10 +558,10 @@ namespace Cms.Repository.Migrations
                             FormId = new Guid("99999999-9999-9999-9999-999999999994"),
                             IsDeleted = false,
                             NumberOfRooms = 2,
-                            Price = 1000000,
+                            Price = 2890000,
                             ReceiveTime = "2026-08-20 14:00",
-                            RoomCategory = new List<string> { "Superior Tour Room" },
-                            ServiceId = new Guid("11111111-1111-1111-1111-111111111111"),
+                            RoomCategory = new List<string> { "Standard Tour Room" },
+                            ServiceId = new Guid("af94c02c-15b7-9e87-ba8e-9f5266c55668"),
                             UnitPrice = "VNĐ",
                             UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
@@ -573,10 +576,10 @@ namespace Cms.Repository.Migrations
                             FormId = new Guid("99999999-9999-9999-9999-999999999995"),
                             IsDeleted = false,
                             NumberOfRooms = 2,
-                            Price = 950000,
+                            Price = 3690000,
                             ReceiveTime = "2026-11-12 14:00",
-                            RoomCategory = new List<string> { "Eco Lodge Room" },
-                            ServiceId = new Guid("11111111-1111-1111-1111-222222222211"),
+                            RoomCategory = new List<string> { "Standard Tour Room" },
+                            ServiceId = new Guid("6b16f002-c173-9ada-ef84-72abcdda571b"),
                             UnitPrice = "VNĐ",
                             UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
@@ -591,10 +594,10 @@ namespace Cms.Repository.Migrations
                             FormId = new Guid("99999999-9999-9999-9999-999999999996"),
                             IsDeleted = false,
                             NumberOfRooms = 1,
-                            Price = 2100000,
+                            Price = 3500000,
                             ReceiveTime = "2026-12-24 14:00",
-                            RoomCategory = new List<string> { "Royal Suite" },
-                            ServiceId = new Guid("11111111-1111-1111-1111-222222222212"),
+                            RoomCategory = new List<string> { "Deluxe Garden View" },
+                            ServiceId = new Guid("6a695375-8160-a254-bce4-37be78bdbe63"),
                             UnitPrice = "VNĐ",
                             UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         });

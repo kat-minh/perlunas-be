@@ -46,4 +46,6 @@ public class Service : BaseEntity<Guid>, IAuditableEntity
     public ICollection<RoomCategory> RoomCategories { get; set; } = new List<RoomCategory>();
     public ICollection<DepartureSchedule> DepartureSchedules { get; set; } = new List<DepartureSchedule>();
     public ICollection<ImportantInfor> ImportantInfors { get; set; } = new List<ImportantInfor>();
+    
+    public ICollection<Form>  Forms { get; set; } = new List<Form>();
 }
