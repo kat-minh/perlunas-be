@@ -43,6 +43,7 @@ builder.Services.AddScoped<Cms.Service.Service.IService, Cms.Service.Service.Ser
 builder.Services.AddScoped<Cms.Service.SiteSetting.IService, Cms.Service.SiteSetting.Service>();
 builder.Services.AddScoped<Cms.Service.Form.IService, Cms.Service.Form.Service>();
 builder.Services.AddScoped<Cms.Service.MailService.IService, Cms.Service.MailService.Service>();
+builder.Services.AddScoped<Cms.Service.CloudinaryService.IService, Cms.Service.CloudinaryService.Service>();
 builder.Services.AddValidatorsFromAssembly(Cms.Service.AssemblyReference.Assembly);
 
 // ── CORS ───────────────────────────────────────────────────────────────────
