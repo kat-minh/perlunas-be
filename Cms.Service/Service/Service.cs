@@ -49,6 +49,7 @@ public class Service : IService
             .Include(x => x.DepartureSchedules)
             .Include(x => x.RoomCategories)
             .OrderByDescending(x => x.CreatedAt)
+            .ThenBy(x => x.Id)
             .Skip((pageIndex - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -78,6 +79,7 @@ public class Service : IService
             .Include(x => x.DepartureSchedules)
             .Include(x => x.RoomCategories)
             .OrderByDescending(x => x.CreatedAt)
+            .ThenBy(x => x.Id)
             .Skip((pageIndex - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -105,7 +107,12 @@ public class Service : IService
             query = query.Where(x => x.Destination != null && x.Destination.ToLower().Contains(destination.Trim().ToLower()));
 
         if (!string.IsNullOrWhiteSpace(form))
-            query = query.Where(x => x.Form != null && x.Form.ToLower().Contains(form.Trim().ToLower()));
+        {
+            // Lưu trú là danh mục (taxonomy) → khớp CHÍNH XÁC, không Contains (kẻo
+            // chọn "Hotel" lại lôi cả "Boutique Hotel").
+            var frm = form.Trim().ToLower();
+            query = query.Where(x => x.Form != null && x.Form.ToLower() == frm);
+        }
 
         if (!string.IsNullOrWhiteSpace(classify))
         {
@@ -124,6 +131,7 @@ public class Service : IService
             .Include(x => x.DepartureSchedules)
             .Include(x => x.RoomCategories)
             .OrderByDescending(x => x.CreatedAt)
+            .ThenBy(x => x.Id)
             .Skip((pageIndex - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -151,7 +159,12 @@ public class Service : IService
             query = query.Where(x => x.Destination != null && x.Destination.ToLower().Contains(destination.Trim().ToLower()));
 
         if (!string.IsNullOrWhiteSpace(form))
-            query = query.Where(x => x.Form != null && x.Form.ToLower().Contains(form.Trim().ToLower()));
+        {
+            // Lưu trú là danh mục (taxonomy) → khớp CHÍNH XÁC, không Contains (kẻo
+            // chọn "Hotel" lại lôi cả "Boutique Hotel").
+            var frm = form.Trim().ToLower();
+            query = query.Where(x => x.Form != null && x.Form.ToLower() == frm);
+        }
 
         if (!string.IsNullOrWhiteSpace(purposeOfTrip))
         {
@@ -164,6 +177,7 @@ public class Service : IService
             .Include(x => x.DepartureSchedules)
             .Include(x => x.RoomCategories)
             .OrderByDescending(x => x.CreatedAt)
+            .ThenBy(x => x.Id)
             .Skip((pageIndex - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
