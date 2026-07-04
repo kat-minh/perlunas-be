@@ -668,7 +668,7 @@ public class ServiceTests
 
         await using var ctx2 = new AppDbContext(options);
         var svc = CreateSvc(ctx2);
-        var result = await svc.GetToursAsync(null, 1, 10);
+        var result = await svc.GetToursAsync(null, null, 1, 10);
 
         result.Value.Items.Should().HaveCount(1);
         result.Value.TotalCount.Should().Be(1);
@@ -689,7 +689,7 @@ public class ServiceTests
 
         await using var ctx2 = new AppDbContext(options);
         var svc = CreateSvc(ctx2);
-        var result = await svc.GetToursAsync("Phú Quốc", 1, 10);
+        var result = await svc.GetToursAsync("Phú Quốc", null, 1, 10);
 
         result.Value.Items.Should().ContainSingle();
     }
@@ -709,7 +709,7 @@ public class ServiceTests
 
         await using var ctx2 = new AppDbContext(options);
         var svc = CreateSvc(ctx2);
-        var result = await svc.GetToursAsync("Miền Trung", 1, 10);
+        var result = await svc.GetToursAsync("Miền Trung", null, 1, 10);
 
         result.Value.Items.Should().ContainSingle();
     }
@@ -1016,7 +1016,7 @@ public class ServiceTests
         var svc = CreateSvc(ctx);
 
         (await svc.GetAllAsync(1, 10)).Value.Items.Should().BeEmpty();
-        (await svc.GetToursAsync(null, 1, 10)).Value.Items.Should().BeEmpty();
+        (await svc.GetToursAsync(null, null, 1, 10)).Value.Items.Should().BeEmpty();
         (await svc.GetCombosAsync(null, null, null, null, null, 1, 10)).Value.Items.Should().BeEmpty();
         (await svc.GetHotelsAsync(null, null, null, null, 1, 10)).Value.Items.Should().BeEmpty();
     }
