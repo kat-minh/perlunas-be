@@ -21,6 +21,12 @@ namespace Cms.Repository.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            // IDEMPOTENT: DB mới thì đây là no-op; DB đã có sẵn 73 row (vd Railway đã chạy
+            // các migration seed cũ trước khi bị xoá) thì xoá trước để chèn lại không đụng
+            // PK_PageContents. Các row này ParentId=null, không phải cha của row nào nên xoá an toàn.
+            foreach (var id in RestoredIds)
+                migrationBuilder.DeleteData(table: "PageContents", keyColumn: "Id", keyValue: new Guid(id));
+
             // --- SeedFooterInfo (footer.brand/contact/social) ---
             migrationBuilder.InsertData(
                 table: "PageContents",
