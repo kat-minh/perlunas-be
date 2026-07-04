@@ -634,8 +634,7 @@ public class Service : IService
 
         service.Title = request.Title!.Trim();
         // GIỮ NGUYÊN slug khi sửa (slug chỉ sinh 1 lần lúc tạo) — đổi title không
-        // đổi URL, tránh vỡ link/bookmark/ISR đã build.
-        service.Slug = await GenerateUniqueSlugAsync(service.Title, id);
+        // đổi URL, tránh vỡ link/bookmark/ISR đã build. (KHÔNG regenerate ở đây.)
         service.Album = JsonSerializer.Serialize(request.Album!);
         service.Region = request.Region!.Trim();
         service.IsPublic = request.IsPublic ?? service.IsPublic;
