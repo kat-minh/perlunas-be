@@ -1,4 +1,5 @@
 using Cms.Repository;
+using Cms.Service.Configurations;
 using Cms.Service.Exceptions;
 using Cms.Service.Models;
 using FluentValidation;
@@ -74,6 +75,9 @@ public class Service : IService
             ReadingTime = request.ReadingTime.Trim(),
             Description = request.Description.Trim(),
             Tag = request.Tag.Trim(),
+            Slug = await GenerateUniqueSlugAsync(request.Titile),
+            Cover = request.Cover.Trim(),
+            Content = request.Content,
             CreatedAt = now,
             UpdatedAt = now,
         };
@@ -97,6 +101,9 @@ public class Service : IService
         blog.ReadingTime = request.ReadingTime.Trim();
         blog.Description = request.Description.Trim();
         blog.Tag = request.Tag.Trim();
+        blog.Slug = await GenerateUniqueSlugAsync(request.Titile, id);
+        blog.Cover = request.Cover.Trim();
+        blog.Content = request.Content;
         blog.UpdatedAt = DateTime.UtcNow;
 
         await _dbContext.SaveChangesAsync();
@@ -116,6 +123,23 @@ public class Service : IService
         return "Blog deleted successfully.";
     }
 
+    private async Task<string> GenerateUniqueSlugAsync(string title, Guid? excludedBlogId = null)
+    {
+        var baseSlug = Slug.GenerateSlug(title.Trim());
+        if (string.IsNullOrWhiteSpace(baseSlug)) baseSlug = Guid.NewGuid().ToString("N");
+
+        var slug = baseSlug;
+        var suffix = 1;
+
+        while (await _dbContext.Blogs.AnyAsync(x => !x.IsDeleted && x.Slug == slug && (!excludedBlogId.HasValue || x.Id != excludedBlogId.Value)))
+        {
+            slug = $"{baseSlug}-{suffix}";
+            suffix++;
+        }
+
+        return slug;
+    }
+
     private static Response.BlogResponse ToResponse(Repository.Entities.Blog blog)
     {
         return new Response.BlogResponse
@@ -127,8 +151,31 @@ public class Service : IService
             ReadingTime = blog.ReadingTime ?? string.Empty,
             Description = blog.Description ?? string.Empty,
             Tag = blog.Tag ?? string.Empty,
+            Slug = blog.Slug ?? string.Empty,
+            Cover = blog.Cover ?? string.Empty,
+            Content = blog.Content ?? string.Empty,
             CreatedAt = blog.CreatedAt,
             UpdatedAt = blog.UpdatedAt,
         };
+    }
+
+    public async Task<Response.BlogResponse> GetBySlugAsync(string slug)
+    {
+        var blog = await _dbContext.Blogs
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Slug == slug && !x.IsDeleted);
+
+        if (blog is null) throw new NotFoundException("Blog not found.");
+
+        var response = ToResponse(blog);
+        response.RecentBlogs = await _dbContext.Blogs
+            .AsNoTracking()
+            .Where(x => !x.IsDeleted && x.Id != blog.Id)
+            .OrderByDescending(x => x.CreatedAt)
+            .Take(3)
+            .Select(x => ToResponse(x))
+            .ToListAsync();
+
+        return response;
     }
 }

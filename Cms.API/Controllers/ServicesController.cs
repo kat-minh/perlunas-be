@@ -26,9 +26,9 @@ public class ServicesController : ControllerBase
     }
 
     [HttpGet("tours")]
-    public async Task<IActionResult> GetTours([FromQuery] string? keyword, [FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> GetTours([FromQuery] string? keyword, [FromQuery] string? destination, [FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
     {
-        var result = await _serviceService.GetToursAsync(keyword, pageIndex, pageSize);
+        var result = await _serviceService.GetToursAsync(keyword, destination, pageIndex, pageSize);
         result.TraceId = HttpContext.TraceIdentifier;
         return Ok(result);
     }

@@ -125,10 +125,11 @@ public class Service : IService
             .Where(x => !x.IsDeleted)
             .ToListAsync();
 
-        var toDelete = new List<Repository.Entities.PageContent>();
-        CollectDescendants(all, id, toDelete);
+        var pageContent = all.FirstOrDefault(x => x.Id == id);
+        if (pageContent is null) throw new NotFoundException("Page content not found.");
 
-        if (toDelete.Count == 0) throw new NotFoundException("Page content not found.");
+        var toDelete = new List<Repository.Entities.PageContent> { pageContent };
+        CollectDescendants(all, id, toDelete);
 
         var now = DateTime.UtcNow;
         foreach (var item in toDelete)

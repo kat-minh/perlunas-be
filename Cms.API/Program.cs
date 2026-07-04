@@ -37,13 +37,12 @@ builder.Services.Configure<Cms.Service.JwtService.JwtOption>(builder.Configurati
 builder.Services.AddScoped<Cms.Service.JwtService.IService, Cms.Service.JwtService.Service>();
 builder.Services.AddScoped<Cms.Service.Auth.IService, Cms.Service.Auth.Service>();
 builder.Services.AddScoped<Cms.Service.Blog.IService, Cms.Service.Blog.Service>();
+builder.Services.AddScoped<Cms.Service.Taxonomy.IService, Cms.Service.Taxonomy.Service>();
 builder.Services.AddScoped<Cms.Service.PageContent.IService, Cms.Service.PageContent.Service>();
 builder.Services.AddScoped<Cms.Service.Service.IService, Cms.Service.Service.Service>();
-builder.Services.AddScoped<Cms.Service.Schedule.IService, Cms.Service.Schedule.Service>();
-builder.Services.AddScoped<Cms.Service.RoomCategory.IService, Cms.Service.RoomCategory.Service>();
-builder.Services.AddScoped<Cms.Service.DepartureSchedule.IService, Cms.Service.DepartureSchedule.Service>();
-builder.Services.AddScoped<Cms.Service.ImportantInfor.IService, Cms.Service.ImportantInfor.Service>();
 builder.Services.AddScoped<Cms.Service.SiteSetting.IService, Cms.Service.SiteSetting.Service>();
+builder.Services.AddScoped<Cms.Service.Form.IService, Cms.Service.Form.Service>();
+builder.Services.AddScoped<Cms.Service.MailService.IService, Cms.Service.MailService.Service>();
 builder.Services.AddValidatorsFromAssembly(Cms.Service.AssemblyReference.Assembly);
 
 // ── CORS ───────────────────────────────────────────────────────────────────
@@ -63,6 +62,15 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// ── Áp EF migrations (kèm HasData seeds) lúc khởi động ──────────────────────
+// Giúp một database mới toanh (vd volume Docker vừa tạo) có sẵn schema + dữ liệu
+// mẫu mà không cần chạy tay `dotnet ef database update`.
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
 
 // ── Middleware pipeline ────────────────────────────────────────────────────
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();

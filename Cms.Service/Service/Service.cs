@@ -45,17 +45,20 @@ public class Service : IService
             .Where(x => !x.IsDeleted);
 
         var totalCount = await query.CountAsync();
-        var items = await query
+        var entities = await query
+            .Include(x => x.DepartureSchedules)
+            .Include(x => x.RoomCategories)
             .OrderByDescending(x => x.CreatedAt)
+            .ThenBy(x => x.Id)
             .Skip((pageIndex - 1) * pageSize)
             .Take(pageSize)
-            .Select(x => ToResponse(x))
             .ToListAsync();
+        var items = entities.Select(ToListItemResponse).ToList();
 
         return ApiResponseFactory.BasePagination(items, pageIndex, pageSize, totalCount);
     }
 
-    public async Task<BasePaginationResponse> GetToursAsync(string? keyword, int pageIndex, int pageSize)
+    public async Task<BasePaginationResponse> GetToursAsync(string? keyword, string? destination, int pageIndex, int pageSize)
     {
         pageIndex = pageIndex <= 0 ? 1 : pageIndex;
         pageSize = pageSize <= 0 ? 10 : Math.Min(pageSize, 100);
@@ -71,13 +74,23 @@ public class Service : IService
                                   || x.Region != null && x.Region.ToLower().Contains(kw));
         }
 
+        // Vùng miền là danh mục → khớp CHÍNH XÁC (giống filter lưu trú).
+        if (!string.IsNullOrWhiteSpace(destination))
+        {
+            var region = destination.Trim().ToLower();
+            query = query.Where(x => x.Region != null && x.Region.ToLower() == region);
+        }
+
         var totalCount = await query.CountAsync();
-        var items = await query
+        var entities = await query
+            .Include(x => x.DepartureSchedules)
+            .Include(x => x.RoomCategories)
             .OrderByDescending(x => x.CreatedAt)
+            .ThenBy(x => x.Id)
             .Skip((pageIndex - 1) * pageSize)
             .Take(pageSize)
-            .Select(x => ToResponse(x))
             .ToListAsync();
+        var items = entities.Select(ToListItemResponse).ToList();
 
         return ApiResponseFactory.BasePagination(items, pageIndex, pageSize, totalCount);
     }
@@ -101,21 +114,35 @@ public class Service : IService
             query = query.Where(x => x.Destination != null && x.Destination.ToLower().Contains(destination.Trim().ToLower()));
 
         if (!string.IsNullOrWhiteSpace(form))
-            query = query.Where(x => x.Form != null && x.Form.ToLower().Contains(form.Trim().ToLower()));
+        {
+            // Lưu trú là danh mục (taxonomy) → khớp CHÍNH XÁC, không Contains (kẻo
+            // chọn "Hotel" lại lôi cả "Boutique Hotel").
+            var frm = form.Trim().ToLower();
+            query = query.Where(x => x.Form != null && x.Form.ToLower() == frm);
+        }
 
-        if (!string.IsNullOrWhiteSpace(classify) && Enum.TryParse<Classify>(classify.Trim(), ignoreCase: true, out var cls))
-            query = query.Where(x => x.Classify == cls);
+        if (!string.IsNullOrWhiteSpace(classify))
+        {
+            var cls = classify.Trim().ToLower();
+            query = query.Where(x => x.Classify != null && x.Classify.ToLower() == cls);
+        }
 
-        if (!string.IsNullOrWhiteSpace(purposeOfTrip) && Enum.TryParse<PurposeOfTrip>(purposeOfTrip.Trim(), ignoreCase: true, out var pot))
-            query = query.Where(x => x.PurposeOfTrip == pot);
+        if (!string.IsNullOrWhiteSpace(purposeOfTrip))
+        {
+            var pot = purposeOfTrip.Trim().ToLower();
+            query = query.Where(x => x.PurposeOfTrip != null && x.PurposeOfTrip.ToLower().Contains(pot));
+        }
 
         var totalCount = await query.CountAsync();
-        var items = await query
+        var entities = await query
+            .Include(x => x.DepartureSchedules)
+            .Include(x => x.RoomCategories)
             .OrderByDescending(x => x.CreatedAt)
+            .ThenBy(x => x.Id)
             .Skip((pageIndex - 1) * pageSize)
             .Take(pageSize)
-            .Select(x => ToResponse(x))
             .ToListAsync();
+        var items = entities.Select(ToListItemResponse).ToList();
 
         return ApiResponseFactory.BasePagination(items, pageIndex, pageSize, totalCount);
     }
@@ -139,18 +166,29 @@ public class Service : IService
             query = query.Where(x => x.Destination != null && x.Destination.ToLower().Contains(destination.Trim().ToLower()));
 
         if (!string.IsNullOrWhiteSpace(form))
-            query = query.Where(x => x.Form != null && x.Form.ToLower().Contains(form.Trim().ToLower()));
+        {
+            // Lưu trú là danh mục (taxonomy) → khớp CHÍNH XÁC, không Contains (kẻo
+            // chọn "Hotel" lại lôi cả "Boutique Hotel").
+            var frm = form.Trim().ToLower();
+            query = query.Where(x => x.Form != null && x.Form.ToLower() == frm);
+        }
 
-        if (!string.IsNullOrWhiteSpace(purposeOfTrip) && Enum.TryParse<PurposeOfTrip>(purposeOfTrip.Trim(), ignoreCase: true, out var pot))
-            query = query.Where(x => x.PurposeOfTrip == pot);
+        if (!string.IsNullOrWhiteSpace(purposeOfTrip))
+        {
+            var pot = purposeOfTrip.Trim().ToLower();
+            query = query.Where(x => x.PurposeOfTrip != null && x.PurposeOfTrip.ToLower().Contains(pot));
+        }
 
         var totalCount = await query.CountAsync();
-        var items = await query
+        var entities = await query
+            .Include(x => x.DepartureSchedules)
+            .Include(x => x.RoomCategories)
             .OrderByDescending(x => x.CreatedAt)
+            .ThenBy(x => x.Id)
             .Skip((pageIndex - 1) * pageSize)
             .Take(pageSize)
-            .Select(x => ToResponse(x))
             .ToListAsync();
+        var items = entities.Select(ToListItemResponse).ToList();
 
         return ApiResponseFactory.BasePagination(items, pageIndex, pageSize, totalCount);
     }
@@ -241,6 +279,28 @@ public class Service : IService
                 response.RelatedHotels = new List<Response.ServiceResponse>();
             }
         }
+        else if (service.Type == ServiceType.Hotel)
+        {
+            // Khách sạn liên quan: cùng "nơi đến" (Destination), tối đa 3, loại chính nó.
+            var targetDest = service.Destination?.Trim().ToLower();
+            if (!string.IsNullOrWhiteSpace(targetDest))
+            {
+                var relatedHotels = await _dbContext.Services
+                    .AsNoTracking()
+                    .Include(x => x.RoomCategories)
+                    .Where(x => !x.IsDeleted && x.IsPublic && x.Type == ServiceType.Hotel && x.Id != service.Id
+                        && x.Destination != null && x.Destination.Trim().ToLower() == targetDest)
+                    .OrderByDescending(x => x.CreatedAt)
+                    .Take(3)
+                    .ToListAsync();
+
+                response.RelatedHotels = relatedHotels.Select(h => ToResponse(h)).ToList();
+            }
+            else
+            {
+                response.RelatedHotels = new List<Response.ServiceResponse>();
+            }
+        }
 
         return response;
     }
@@ -263,16 +323,22 @@ public class Service : IService
         {
             Id = serviceId,
             Title = request.Title.Trim(),
-            Slug = Slug.GenerateSlug(request.Title),
+            Slug = await GenerateUniqueSlugAsync(request.Title),
             BestSeller = request.BestSeller,
+            ComingSoon = request.ComingSoon,
             Type = ServiceType.Tour,
             Day = request.Day,
             Night = request.Night,
+            DurationText = string.IsNullOrWhiteSpace(request.DurationText) ? null : request.DurationText.Trim(),
             Album = JsonSerializer.Serialize(request.Album),
             Region = request.Region.Trim(),
             Description = request.Description.Trim(),
             Infor = request.Infor.Trim(),
             Highlight = request.Highlight.Select(h => h.Trim()).ToList(),
+            Destinations = request.Destinations.Select(d => d.Trim()).ToList(),
+            HighlightContent = request.HighlightContent.Trim(),
+            TripInfoJson = string.IsNullOrWhiteSpace(request.TripInfoJson) ? null : request.TripInfoJson.Trim(),
+            PriceUnit = string.IsNullOrWhiteSpace(request.PriceUnit) ? null : request.PriceUnit.Trim(),
             Code = request.Code.Trim(),
             IsPublic = request.IsPublic,
             CreatedAt = now,
@@ -312,6 +378,7 @@ public class Service : IService
             StartTime = d.StartTime.Trim(),
             Code = d.Code.Trim(),
             Price = d.Price.Trim(),
+            OriginalPrice = string.IsNullOrWhiteSpace(d.OriginalPrice) ? null : d.OriginalPrice.Trim(),
             AccommodationStandards = d.AccommodationStandards.Trim(),
             CreatedAt = now,
             UpdatedAt = now,
@@ -349,6 +416,7 @@ public class Service : IService
             StartTime = d.StartTime ?? string.Empty,
             Code = d.Code ?? string.Empty,
             Price = d.Price ?? string.Empty,
+            OriginalPrice = d.OriginalPrice ?? string.Empty,
             AccommodationStandards = d.AccommodationStandards ?? string.Empty,
             CreatedAt = d.CreatedAt,
             UpdatedAt = d.UpdatedAt,
@@ -369,18 +437,26 @@ public class Service : IService
             Slug = Slug.GenerateSlug(request.Title),
             BestSeller = request.BestSeller,
             Type = ServiceType.Combo,
+            Day = request.Day > 0 ? request.Day : (int?)null,
             Night = request.Night,
+            DurationText = string.IsNullOrWhiteSpace(request.DurationText) ? null : request.DurationText.Trim(),
             Label = request.Label.Trim(),
             Album = JsonSerializer.Serialize(request.Album),
             Region = request.Region.Trim(),
             Description = request.Description.Trim(),
             Infor = request.Infor.Trim(),
             Highlight = request.Highlight.Select(h => h.Trim()).ToList(),
+            HighlightContent = string.IsNullOrWhiteSpace(request.HighlightContent) ? null : request.HighlightContent.Trim(),
             Code = request.Code.Trim(),
-            PurposeOfTrip = request.PurposeOfTrip,
+            PurposeOfTrip = request.PurposeOfTrip.Trim(),
             Destination = request.Destination.Trim(),
             Form = request.Form.Trim(),
-            Classify = request.Classify,
+            Classify = request.Classify.Trim(),
+            TripInfoJson = string.IsNullOrWhiteSpace(request.TripInfoJson) ? null : request.TripInfoJson.Trim(),
+            PriceUnit = string.IsNullOrWhiteSpace(request.PriceUnit) ? null : request.PriceUnit.Trim(),
+            // Combo: giá bán theo GÓI ở cấp dịch vụ (không ở hạng phòng).
+            Price = string.IsNullOrWhiteSpace(request.Price) ? null : request.Price.Trim(),
+            OriginalPrice = string.IsNullOrWhiteSpace(request.OriginalPrice) ? null : request.OriginalPrice.Trim(),
             IsPublic = request.IsPublic,
             CreatedAt = now,
             UpdatedAt = now,
@@ -423,9 +499,10 @@ public class Service : IService
             NumberOfBed = r.NumberOfBed.Trim(),
             Description = r.Description.Trim(),
             Feature = JsonSerializer.Serialize(r.Feature),
-            Price = null, // Combo → Price = null
-            OriginalPrice = r.OriginalPrice?.Trim(),
-            Unit = r.Unit?.Trim(),
+            // Combo: hạng phòng CHỈ mô tả (không giá) — giá nằm ở cấp gói (service.Price).
+            Price = null,
+            OriginalPrice = null,
+            Unit = null,
             CreatedAt = now,
             UpdatedAt = now,
         }).ToList();
@@ -484,7 +561,7 @@ public class Service : IService
         {
             Id = Guid.NewGuid(),
             Title = request.Title.Trim(),
-            Slug = Slug.GenerateSlug(request.Title),
+            Slug = await GenerateUniqueSlugAsync(request.Title),
             BestSeller = request.BestSeller,
             Type = ServiceType.Hotel,
             Introducetion = request.Introducetion.Trim(),
@@ -492,7 +569,8 @@ public class Service : IService
             Region = request.Region.Trim(),
             Instruct = request.Instruct.Trim(),
             Feature = request.Feature.Trim(),
-            PurposeOfTrip = request.PurposeOfTrip,
+            Facilities = request.Facilities.Select(f => f.Trim()).ToList(),
+            PurposeOfTrip = request.PurposeOfTrip.Trim(),
             Destination = request.Destination.Trim(),
             Form = request.Form.Trim(),
             IsPublic = request.IsPublic,
@@ -555,13 +633,19 @@ public class Service : IService
         var type = request.Type!.Value;
 
         service.Title = request.Title!.Trim();
-        service.Slug = Slug.GenerateSlug(service.Title);
+        // GIỮ NGUYÊN slug khi sửa (slug chỉ sinh 1 lần lúc tạo) — đổi title không
+        // đổi URL, tránh vỡ link/bookmark/ISR đã build.
+        service.Slug = await GenerateUniqueSlugAsync(service.Title, id);
         service.Album = JsonSerializer.Serialize(request.Album!);
         service.Region = request.Region!.Trim();
         service.IsPublic = request.IsPublic ?? service.IsPublic;
         if (request.BestSeller.HasValue)
         {
             service.BestSeller = request.BestSeller.Value;
+        }
+        if (request.ComingSoon.HasValue)
+        {
+            service.ComingSoon = request.ComingSoon.Value;
         }
 
         service.Type = type;
@@ -606,7 +690,9 @@ public class Service : IService
             {
                 Id = Guid.NewGuid(), ServiceId = id,
                 StartTime = d.StartTime.Trim(), Code = d.Code.Trim(),
-                Price = d.Price.Trim(), AccommodationStandards = d.AccommodationStandards.Trim(),
+                Price = d.Price.Trim(),
+                OriginalPrice = string.IsNullOrWhiteSpace(d.OriginalPrice) ? null : d.OriginalPrice.Trim(),
+                AccommodationStandards = d.AccommodationStandards.Trim(),
                 CreatedAt = now, UpdatedAt = now,
             }));
         }
@@ -624,8 +710,10 @@ public class Service : IService
                 Titile = r.Titile.Trim(), NumberOfCustomer = r.NumberOfCustomer,
                 Acreage = r.Acreage.Trim(), NumberOfBed = r.NumberOfBed.Trim(),
                 Description = r.Description.Trim(), Feature = JsonSerializer.Serialize(r.Feature),
+                // Combo: hạng phòng không mang giá (giá ở cấp gói); khách sạn thì giữ giá phòng.
                 Price = type == ServiceType.Combo ? null : r.Price?.Trim(),
-                OriginalPrice = r.OriginalPrice?.Trim(), Unit = r.Unit?.Trim(),
+                OriginalPrice = type == ServiceType.Combo ? null : r.OriginalPrice?.Trim(),
+                Unit = type == ServiceType.Combo ? null : r.Unit?.Trim(),
                 CreatedAt = now, UpdatedAt = now,
             }));
         }
@@ -713,7 +801,9 @@ public class Service : IService
         string? introducetion, int? day, int? night, string? label,
         string? description, string? infor, List<string>? highlight, string? code,
         string? instruct, string? feature,
-        PurposeOfTrip? purposeOfTrip, string? destination, string? form, Classify? classify)
+        string? purposeOfTrip, string? destination, string? form, string? classify,
+        List<string>? destinations, List<string>? facilities, string? highlightContent,
+        string? tripInfoJson, string? priceUnit, string? price, string? originalPrice, string? durationText)
     {
         switch (type)
         {
@@ -726,47 +816,74 @@ public class Service : IService
                 service.Destination = null;
                 service.Form = null;
                 service.Classify = null;
+                service.Price = null; // giá gói chỉ dành cho combo
+                service.OriginalPrice = null;
+                service.Facilities = new List<string>(); // tiện nghi chỉ dành cho hotel
 
                 if (day.HasValue) service.Day = day.Value;
                 if (night.HasValue) service.Night = night.Value;
+                if (durationText is not null) service.DurationText = string.IsNullOrWhiteSpace(durationText) ? null : durationText.Trim();
                 if (description is not null) service.Description = description.Trim();
                 if (infor is not null) service.Infor = infor.Trim();
                 if (highlight is not null) service.Highlight = highlight.Select(h => h.Trim()).ToList();
+                if (destinations is not null) service.Destinations = destinations.Select(d => d.Trim()).ToList();
+                if (highlightContent is not null) service.HighlightContent = highlightContent.Trim();
+                if (tripInfoJson is not null) service.TripInfoJson = string.IsNullOrWhiteSpace(tripInfoJson) ? null : tripInfoJson.Trim();
+                if (priceUnit is not null) service.PriceUnit = string.IsNullOrWhiteSpace(priceUnit) ? null : priceUnit.Trim();
                 if (code is not null) service.Code = code.Trim();
                 break;
 
             case ServiceType.Combo:
                 service.Introducetion = null;
-                service.Day = null;
                 service.Instruct = null;
                 service.Feature = null;
+                service.Destinations = new List<string>(); // combo không có điểm đến kiểu tour
+                service.Facilities = new List<string>();
+                // Day + HighlightContent: combo CÓ dùng (thời lượng "x ngày y đêm" +
+                // "Điểm nổi bật") — set từ request bên dưới, KHÔNG null hoá.
 
+                if (day.HasValue) service.Day = day.Value;
                 if (night.HasValue) service.Night = night.Value;
+                if (durationText is not null) service.DurationText = string.IsNullOrWhiteSpace(durationText) ? null : durationText.Trim();
+                if (highlightContent is not null) service.HighlightContent = highlightContent.Trim();
                 if (label is not null) service.Label = label.Trim();
                 if (description is not null) service.Description = description.Trim();
                 if (infor is not null) service.Infor = infor.Trim();
                 if (highlight is not null) service.Highlight = highlight.Select(h => h.Trim()).ToList();
                 if (code is not null) service.Code = code.Trim();
-                if (purposeOfTrip.HasValue) service.PurposeOfTrip = purposeOfTrip.Value;
+                if (purposeOfTrip is not null) service.PurposeOfTrip = purposeOfTrip.Trim();
                 if (destination is not null) service.Destination = destination.Trim();
                 if (form is not null) service.Form = form.Trim();
-                if (classify.HasValue) service.Classify = classify.Value;
+                if (classify is not null) service.Classify = classify.Trim();
+                if (tripInfoJson is not null) service.TripInfoJson = string.IsNullOrWhiteSpace(tripInfoJson) ? null : tripInfoJson.Trim();
+                if (priceUnit is not null) service.PriceUnit = string.IsNullOrWhiteSpace(priceUnit) ? null : priceUnit.Trim();
+                // Combo: giá bán theo gói ở cấp dịch vụ (Price/OriginalPrice).
+                if (price is not null) service.Price = string.IsNullOrWhiteSpace(price) ? null : price.Trim();
+                if (originalPrice is not null) service.OriginalPrice = string.IsNullOrWhiteSpace(originalPrice) ? null : originalPrice.Trim();
                 break;
 
             case ServiceType.Hotel:
                 service.Day = null;
                 service.Night = null;
+                service.DurationText = null; // khách sạn không có thời lượng
                 service.Label = null;
                 service.Description = null;
                 service.Infor = null;
                 service.Highlight = new List<string>();
                 service.Code = null;
                 service.Classify = null;
+                service.Destinations = new List<string>(); // điểm đến chỉ dành cho tour
+                service.HighlightContent = null; // richtext điểm nổi bật chỉ dành cho tour
+                service.TripInfoJson = null; // 4 ô "Thông tin chính" chỉ dành cho tour
+                service.PriceUnit = null; // đơn vị giá tour chỉ dành cho tour
+                service.Price = null; // giá gói chỉ dành cho combo
+                service.OriginalPrice = null;
 
                 if (introducetion is not null) service.Introducetion = introducetion.Trim();
                 if (instruct is not null) service.Instruct = instruct.Trim();
                 if (feature is not null) service.Feature = feature.Trim();
-                if (purposeOfTrip.HasValue) service.PurposeOfTrip = purposeOfTrip.Value;
+                if (facilities is not null) service.Facilities = facilities.Select(f => f.Trim()).ToList();
+                if (purposeOfTrip is not null) service.PurposeOfTrip = purposeOfTrip.Trim();
                 if (destination is not null) service.Destination = destination.Trim();
                 if (form is not null) service.Form = form.Trim();
                 break;
@@ -777,7 +894,9 @@ public class Service : IService
         ApplyTypeFields(service, type, request.Introducetion, request.Day, request.Night, request.Label,
             request.Description, request.Infor, request.Highlight, request.Code,
             request.Instruct, request.Feature,
-            request.PurposeOfTrip, request.Destination, request.Form, request.Classify);
+            request.PurposeOfTrip, request.Destination, request.Form, request.Classify,
+            request.Destinations, request.Facilities, request.HighlightContent, request.TripInfoJson, request.PriceUnit,
+            request.Price, request.OriginalPrice, request.DurationText);
 
     private static Response.ServiceResponse ToResponse(Repository.Entities.Service service)
     {
@@ -787,15 +906,25 @@ public class Service : IService
             Title = service.Title ?? string.Empty,
             Slug = service.Slug ?? string.Empty,
             BestSeller = service.BestSeller,
+            ComingSoon = service.ComingSoon,
             Introducetion = service.Introducetion ?? string.Empty,
             Day = service.Day ?? 0,
             Night = service.Night ?? 0,
+            DurationText = service.DurationText ?? string.Empty,
             Label = service.Label ?? string.Empty,
             Album = DeserializeAlbum(service.Album),
             Region = service.Region ?? string.Empty,
             Description = service.Description ?? string.Empty,
             Infor = service.Infor ?? string.Empty,
             Highlight = service.Highlight ?? new(),
+            Destinations = service.Destinations ?? new(),
+            Facilities = service.Facilities ?? new(),
+            HighlightContent = service.HighlightContent ?? string.Empty,
+            TripInfoJson = service.TripInfoJson ?? string.Empty,
+            PriceUnit = service.PriceUnit ?? string.Empty,
+            Price = service.Price ?? string.Empty,
+            OriginalPrice = service.OriginalPrice ?? string.Empty,
+            PriceText = service.PriceText ?? string.Empty,
             Code = service.Code ?? string.Empty,
             Instruct = service.Instruct ?? string.Empty,
             Feature = service.Feature ?? string.Empty,
@@ -847,6 +976,7 @@ public class Service : IService
                 StartTime = d.StartTime ?? string.Empty,
                 Code = d.Code ?? string.Empty,
                 Price = d.Price ?? string.Empty,
+                OriginalPrice = d.OriginalPrice ?? string.Empty,
                 AccommodationStandards = d.AccommodationStandards ?? string.Empty,
                 CreatedAt = d.CreatedAt,
                 UpdatedAt = d.UpdatedAt,
@@ -874,6 +1004,62 @@ public class Service : IService
             }).ToList();
         }
 
+        response.PriceFrom = ComputePriceFrom(service);
+
+        return response;
+    }
+
+    /// <summary>
+    /// Giá "từ" = giá thấp nhất > 0 gộp từ lịch khởi hành (tour) và hạng phòng
+    /// (khách sạn/combo). Combo có hạng phòng chỉ có OriginalPrice (Price = null)
+    /// nên fallback sang OriginalPrice khi không có Price nào hợp lệ.
+    /// </summary>
+    private static decimal? ComputePriceFrom(Repository.Entities.Service service)
+    {
+        // Combo: giá bán theo GÓI ở cấp dịch vụ (không gộp từ hạng phòng nữa).
+        if (service.Type == ServiceType.Combo)
+        {
+            var comboPrice = ParseNumericPrice(service.Price);
+            if (comboPrice > 0) return comboPrice;
+            var comboOrig = ParseNumericPrice(service.OriginalPrice);
+            return comboOrig > 0 ? comboOrig : (decimal?)null;
+        }
+
+        var prices = new List<decimal>();
+
+        if (service.DepartureSchedules != null)
+            prices.AddRange(service.DepartureSchedules
+                .Where(d => !d.IsDeleted)
+                .Select(d => ParseNumericPrice(d.Price)));
+
+        if (service.RoomCategories != null)
+            prices.AddRange(service.RoomCategories
+                .Where(r => !r.IsDeleted)
+                .Select(r => ParseNumericPrice(r.Price)));
+
+        var positive = prices.Where(p => p > 0).ToList();
+
+        if (positive.Count == 0 && service.RoomCategories != null)
+            positive = service.RoomCategories
+                .Where(r => !r.IsDeleted)
+                .Select(r => ParseNumericPrice(r.OriginalPrice))
+                .Where(p => p > 0)
+                .ToList();
+
+        return positive.Count > 0 ? positive.Min() : (decimal?)null;
+    }
+
+    /// <summary>
+    /// Map cho THẺ LIST: giữ PriceFrom (đã tính trong ToResponse) nhưng bỏ các
+    /// bảng con nặng (lịch trình/hạng phòng/lịch khởi hành) mà thẻ list không cần.
+    /// </summary>
+    private static Response.ServiceResponse ToListItemResponse(Repository.Entities.Service service)
+    {
+        var response = ToResponse(service);
+        response.Schedules = new();
+        response.ImportantInfors = new();
+        response.DepartureSchedules = new();
+        response.RoomCategories = new();
         return response;
     }
 
@@ -889,5 +1075,22 @@ public class Service : IService
         if (string.IsNullOrWhiteSpace(feature)) return new();
         try { return JsonSerializer.Deserialize<List<string>>(feature) ?? new(); }
         catch { return new(); }
+    }
+
+    private async Task<string> GenerateUniqueSlugAsync(string title, Guid? excludedServiceId = null)
+    {
+        var baseSlug = Slug.GenerateSlug(title.Trim());
+        if (string.IsNullOrWhiteSpace(baseSlug)) baseSlug = Guid.NewGuid().ToString("N");
+
+        var slug = baseSlug;
+        var suffix = 1;
+
+        while (await _dbContext.Services.AnyAsync(x => !x.IsDeleted && x.Slug == slug && (!excludedServiceId.HasValue || x.Id != excludedServiceId.Value)))
+        {
+            slug = $"{baseSlug}-{suffix}";
+            suffix++;
+        }
+
+        return slug;
     }
 }

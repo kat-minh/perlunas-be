@@ -11,9 +11,7 @@ public class CreateHotelRequestValidator : AbstractValidator<Request.CreateHotel
         RuleFor(x => x.Introducetion).NotEmpty().WithMessage("INTRODUCTION_REQUIRED");
         RuleFor(x => x.Album).NotEmpty().WithMessage("ALBUM_REQUIRED");
         RuleFor(x => x.Region).NotEmpty().WithMessage("REGION_REQUIRED");
-        RuleFor(x => x.Instruct).NotEmpty().WithMessage("INSTRUCT_REQUIRED");
-        RuleFor(x => x.Feature).NotEmpty().WithMessage("FEATURE_REQUIRED");
-        RuleFor(x => x.PurposeOfTrip).IsInEnum().WithMessage("PURPOSE_OF_TRIP_INVALID");
+        RuleFor(x => x.PurposeOfTrip).NotEmpty().WithMessage("PURPOSE_OF_TRIP_REQUIRED");
         RuleFor(x => x.Destination).NotEmpty().WithMessage("DESTINATION_REQUIRED");
         RuleFor(x => x.Form).NotEmpty().WithMessage("FORM_REQUIRED");
         RuleFor(x => x.RoomCategories).NotEmpty().WithMessage("ROOM_CATEGORIES_REQUIRED");
