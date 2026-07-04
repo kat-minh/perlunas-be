@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Cms.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Cms.Repository.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260704112247_FixFormSeedServiceIds")]
+    partial class FixFormSeedServiceIds
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -6517,138 +6520,6 @@ namespace Cms.Repository.Migrations
                     b.HasIndex("ServiceId");
 
                     b.ToTable("RoomCategories", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-bbbbbbbbbb01"),
-                            Acreage = "30m²",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            NumberOfBed = "1 giường đôi",
-                            NumberOfCustomer = 2,
-                            Price = "1200000",
-                            ServiceId = new Guid("e50a45c4-40d6-316f-0e40-2e58860b0f8e"),
-                            Titile = "Deluxe Room",
-                            Unit = "VNĐ"
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-bbbbbbbbbb02"),
-                            Acreage = "45m²",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            NumberOfBed = "1 giường king",
-                            NumberOfCustomer = 2,
-                            Price = "1800000",
-                            ServiceId = new Guid("e50a45c4-40d6-316f-0e40-2e58860b0f8e"),
-                            Titile = "Suite Room",
-                            Unit = "VNĐ"
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-bbbbbbbbbb03"),
-                            Acreage = "50m²",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            NumberOfBed = "2 giường đôi",
-                            NumberOfCustomer = 4,
-                            Price = "2200000",
-                            ServiceId = new Guid("e50a45c4-40d6-316f-0e40-2e58860b0f8e"),
-                            Titile = "Family Room",
-                            Unit = "VNĐ"
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-bbbbbbbbbb04"),
-                            Acreage = "55m²",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            NumberOfBed = "1 giường king",
-                            NumberOfCustomer = 2,
-                            Price = "2200000",
-                            ServiceId = new Guid("6fc490b0-6501-7066-2716-f195529f23d3"),
-                            Titile = "Heritage Suite",
-                            Unit = "VNĐ"
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-bbbbbbbbbb05"),
-                            Acreage = "60m²",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            NumberOfBed = "1 giường king",
-                            NumberOfCustomer = 2,
-                            Price = "2800000",
-                            ServiceId = new Guid("6fc490b0-6501-7066-2716-f195529f23d3"),
-                            Titile = "Ocean View Suite",
-                            Unit = "VNĐ"
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-bbbbbbbbbb06"),
-                            Acreage = "90m²",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            NumberOfBed = "2 giường king",
-                            NumberOfCustomer = 4,
-                            Price = "5000000",
-                            ServiceId = new Guid("6fc490b0-6501-7066-2716-f195529f23d3"),
-                            Titile = "Presidential Suite",
-                            Unit = "VNĐ"
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-bbbbbbbbbb07"),
-                            Acreage = "28m²",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            NumberOfBed = "1 giường đôi",
-                            NumberOfCustomer = 2,
-                            Price = "950000",
-                            ServiceId = new Guid("1c319bb9-c82d-5a4a-22b3-2f5d6625fbd2"),
-                            Titile = "Eco Lodge Room",
-                            Unit = "VNĐ"
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-bbbbbbbbbb08"),
-                            Acreage = "35m²",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            NumberOfBed = "1 giường king",
-                            NumberOfCustomer = 2,
-                            Price = "1200000",
-                            ServiceId = new Guid("1c319bb9-c82d-5a4a-22b3-2f5d6625fbd2"),
-                            Titile = "Mountain View Room",
-                            Unit = "VNĐ"
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-bbbbbbbbbb09"),
-                            Acreage = "50m²",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            NumberOfBed = "1 giường king",
-                            NumberOfCustomer = 2,
-                            Price = "2100000",
-                            ServiceId = new Guid("8e401cad-0a9e-259e-9819-bf4842528f05"),
-                            Titile = "Royal Suite",
-                            Unit = "VNĐ"
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-bbbbbbbbbb10"),
-                            Acreage = "30m²",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            NumberOfBed = "1 giường đôi",
-                            NumberOfCustomer = 2,
-                            Price = "1400000",
-                            ServiceId = new Guid("8e401cad-0a9e-259e-9819-bf4842528f05"),
-                            Titile = "Classic Room",
-                            Unit = "VNĐ"
-                        });
                 });
 
             modelBuilder.Entity("Cms.Repository.Entities.Schedule", b =>

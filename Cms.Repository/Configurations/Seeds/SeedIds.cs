@@ -4,10 +4,6 @@ public static class SeedIds
 {
     public static readonly DateTime CreatedAt = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-    public static readonly Guid ServiceMain = Guid.Parse("11111111-1111-1111-1111-111111111111");
-    public static readonly Guid ServiceResort = Guid.Parse("11111111-1111-1111-1111-111111111112");
-    public static readonly Guid ServicePrivate = Guid.Parse("11111111-1111-1111-1111-111111111113");
-
     public static readonly Guid ScheduleDay1 = Guid.Parse("22222222-2222-2222-2222-222222222221");
     public static readonly Guid ScheduleDay2 = Guid.Parse("22222222-2222-2222-2222-222222222222");
     public static readonly Guid ScheduleResortDay1 = Guid.Parse("22222222-2222-2222-2222-222222222223");

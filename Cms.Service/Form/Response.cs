@@ -1,5 +1,4 @@
 using Cms.Repository.Enums;
-using ServiceResponseDto = Cms.Service.Service.Response.ServiceResponse;
 
 namespace Cms.Service.Form;
 
@@ -9,6 +8,9 @@ public class Response
     {
         public Guid Id { get; set; }
         public FormType Type { get; set; }
+        public string? Title { get; set; }
+        public string? Slug { get; set; }
+        public Guid? ServiceId { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }
@@ -16,7 +18,6 @@ public class Response
     public class AdviseFormResponse : FormResponse
     {
         public string? Where { get; set; }
-        public string? Slug { get; set; }
         public string? Month { get; set; }
         public string? Year { get; set; }
         public string? LongTime { get; set; }
@@ -28,8 +29,7 @@ public class Response
         public string? Website { get; set; }
         public string? ContactName { get; set; }
         public bool PromotionalInformation { get; set; }
-        public Guid ServiceId { get; set; }
-        public ServiceResponseDto? Service { get; set; }
+        public string? PricePerPerson { get; set; }
     }
 
     public class TourFormResponse : FormResponse
@@ -38,8 +38,6 @@ public class Response
         public string? FullName { get; set; }
         public string? Phone { get; set; }
         public string? Email { get; set; }
-        public Guid ServiceId { get; set; }
-        public ServiceResponseDto? Service { get; set; }
     }
 
     public class BookingFormResponse : FormResponse
@@ -48,8 +46,7 @@ public class Response
         public string? Phone { get; set; }
         public string? Email { get; set; }
         public int? TotalPrice { get; set; }
-        public Guid ServiceId { get; set; }
-        public ServiceResponseDto? Service { get; set; }
+        public string? Region { get; set; }
         public ICollection<FormDetailsResponse> FormDetails { get; set; } = new List<FormDetailsResponse>();
     }
 

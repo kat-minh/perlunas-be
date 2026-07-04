@@ -10,4 +10,5 @@ public interface IService
     Task<string> CreateAdviseAsync(Request.CreateAdviseFormRequest request);
     Task<string> CreateTourAsync(Request.CreateTourFormRequest request);
     Task<string> CreateComboAsync(Request.CreateBookingFormRequest request);
+    Task<string> CreateHotelAsync(Request.CreateBookingFormRequest request);
 }

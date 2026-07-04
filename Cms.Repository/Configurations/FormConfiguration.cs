@@ -26,6 +26,9 @@ public class FormConfiguration : IEntityTypeConfiguration<Form>
         builder.Property(x => x.Website).HasMaxLength(255);
         builder.Property(x => x.ContactName).HasMaxLength(255);
         builder.Property(x => x.PromotionalInformation).HasDefaultValue(false);
+        builder.Property(x => x.PricePerPerson).HasMaxLength(100);
+        builder.Property(x => x.Title).HasMaxLength(500);
+        builder.Property(x => x.Region).HasMaxLength(255);
         builder.Property(x => x.Type).HasConversion<string>().HasMaxLength(50);
         builder.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
 

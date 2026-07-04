@@ -55,4 +55,11 @@ public class FormsController : ControllerBase
         var result = await _formService.CreateComboAsync(request);
         return Ok(ApiResponseFactory.Base(result, true, "", HttpContext.TraceIdentifier));
     }
+
+    [HttpPost("hotel")]
+    public async Task<IActionResult> CreateHotel([FromBody] FormService.Request.CreateBookingFormRequest request)
+    {
+        var result = await _formService.CreateHotelAsync(request);
+        return Ok(ApiResponseFactory.Base(result, true, "", HttpContext.TraceIdentifier));
+    }
 }
