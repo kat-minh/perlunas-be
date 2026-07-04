@@ -41,6 +41,8 @@ builder.Services.AddScoped<Cms.Service.Taxonomy.IService, Cms.Service.Taxonomy.S
 builder.Services.AddScoped<Cms.Service.PageContent.IService, Cms.Service.PageContent.Service>();
 builder.Services.AddScoped<Cms.Service.Service.IService, Cms.Service.Service.Service>();
 builder.Services.AddScoped<Cms.Service.SiteSetting.IService, Cms.Service.SiteSetting.Service>();
+builder.Services.AddScoped<Cms.Service.Form.IService, Cms.Service.Form.Service>();
+builder.Services.AddScoped<Cms.Service.MailService.IService, Cms.Service.MailService.Service>();
 builder.Services.AddValidatorsFromAssembly(Cms.Service.AssemblyReference.Assembly);
 
 // ── CORS ───────────────────────────────────────────────────────────────────

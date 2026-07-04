@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace CodeBase.Service.MailService;
+namespace Cms.Service.MailService;
 
 public class MailOptions
 {

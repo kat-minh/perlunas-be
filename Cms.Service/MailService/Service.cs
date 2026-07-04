@@ -4,7 +4,7 @@ using MailKit.Security;
 using Microsoft.Extensions.Configuration;
 using MimeKit;
 
-namespace CodeBase.Service.MailService;
+namespace Cms.Service.MailService;
 
 public class Service: IService
 {

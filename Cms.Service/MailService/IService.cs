@@ -1,4 +1,4 @@
-﻿namespace CodeBase.Service.MailService;
+﻿namespace Cms.Service.MailService;
 
 public interface IService
 {
