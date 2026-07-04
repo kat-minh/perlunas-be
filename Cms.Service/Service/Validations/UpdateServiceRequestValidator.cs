@@ -32,8 +32,10 @@ public class UpdateServiceRequestValidator : AbstractValidator<Request.UpdateSer
         RuleFor(x => x.Classify).NotEmpty().WithMessage("CLASSIFY_REQUIRED")
             .When(x => x.Classify != null && x.Type == ServiceType.Combo);
 
+        // Combo: Lịch trình KHÔNG bắt buộc (bỏ trống → trang combo tự ẩn mục này).
+        // Chỉ Tour mới bắt buộc ≥1 Lịch trình.
         RuleFor(x => x.Schedules).NotEmpty().WithMessage("SCHEDULES_REQUIRED")
-            .When(x => x.Schedules != null && (x.Type == ServiceType.Tour || x.Type == ServiceType.Combo));
+            .When(x => x.Schedules != null && x.Type == ServiceType.Tour);
         RuleForEach(x => x.Schedules).ChildRules(s =>
         {
             s.RuleFor(x => x.Titile).NotEmpty().WithMessage("SCHEDULE_TITLE_REQUIRED");
