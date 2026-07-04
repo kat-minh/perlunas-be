@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Cms.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Cms.Repository.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260704123000_SeedRemainingHardcode")]
+    partial class SeedRemainingHardcode
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1725,62 +1728,6 @@ namespace Cms.Repository.Migrations
                     b.ToTable("PageContents", (string)null);
 
                     b.HasData(
-                        new
-                        {
-                            Id = new Guid("cfc69857-e9fa-f5be-7b39-5fbfe403deab"),
-                            ContentValue = "https://zalo.me/0900000000",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "contact.message.zalo.url",
-                            Kind = "text",
-                            Label = "Liên hệ: URL link Zalo",
-                            PageKey = "Liên hệ",
-                            SectionKey = "",
-                            SoftOrder = 94,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("55d8d588-b7b1-b34a-17ad-04935f9269d9"),
-                            ContentValue = "https://m.me/perlunas",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "contact.message.messenger.url",
-                            Kind = "text",
-                            Label = "Liên hệ: URL link Messenger",
-                            PageKey = "Liên hệ",
-                            SectionKey = "",
-                            SoftOrder = 95,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("5bf7543d-2bd7-85f9-edec-3abb1a4f2ab8"),
-                            ContentValue = "Tổng cộng",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "hb.total",
-                            Kind = "text",
-                            Label = "HotelBooking: nhãn Tổng cộng",
-                            PageKey = "Form liên hệ / đặt",
-                            SectionKey = "",
-                            SoftOrder = 320,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("14dbcbb2-e8a3-67d1-385e-05f5bd6b1f0c"),
-                            ContentValue = "Chọn ngày nhận và trả phòng để tính thành tiền.",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "hb.pricehint",
-                            Kind = "textarea",
-                            Label = "HotelBooking: gợi ý tính giá",
-                            PageKey = "Form liên hệ / đặt",
-                            SectionKey = "",
-                            SoftOrder = 321,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
                         new
                         {
                             Id = new Guid("e20c9f1e-d83d-2d96-8c6e-b3cf5e2a28c4"),
@@ -5517,6 +5464,20 @@ namespace Cms.Repository.Migrations
                             PageKey = "Chi tiết khách sạn",
                             SectionKey = "",
                             SoftOrder = 197,
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("c6278a8c-4a8b-5462-4094-bfdb852d9475"),
+                            ContentValue = "Loại hình",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDeleted = false,
+                            Key = "hoteldetail.ticket.type",
+                            Kind = "text",
+                            Label = "Vé: nhãn loại hình",
+                            PageKey = "Chi tiết khách sạn",
+                            SectionKey = "",
+                            SoftOrder = 198,
                             UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new

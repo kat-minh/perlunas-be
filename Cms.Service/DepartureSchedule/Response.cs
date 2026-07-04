@@ -9,6 +9,7 @@ public class Response
         public string StartTime { get; set; } = string.Empty;
         public string Code { get; set; } = string.Empty;
         public string Price { get; set; } = string.Empty;
+        public string OriginalPrice { get; set; } = string.Empty;
         public string AccommodationStandards { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }

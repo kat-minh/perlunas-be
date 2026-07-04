@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Cms.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Cms.Repository.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260704122000_SeedContactFormContent")]
+    partial class SeedContactFormContent
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1725,412 +1728,6 @@ namespace Cms.Repository.Migrations
                     b.ToTable("PageContents", (string)null);
 
                     b.HasData(
-                        new
-                        {
-                            Id = new Guid("cfc69857-e9fa-f5be-7b39-5fbfe403deab"),
-                            ContentValue = "https://zalo.me/0900000000",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "contact.message.zalo.url",
-                            Kind = "text",
-                            Label = "Liên hệ: URL link Zalo",
-                            PageKey = "Liên hệ",
-                            SectionKey = "",
-                            SoftOrder = 94,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("55d8d588-b7b1-b34a-17ad-04935f9269d9"),
-                            ContentValue = "https://m.me/perlunas",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "contact.message.messenger.url",
-                            Kind = "text",
-                            Label = "Liên hệ: URL link Messenger",
-                            PageKey = "Liên hệ",
-                            SectionKey = "",
-                            SoftOrder = 95,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("5bf7543d-2bd7-85f9-edec-3abb1a4f2ab8"),
-                            ContentValue = "Tổng cộng",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "hb.total",
-                            Kind = "text",
-                            Label = "HotelBooking: nhãn Tổng cộng",
-                            PageKey = "Form liên hệ / đặt",
-                            SectionKey = "",
-                            SoftOrder = 320,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("14dbcbb2-e8a3-67d1-385e-05f5bd6b1f0c"),
-                            ContentValue = "Chọn ngày nhận và trả phòng để tính thành tiền.",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "hb.pricehint",
-                            Kind = "textarea",
-                            Label = "HotelBooking: gợi ý tính giá",
-                            PageKey = "Form liên hệ / đặt",
-                            SectionKey = "",
-                            SoftOrder = 321,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("e20c9f1e-d83d-2d96-8c6e-b3cf5e2a28c4"),
-                            ContentValue = "Blog",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "blog.eyebrow",
-                            Kind = "text",
-                            Label = "Blog: nhãn hero",
-                            PageKey = "Blog",
-                            SectionKey = "",
-                            SoftOrder = 400,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("9d88fb1d-11b1-d375-be99-a5ac5e705a2f"),
-                            ContentValue = "Blog du lịch Perlunas",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "blog.hero.title",
-                            Kind = "text",
-                            Label = "Blog: tiêu đề hero",
-                            PageKey = "Blog",
-                            SectionKey = "",
-                            SoftOrder = 401,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("5fbabfa0-51cf-f0d5-9d90-9e350859453a"),
-                            ContentValue = "Kinh nghiệm điểm đến, mẹo chuẩn bị, ẩm thực và những câu chuyện truyền cảm hứng cho hành trình của bạn.",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "blog.hero.intro",
-                            Kind = "textarea",
-                            Label = "Blog: mô tả hero",
-                            PageKey = "Blog",
-                            SectionKey = "",
-                            SoftOrder = 402,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("d08d45b3-e23e-b4df-87d3-5da734fcb587"),
-                            ContentValue = "Blog du lịch Perlunas",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "blog.hero.alt",
-                            Kind = "text",
-                            Label = "Blog: alt ảnh hero",
-                            PageKey = "Blog",
-                            SectionKey = "",
-                            SoftOrder = 403,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("b395ecf5-4a37-7f04-940b-d394535b5f5a"),
-                            ContentValue = "Đọc bài viết",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "blog.readmore",
-                            Kind = "text",
-                            Label = "Blog: nút đọc bài",
-                            PageKey = "Blog",
-                            SectionKey = "",
-                            SoftOrder = 404,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("5dcffc52-e97b-20db-aed3-2bea395aad21"),
-                            ContentValue = "Blog",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "blog.meta.title",
-                            Kind = "text",
-                            Label = "Blog: SEO title",
-                            PageKey = "Blog",
-                            SectionKey = "",
-                            SoftOrder = 405,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("18ed1731-be8a-b7fe-2bdf-d9a5b14a7bf9"),
-                            ContentValue = "Blog du lịch Perlunas — kinh nghiệm điểm đến, mẹo chuẩn bị, ẩm thực và cảm hứng cho mỗi hành trình.",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "blog.meta.desc",
-                            Kind = "textarea",
-                            Label = "Blog: SEO description",
-                            PageKey = "Blog",
-                            SectionKey = "",
-                            SoftOrder = 406,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("103bd0da-2abb-ef0f-61ad-75f9fb5f2102"),
-                            ContentValue = "Tất cả bài viết",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "blog.back",
-                            Kind = "text",
-                            Label = "Blog: link quay lại",
-                            PageKey = "Blog",
-                            SectionKey = "",
-                            SoftOrder = 407,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("fc709b17-4a8a-4d81-c58a-4c5462a9ebf5"),
-                            ContentValue = "Bài viết khác",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "blog.related.title",
-                            Kind = "text",
-                            Label = "Blog: tiêu đề bài khác",
-                            PageKey = "Blog",
-                            SectionKey = "",
-                            SoftOrder = 408,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("7d6db0a1-04cf-e259-9ac4-4e5d1ed99185"),
-                            ContentValue = "Liên hệ tư vấn",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "qe.eyebrow",
-                            Kind = "text",
-                            Label = "QuickEnquiry: nhãn tiêu đề",
-                            PageKey = "Form liên hệ / đặt",
-                            SectionKey = "",
-                            SoftOrder = 380,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("244bb1b5-ff16-b532-d344-85f3c6c2877b"),
-                            ContentValue = "VD: Nguyễn Thị Lan",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "qe.name.ph",
-                            Kind = "text",
-                            Label = "QuickEnquiry placeholder: họ tên",
-                            PageKey = "Form liên hệ / đặt",
-                            SectionKey = "",
-                            SoftOrder = 381,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("00a4d537-a78f-f732-d655-d9a9aa9908d1"),
-                            ContentValue = "Gói",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "combodetail.tier.prefix",
-                            Kind = "text",
-                            Label = "Combo detail: tiền tố dòng ngọc (Gói …)",
-                            PageKey = "Chi tiết combo",
-                            SectionKey = "",
-                            SoftOrder = 260,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("a1786ff9-d4ba-e6b7-3383-4a4f5e8cf6a7"),
-                            ContentValue = "Lưu trú khác tại",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "hoteldetail.related.title",
-                            Kind = "text",
-                            Label = "Hotel detail: tiêu đề lưu trú liên quan",
-                            PageKey = "Chi tiết khách sạn",
-                            SectionKey = "",
-                            SoftOrder = 230,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("bfbb6ec3-a4d4-979a-a228-b247ce073ccc"),
-                            ContentValue = "Tháng",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "tourdetail.dep.month",
-                            Kind = "text",
-                            Label = "Tour detail lịch: nhãn Tháng",
-                            PageKey = "Chi tiết tour",
-                            SectionKey = "",
-                            SoftOrder = 210,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("d55efde7-2278-8e62-28e0-ea6cde50db1c"),
-                            ContentValue = "Vui lòng chọn ngày khởi hành bên dưới để xem đúng giá tour.",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "tourdetail.dep.instruction",
-                            Kind = "textarea",
-                            Label = "Tour detail lịch: câu nhắc chọn ngày",
-                            PageKey = "Chi tiết tour",
-                            SectionKey = "",
-                            SoftOrder = 211,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("74fde08b-012a-b79d-d030-3d397076ed51"),
-                            ContentValue = "Ngày khởi hành",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "tourdetail.dep.date",
-                            Kind = "text",
-                            Label = "Tour detail lịch: nhãn Ngày khởi hành",
-                            PageKey = "Chi tiết tour",
-                            SectionKey = "",
-                            SoftOrder = 212,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("7f925e54-5925-f7cc-db9b-3af1b4078f64"),
-                            ContentValue = "Mã tour",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "tourdetail.dep.code",
-                            Kind = "text",
-                            Label = "Tour detail lịch: nhãn Mã tour",
-                            PageKey = "Chi tiết tour",
-                            SectionKey = "",
-                            SoftOrder = 213,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("bffacded-867d-b829-1ed5-0a55d27358c2"),
-                            ContentValue = "Giá tour",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "tourdetail.dep.price",
-                            Kind = "text",
-                            Label = "Tour detail lịch: nhãn Giá tour",
-                            PageKey = "Chi tiết tour",
-                            SectionKey = "",
-                            SoftOrder = 214,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("ced12a86-529f-62c6-ff91-16b424c36ff4"),
-                            ContentValue = "Chuẩn lưu trú",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "tourdetail.dep.stay",
-                            Kind = "text",
-                            Label = "Tour detail lịch: nhãn Chuẩn lưu trú",
-                            PageKey = "Chi tiết tour",
-                            SectionKey = "",
-                            SoftOrder = 215,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("4d8ab106-f828-8eaa-4f93-1bb5e8a1fe77"),
-                            ContentValue = "Chọn",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "tourdetail.dep.choose",
-                            Kind = "text",
-                            Label = "Tour detail lịch: nhãn cột Chọn",
-                            PageKey = "Chi tiết tour",
-                            SectionKey = "",
-                            SoftOrder = 216,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("19dbce70-fa92-6787-baa6-bfd709a0510d"),
-                            ContentValue = "Chưa có lịch khởi hành cho tháng này.",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "tourdetail.dep.empty",
-                            Kind = "text",
-                            Label = "Tour detail lịch: khi trống",
-                            PageKey = "Chi tiết tour",
-                            SectionKey = "",
-                            SoftOrder = 217,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("4bf7beb8-89c1-35dc-6c34-0ef04749ca14"),
-                            ContentValue = "Thời lượng",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "tourdetail.dep.duration",
-                            Kind = "text",
-                            Label = "Tour detail lịch: nhãn Thời lượng",
-                            PageKey = "Chi tiết tour",
-                            SectionKey = "",
-                            SoftOrder = 218,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("e5b6e275-9046-c923-f113-03ea21d71b19"),
-                            ContentValue = "Giá từ",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "tourdetail.dep.pricefrom",
-                            Kind = "text",
-                            Label = "Tour detail lịch: nhãn Giá từ",
-                            PageKey = "Chi tiết tour",
-                            SectionKey = "",
-                            SoftOrder = 219,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("fb51ae84-a6d0-1a37-f873-dc99d495d3c1"),
-                            ContentValue = "Điểm nhấn",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "tourdetail.highlights.fallbacktitle",
-                            Kind = "text",
-                            Label = "Tour detail: tiêu đề điểm nhấn (mặc định)",
-                            PageKey = "Chi tiết tour",
-                            SectionKey = "",
-                            SoftOrder = 220,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("8938dda1-d058-a36c-e5e8-b0b887a82e67"),
-                            ContentValue = "Những trải nghiệm và điểm đến nổi bật được chọn lọc cho hành trình của bạn.",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "tourdetail.highlights.fallbackintro",
-                            Kind = "textarea",
-                            Label = "Tour detail: mô tả điểm nhấn (mặc định)",
-                            PageKey = "Chi tiết tour",
-                            SectionKey = "",
-                            SoftOrder = 221,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
                         new
                         {
                             Id = new Guid("acafd321-b84f-8bed-9a3c-1e80802b2edd"),
@@ -5517,6 +5114,20 @@ namespace Cms.Repository.Migrations
                             PageKey = "Chi tiết khách sạn",
                             SectionKey = "",
                             SoftOrder = 197,
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("c6278a8c-4a8b-5462-4094-bfdb852d9475"),
+                            ContentValue = "Loại hình",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDeleted = false,
+                            Key = "hoteldetail.ticket.type",
+                            Kind = "text",
+                            Label = "Vé: nhãn loại hình",
+                            PageKey = "Chi tiết khách sạn",
+                            SectionKey = "",
+                            SoftOrder = 198,
                             UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new

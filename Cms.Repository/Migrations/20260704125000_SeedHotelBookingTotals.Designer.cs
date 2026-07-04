@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Cms.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Cms.Repository.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260704125000_SeedHotelBookingTotals")]
+    partial class SeedHotelBookingTotals
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1725,34 +1728,6 @@ namespace Cms.Repository.Migrations
                     b.ToTable("PageContents", (string)null);
 
                     b.HasData(
-                        new
-                        {
-                            Id = new Guid("cfc69857-e9fa-f5be-7b39-5fbfe403deab"),
-                            ContentValue = "https://zalo.me/0900000000",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "contact.message.zalo.url",
-                            Kind = "text",
-                            Label = "Liên hệ: URL link Zalo",
-                            PageKey = "Liên hệ",
-                            SectionKey = "",
-                            SoftOrder = 94,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("55d8d588-b7b1-b34a-17ad-04935f9269d9"),
-                            ContentValue = "https://m.me/perlunas",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Key = "contact.message.messenger.url",
-                            Kind = "text",
-                            Label = "Liên hệ: URL link Messenger",
-                            PageKey = "Liên hệ",
-                            SectionKey = "",
-                            SoftOrder = 95,
-                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
                         new
                         {
                             Id = new Guid("5bf7543d-2bd7-85f9-edec-3abb1a4f2ab8"),

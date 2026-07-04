@@ -8,14 +8,11 @@ public class CreateComboRequestValidator : AbstractValidator<Request.CreateCombo
     public CreateComboRequestValidator()
     {
         RuleFor(x => x.Title).NotEmpty().WithMessage("TITLE_REQUIRED");
-        RuleFor(x => x.Night).GreaterThan(0).WithMessage("NIGHT_MUST_BE_GREATER_THAN_ZERO");
-        RuleFor(x => x.Label).NotEmpty().WithMessage("LABEL_REQUIRED");
+        // Thời lượng giờ là chuỗi tự do (DurationText) → KHÔNG bắt buộc Night > 0.
         RuleFor(x => x.Album).NotEmpty().WithMessage("ALBUM_REQUIRED");
         RuleFor(x => x.Region).NotEmpty().WithMessage("REGION_REQUIRED");
-        RuleFor(x => x.Description).NotEmpty().WithMessage("DESCRIPTION_REQUIRED");
-        RuleFor(x => x.Infor).NotEmpty().WithMessage("INFOR_REQUIRED");
-        RuleFor(x => x.Highlight).NotEmpty().WithMessage("HIGHLIGHT_REQUIRED");
-        RuleFor(x => x.Code).NotEmpty().WithMessage("CODE_REQUIRED");
+        // Bỏ bắt buộc Label / Description / Infor / Highlight / Code cho combo:
+        // các field này không hiển thị trên trang combo (đã gỡ khỏi form).
         RuleFor(x => x.PurposeOfTrip).NotEmpty().WithMessage("PURPOSE_OF_TRIP_REQUIRED");
         RuleFor(x => x.Destination).NotEmpty().WithMessage("DESTINATION_REQUIRED");
         RuleFor(x => x.Form).NotEmpty().WithMessage("FORM_REQUIRED");
