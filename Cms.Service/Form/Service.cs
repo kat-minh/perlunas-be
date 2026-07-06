@@ -9,6 +9,7 @@ namespace Cms.Service.Form;
 
 public class Service : IService
 {
+    private const string AdminEmail = "duongbilly18012004@gmail.com";
     private readonly AppDbContext _dbContext;
     private readonly IValidator<Request.CreateAdviseFormRequest> _createAdviseValidator;
     private readonly IValidator<Request.CreateTourFormRequest> _createTourValidator;
@@ -78,6 +79,26 @@ public class Service : IService
                 closing: "Đội ngũ Perlunas sẽ liên hệ với bạn trong thời gian sớm nhất.")
         });
 
+        await _mailService.SendMail(new MailService.MailContent
+        {
+            To = AdminEmail,
+            Subject = $"[Admin] Yêu cầu tư vấn mới từ {request.FullName}",
+            Body = MailService.MailTemplate.Confirmation(
+                heading: "Yêu cầu tư vấn mới",
+                fullName: request.FullName,
+                intro: "Hệ thống ghi nhận một yêu cầu tư vấn mới với thông tin chi tiết bên dưới:",
+                rows: new (string, string?)[]
+                {
+                    ("Họ tên", request.FullName),
+                    ("Số điện thoại", request.Phone),
+                    ("Email", request.Email),
+                    ("Địa điểm", request.Where),
+                    ("Thời gian", $"{request.Month}/{request.Year}"),
+                    ("Ghi chú", request.Note),
+                },
+                closing: "Vui lòng liên hệ lại khách hàng sớm nhất.")
+        });
+
         return "CREATE_ADVISE_FORM_SUCCESS";
     }
 
@@ -122,6 +143,25 @@ public class Service : IService
                     ("Chi tiết đặt", request.Note),
                 },
                 closing: "Đội ngũ Perlunas sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận tour.")
+        });
+
+        await _mailService.SendMail(new MailService.MailContent
+        {
+            To = AdminEmail,
+            Subject = $"[Admin] Yêu cầu đặt tour mới từ {request.FullName}",
+            Body = MailService.MailTemplate.Confirmation(
+                heading: "Yêu cầu đặt tour mới",
+                fullName: request.FullName,
+                intro: "Hệ thống ghi nhận một yêu cầu đặt tour mới với thông tin chi tiết bên dưới:",
+                rows: new (string, string?)[]
+                {
+                    ("Họ tên", request.FullName),
+                    ("Số điện thoại", request.Phone),
+                    ("Email", request.Email),
+                    ("Tour", request.Title),
+                    ("Chi tiết đặt", request.Note),
+                },
+                closing: "Vui lòng liên hệ lại khách hàng để xác nhận.")
         });
 
         return "CREATE_TOUR_FORM_SUCCESS";
@@ -205,6 +245,24 @@ public class Service : IService
                 closing: "Đội ngũ Perlunas sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận.")
         });
 
+        await _mailService.SendMail(new MailService.MailContent
+        {
+            To = AdminEmail,
+            Subject = $"[Admin] Yêu cầu đặt combo mới từ {request.FullName}",
+            Body = MailService.MailTemplate.Confirmation(
+                heading: "Yêu cầu đặt combo mới",
+                fullName: request.FullName,
+                intro: "Hệ thống ghi nhận một yêu cầu đặt combo mới với thông tin chi tiết bên dưới:",
+                rows: new (string, string?)[]
+                {
+                    ("Họ tên", request.FullName),
+                    ("Số điện thoại", request.Phone),
+                    ("Email", request.Email),
+                    ("Tổng tiền", $"{request.TotalPrice:N0} VNĐ"),
+                },
+                closing: "Vui lòng liên hệ lại khách hàng để xác nhận combo.")
+        });
+
         return "CREATE_COMBO_FORM_SUCCESS";
     }
 
@@ -284,6 +342,24 @@ public class Service : IService
                     ("Tổng tiền", $"{request.TotalPrice:N0} VNĐ"),
                 },
                 closing: "Đội ngũ Perlunas sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận.")
+        });
+
+        await _mailService.SendMail(new MailService.MailContent
+        {
+            To = AdminEmail,
+            Subject = $"[Admin] Yêu cầu đặt phòng mới từ {request.FullName}",
+            Body = MailService.MailTemplate.Confirmation(
+                heading: "Yêu cầu đặt phòng mới",
+                fullName: request.FullName,
+                intro: "Hệ thống ghi nhận một yêu cầu đặt phòng mới với thông tin chi tiết bên dưới:",
+                rows: new (string, string?)[]
+                {
+                    ("Họ tên", request.FullName),
+                    ("Số điện thoại", request.Phone),
+                    ("Email", request.Email),
+                    ("Tổng tiền", $"{request.TotalPrice:N0} VNĐ"),
+                },
+                closing: "Vui lòng liên hệ lại khách hàng để xác nhận đặt phòng.")
         });
 
         return "CREATE_HOTEL_FORM_SUCCESS";
