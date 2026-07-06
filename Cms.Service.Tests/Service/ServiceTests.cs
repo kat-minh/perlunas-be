@@ -228,11 +228,11 @@ public class ServiceTests
     }
 
     [Fact]
-    public async Task CreateComboAsync_DuplicateTitle_ShouldUseGeneratedSlugAsIs()
+    public async Task CreateComboAsync_DuplicateTitle_ShouldAppendSuffix()
     {
-        // NOTE: CreateComboAsync dùng Slug.GenerateSlug(title) (không kiểm tra trùng như tour).
-        // Khi DB thật có unique-index trên Slug, tạo combo trùng tiêu đề sẽ ném DbUpdateException
-        // tại SaveChangesAsync (ghi nhận là điểm cần cải thiện trong tài liệu test).
+        // fix(combo): CreateComboAsync now uses GenerateUniqueSlugAsync (like tour/hotel),
+        // so a duplicate title appends suffix -1, -2...
+
         var options = NewDb();
         await using (var ctx = new AppDbContext(options))
         {
@@ -245,7 +245,7 @@ public class ServiceTests
         var result = await svc.CreateComboAsync(ValidComboReq);
 
         // InMemory không ép unique-index → slug sinh đúng theo tiêu đề, KHÔNG thêm hậu tố.
-        result.Slug.Should().Be("combo-da-nang");
+        result.Slug.Should().Be("combo-da-nang-1");
         result.Title.Should().Be("Combo Đà Nẵng");
     }
 
@@ -865,7 +865,8 @@ public class ServiceTests
         var result = await svc.UpdateAsync(svcId, UpdateReq());
 
         result.Title.Should().Be("Updated Title");
-        result.Slug.Should().Be("updated-title");
+        // fix(slug): keep slug fixed after creation - Update does NOT regenerate slug.
+        result.Slug.Should().Be("old-title");
         result.Region.Should().Be("Miền Bắc");
         result.Day.Should().Be(4);
         result.Night.Should().Be(3);
@@ -926,7 +927,7 @@ public class ServiceTests
     }
 
     [Fact]
-    public async Task UpdateAsync_DuplicateTitle_ShouldAppendSuffix()
+    public async Task UpdateAsync_DuplicateTitle_ShouldKeepSlugUnchanged()
     {
         var options = NewDb();
         var svcId = Guid.NewGuid();
@@ -943,7 +944,8 @@ public class ServiceTests
         var svc = CreateSvc(ctx2);
         var result = await svc.UpdateAsync(svcId, UpdateReq("Existing Title"));
 
-        result.Slug.Should().Be("existing-title-1");
+        // fix(slug): Update never regenerates slug even when title matches another service.
+        result.Slug.Should().Be("original");
     }
 
     [Fact]

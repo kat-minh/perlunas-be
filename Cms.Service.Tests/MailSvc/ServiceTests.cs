@@ -63,26 +63,27 @@ public class ServiceTests
     //  - luồng đi tới bước kết nối SMTP.
 
     [Fact]
-    public async Task SendMail_WithValidMailContent_ShouldAttemptSmtpConnect()
+    public async Task SendMail_WithValidMailContent_ShouldNotThrow_BestEffort()
     {
         var svc = CreateService();
 
-        // Vì host không tồn tại → ném exception khi ConnectAsync (SocketException/DnsException).
+        // Best-effort: host không tồn tại (smtp.invalid.example) -> MailKit ném khi ConnectAsync,
+        // nhưng Service nuốt lỗi (không làm hỏng luồng form đã lưu) -> không ném ra ngoài.
         var act = () => svc.SendMail(ValidMail);
 
-        await act.Should().ThrowAsync<Exception>();
+        await act.Should().NotThrowAsync();
     }
 
     [Fact]
-    public async Task SendMail_WhenConfigMissing_ShouldFailBeforeOrAtConnect()
+    public async Task SendMail_WhenConfigMissing_ShouldNotThrow_BestEffort()
     {
-        // Cấu hình thiếu → _mailOptions.Mail/Host = null. Service sẽ ném (NullReference hoặc
-        // MailKit ném khi parse địa chỉ null).
+        // Cấu hình thiếu -> _mailOptions.Mail/Host = null. Service best-effort bỏ qua gửi (return sớm)
+        // -> không ném, không làm hỏng luồng form đã lưu.
         var config = new DictionaryConfiguration(new Dictionary<string, string?>());
         var svc = new Cms.Service.MailService.Service(config);
 
         var act = () => svc.SendMail(ValidMail);
 
-        await act.Should().ThrowAsync<Exception>();
+        await act.Should().NotThrowAsync();
     }
 }

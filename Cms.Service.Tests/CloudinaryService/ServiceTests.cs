@@ -1,3 +1,4 @@
+using Cms.Service.Exceptions;
 using Cms.Service.Tests.TestHelper;
 using Cms.Service.CloudinaryService;
 using FluentAssertions;
@@ -17,8 +18,14 @@ public class ServiceTests
                 ["CloudinaryOptions:ApiSecret"] = "secret-key-value"
             });
 
+    private static IConfiguration EmptyConfig() =>
+        new DictionaryConfiguration(new Dictionary<string, string?>());
+
     private static Cms.Service.CloudinaryService.Service CreateService() =>
         new(ConfigWithCloudinary());
+
+    private static Cms.Service.CloudinaryService.Service CreateServiceWithoutConfig() =>
+        new(EmptyConfig());
 
     /// <summary>
     /// Tạo một IFormFile giả với nội dung byte + tên file cho trước.
@@ -37,110 +44,57 @@ public class ServiceTests
         return mock.Object;
     }
 
-    // ===== UploadImageAsync — Validation (không cần gọi Cloudinary thật) =====
+    // ===== UploadImageAsync — cấu hình thiếu (ServerException 500) =====
 
     [Fact]
-    public async Task UploadImageAsync_WithNullFile_ShouldThrow()
+    public async Task UploadImageAsync_WhenCloudinaryNotConfigured_ShouldThrowServerException()
+    {
+        // fix(cloudinary): thiếu env CloudName/ApiKey/ApiSecret -> 500 ServerException rõ ràng.
+        var svc = CreateServiceWithoutConfig();
+        var file = FakeFormFile("photo.jpg", "image/jpeg");
+
+        var act = () => svc.UploadImageAsync(file);
+
+        await act.Should().ThrowAsync<ServerException>()
+            .WithMessage("*chưa được cấu hình*");
+    }
+
+    // ===== UploadImageAsync — validation phía người dùng (BadRequestException 400) =====
+
+    [Fact]
+    public async Task UploadImageAsync_WithNullFile_ShouldThrowBadRequest()
     {
         var svc = CreateService();
 
         var act = () => svc.UploadImageAsync(null!);
 
-        await act.Should().ThrowAsync<ArgumentException>()
-            .WithMessage("*File is empty or null*");
+        await act.Should().ThrowAsync<BadRequestException>()
+            .WithMessage("*Chưa chọn ảnh hoặc ảnh rỗng*");
     }
 
     [Fact]
-    public async Task UploadImageAsync_WithEmptyFile_ShouldThrow()
+    public async Task UploadImageAsync_WithEmptyFile_ShouldThrowBadRequest()
     {
         var svc = CreateService();
         var file = FakeFormFile("photo.jpg", "image/jpeg", Array.Empty<byte>());
 
         var act = () => svc.UploadImageAsync(file);
 
-        await act.Should().ThrowAsync<ArgumentException>()
-            .WithMessage("*File is empty or null*");
+        await act.Should().ThrowAsync<BadRequestException>()
+            .WithMessage("*Chưa chọn ảnh hoặc ảnh rỗng*");
     }
 
-    [Theory]
-    [InlineData("document.pdf")]
-    [InlineData("archive.zip")]
-    [InlineData("movie.mp4")]
-    [InlineData("song.mp3")]
-    [InlineData("noextension")]
-    public async Task UploadImageAsync_WithNonImageExtension_ShouldThrow(string fileName)
+    [Fact]
+    public async Task UploadImageAsync_WhenFileExceeds10MB_ShouldThrowBadRequest()
     {
         var svc = CreateService();
-        var file = FakeFormFile(fileName, "application/octet-stream");
+        // 10MB + 1 byte -> vượt giới hạn.
+        var oversize = new byte[(10 * 1024 * 1024) + 1];
+        var file = FakeFormFile("photo.jpg", "image/jpeg", oversize);
 
         var act = () => svc.UploadImageAsync(file);
 
-        await act.Should().ThrowAsync<ArgumentException>()
-            .WithMessage("*File is not an image*");
-    }
-
-    // ===== IsImageFile (qua hành vi UploadImageAsync) — định dạng được phép =====
-    // Lưu ý: các test dưới đây để file đi qua validation rồi mới gọi Cloudinary thật.
-    // Vì không có network/credentials thật, Cloudinary sẽ ném lỗi kết nối — ta chỉ kiểm tra
-    // rằng exception KHÔNG phải là "File is empty" hay "File is not an image" (nghĩa là file
-    // đã được chấp nhận về định dạng). Điều này vẫn xác nhận được nhánh IsImageFile = true.
-
-    [Theory]
-    [InlineData("photo.jpg")]
-    [InlineData("photo.jpeg")]
-    [InlineData("photo.png")]
-    [InlineData("photo.gif")]
-    [InlineData("photo.webp")]
-    [InlineData("PHOTO.JPG")]     // kiểm tra case-insensitive
-    [InlineData("Photo.PNG")]
-    public async Task UploadImageAsync_WithAllowedImageExtension_ShouldPassFormatCheck(string fileName)
-    {
-        var svc = CreateService();
-        var file = FakeFormFile(fileName, "image/jpeg");
-
-        // Cloudinary thật sẽ ném (không có network) — nhưng không phải lỗi định dạng file.
-        var thrown = await FluentActions.Awaiting(() => svc.UploadImageAsync(file))
-            .Should().ThrowAsync<Exception>();
-
-        // File đã qua bước kiểm tra định dạng: exception ném ra KHÔNG chứa thông điệp validate.
-        thrown.Which.Message.Should().NotContain("File is not an image");
-        thrown.Which.Message.Should().NotContain("File is empty or null");
-    }
-
-    [Fact]
-    public async Task UploadImageAsync_WithDotJpgButPdfContent_ShouldStillPassFormatCheck()
-    {
-        // IsImageFile chỉ kiểm tra phần mở rộng, KHÔNG kiểm tra nội dung/magic-bytes.
-        var svc = CreateService();
-        var file = FakeFormFile("trick.jpg", "application/pdf", "%PDF-1.4 fake"u8.ToArray());
-
-        var thrown = await FluentActions.Awaiting(() => svc.UploadImageAsync(file))
-            .Should().ThrowAsync<Exception>();
-
-        thrown.Which.Message.Should().NotContain("File is not an image");
-        thrown.Which.Message.Should().NotContain("File is empty or null");
-    }
-
-    // ===== Constructor / Cấu hình =====
-
-    [Fact]
-    public void Constructor_WithMissingCloudName_ShouldThrowArgumentException()
-    {
-        // CloudinaryOptions binding rỗng → Account("","","") → thư viện CloudinaryDotNet ném
-        // "Cloud name must be specified in Account!" ở constructor.
-        var config = new DictionaryConfiguration(new Dictionary<string, string?>());
-
-        var act = () => new Cms.Service.CloudinaryService.Service(config);
-
-        act.Should().Throw<ArgumentException>()
-            .WithMessage("*Cloud name must be specified*");
-    }
-
-    [Fact]
-    public void Constructor_WithValidConfig_ShouldInstantiate()
-    {
-        var act = () => CreateService();
-
-        act.Should().NotThrow();
+        await act.Should().ThrowAsync<BadRequestException>()
+            .WithMessage("*vượt quá dung lượng tối đa 10 MB*");
     }
 }

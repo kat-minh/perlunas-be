@@ -1,4 +1,4 @@
-using Cms.Repository;
+﻿using Cms.Repository;
 using BlogEntity = Cms.Repository.Entities.Blog;
 using Cms.Service.Blog;
 using Cms.Service.Exceptions;
@@ -42,7 +42,7 @@ public class ServiceTests
         Titile = "Test Blog Title",
         SubTitile = "Test Subtitle",
         Author = "Test Author",
-        ReadingTime = "5 phút",
+        ReadingTime = "5 phÃºt",
         Description = "Test Description",
         Tag = "test",
         Cover = "https://example.com/cover.jpg",
@@ -54,7 +54,7 @@ public class ServiceTests
         Titile = "Updated Title",
         SubTitile = "Updated Subtitle",
         Author = "Updated Author",
-        ReadingTime = "10 phút",
+        ReadingTime = "10 phÃºt",
         Description = "Updated Description",
         Tag = "updated",
         Cover = "https://example.com/cover2.jpg",
@@ -122,7 +122,7 @@ public class ServiceTests
             Titile = "@#$%^&*()",
             SubTitile = "Test Subtitle",
             Author = "Test Author",
-            ReadingTime = "5 phút",
+            ReadingTime = "5 phÃºt",
             Description = "Test Description",
             Tag = "test",
             Cover = "https://example.com/cover.jpg",
@@ -157,7 +157,7 @@ public class ServiceTests
                 Slug = "original-title",
                 Author = "Original Author",
                 SubTitile = "Original Sub",
-                ReadingTime = "5 phút",
+                ReadingTime = "5 phÃºt",
                 Description = "Original desc",
                 Tag = "original",
                 Cover = "https://example.com/cover.jpg",
@@ -174,7 +174,8 @@ public class ServiceTests
             var result = await service.UpdateAsync(blogId, ValidUpdateRequest);
 
             result.Titile.Should().Be("Updated Title");
-            result.Slug.Should().Be("updated-title");
+            // fix(slug): keep slug fixed after creation - Update does NOT regenerate slug.
+            result.Slug.Should().Be("original-title");
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
         }
     }
@@ -196,7 +197,7 @@ public class ServiceTests
     }
 
     [Fact]
-    public async Task UpdateAsync_WithTitleExistingElsewhere_ShouldAppendSuffix()
+    public async Task UpdateAsync_WithTitleExistingElsewhere_ShouldKeepSlugUnchanged()
     {
         var options = NewDb();
         var createValidator = CreateValidatorMock();
@@ -215,9 +216,11 @@ public class ServiceTests
             var service = new Cms.Service.Blog.Service(ctx, createValidator.Object, updateValidator.Object);
             var result = await service.UpdateAsync(blogId, ValidUpdateRequest);
 
-            result.Slug.Should().Be("updated-title-1");
+            // fix(slug): Update never regenerates slug even when title matches another blog.
+            result.Slug.Should().Be("old-title");
         }
     }
+
 
     // ===== DeleteAsync =====
 
@@ -510,7 +513,7 @@ public class ServiceTests
         var id = Guid.NewGuid();
         await using (var ctx = new AppDbContext(options))
         {
-            ctx.Blogs.Add(new BlogEntity { Id = id, Titile = "Xoá", Slug = "xoa", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            ctx.Blogs.Add(new BlogEntity { Id = id, Titile = "XoÃ¡", Slug = "xoa", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
             await ctx.SaveChangesAsync();
         }
 
@@ -541,11 +544,11 @@ public class ServiceTests
     }
 
     // ==================================================================
-    //  GetAllAsync — paging defaults
+    //  GetAllAsync â€” paging defaults
     // ==================================================================
 
     [Theory]
-    [InlineData(0, 0)]   // pageIndex/pageSize <= 0 → mặc định 1/10
+    [InlineData(0, 0)]   // pageIndex/pageSize <= 0 â†’ máº·c Ä‘á»‹nh 1/10
     [InlineData(-1, -5)]
     public async Task GetAllAsync_WithNonPositivePaging_ShouldUseDefaults(int pageIndex, int pageSize)
     {

@@ -110,7 +110,7 @@ public class ServiceTests
         await using (var ctx = new AppDbContext(options))
         {
             var service = CreateService(ctx);
-            var result = await service.GetAllAsync(1, 10, null);
+            var result = await service.GetAllAsync(1, 10, null, null);
 
             result.Value.Should().NotBeNull();
             result.Value.Items.Should().HaveCount(2);
@@ -167,7 +167,7 @@ public class ServiceTests
         await using (var ctx = new AppDbContext(options))
         {
             var service = CreateService(ctx);
-            var result = await service.GetAllAsync(1, 10, FormType.Hotel);
+            var result = await service.GetAllAsync(1, 10, FormType.Hotel, null);
 
             result.Value.Should().NotBeNull();
             result.Value.Items.Should().HaveCount(1);
@@ -225,7 +225,7 @@ public class ServiceTests
         await using (var ctx = new AppDbContext(options))
         {
             var service = CreateService(ctx);
-            var result = await service.GetAllAsync(1, 10, null);
+            var result = await service.GetAllAsync(1, 10, null, null);
 
             result.Value.Items.Should().HaveCount(1);
             var item = result.Value.Items[0].Should().BeOfType<Response.BookingFormResponse>().Subject;

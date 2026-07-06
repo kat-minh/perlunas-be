@@ -89,14 +89,15 @@ Cms.Service.Tests/
 | `POST api/services/tours` | `CreateTourAsync` | `CreateTourAsync_WithValidRequest_ShouldCreateTourWithChildren` | PASS |
 | | | `CreateTourAsync_WhenValidationFails_ShouldThrow` | PASS |
 | `POST api/services/combos` | `CreateComboAsync` | `CreateComboAsync_WithValidRequest_ShouldCreateComboWithChildren` — hạng phòng KHÔNG mang giá (Price/OriginalPrice/Unit = null) | PASS |
-| | | `CreateComboAsync_DuplicateTitle_ShouldUseGeneratedSlugAsIs` — combo dùng `Slug.GenerateSlug` (không kiểm tra trùng) | PASS |
+| | | `CreateComboAsync_DuplicateTitle_ShouldAppendSuffix` — combo dùng `GenerateUniqueSlugAsync` như tour/hotel → trùng tiêu đề thêm hậu tố -1 | PASS |
 | `POST api/services/hotels` | `CreateHotelAsync` | `CreateHotelAsync_WithValidRequest_ShouldCreateHotelWithRoomCategories` | PASS |
-| `PUT api/services/{id:guid}` | `UpdateAsync` | `UpdateAsync_ForTour_ShouldReplaceSchedulesAndImportantInfors` — soft-delete children cũ | PASS |
+| `PUT api/services/{id:guid}` | `UpdateAsync` | `UpdateAsync_WithValidRequest_ShouldUpdateAndReplaceChildren` — đổi title KHÔNG đổi slug (giữ slug cũ) | PASS |
 | | | `UpdateAsync_ForHotel_ShouldReplaceRoomCategories` | PASS |
+| | | `UpdateAsync_DuplicateTitle_ShouldKeepSlugUnchanged` — Update không regenerate slug ngay cả khi trùng title khác | PASS |
 | | | `UpdateAsync_WhenNotFound_ShouldThrow` | PASS |
 | `DELETE api/services/{id:guid}` | `DeleteAsync` | *(test delete soft-delete service)* | PASS |
 
-> **Lưu ý quan trọng (đã phát hiện khi viết test):** `CreateComboAsync` dùng `Slug.GenerateSlug(title)` mà **không** gọi `GenerateUniqueSlugAsync` như Tour → khi DB thật có unique-index trên `Slug`, tạo combo trùng tiêu đề sẽ ném `DbUpdateException` ở `SaveChangesAsync`. InMemory không ép unique-index nên test vẫn pass, nhưng đây là **điểm cần cải thiện** của service. Ghi nhận trong test `CreateComboAsync_DuplicateTitle_ShouldUseGeneratedSlugAsIs`.
+> **Lưu ý:** `CreateComboAsync` đã được sửa dùng `GenerateUniqueSlugAsync` (như Tour/Hotel) → tạo combo trùng tiêu đề tự thêm hậu tố `-1`, `-2`... không còn `DbUpdateException` khi DB có unique-index. `UpdateAsync` **giữ slug cố định** sau khi tạo (đổi title không đổi URL) — tránh vỡ link/bookmark/ISR đã build.
 
 ### 2.4. Forms — `api/forms` (`FormsController`)
 
@@ -166,15 +167,12 @@ Cms.Service.Tests/
 
 | API | Service method | Test cases | Trạng thái |
 |---|---|---|---|
-| `POST api/cloudinary/upload` | `CloudinaryService.Service.UploadImageAsync` | `UploadImageAsync_WithNullFile_ShouldThrow` — file null → `ArgumentException("File is empty or null")` | PASS |
-| | | `UploadImageAsync_WithEmptyFile_ShouldThrow` — file rỗng → `ArgumentException` | PASS |
-| | | `UploadImageAsync_WithNonImageExtension_ShouldThrow` — pdf/zip/mp4/mp3/noext → `ArgumentException("File is not an image")` | PASS |
-| | | `UploadImageAsync_WithAllowedImageExtension_ShouldPassFormatCheck` — jpg/jpeg/png/gif/webp (+ chữ hoa) qua bước định dạng | PASS |
-| | | `UploadImageAsync_WithDotJpgButPdfContent_ShouldStillPassFormatCheck` — chỉ kiểm tra đuôi file, không kiểm tra magic-bytes | PASS |
-| | | `Constructor_WithMissingCloudName_ShouldThrowArgumentException` — thiếu config → CloudinaryDotNet ném | PASS |
-| | | `Constructor_WithValidConfig_ShouldInstantiate` | PASS |
+| `POST api/cloudinary/upload` | `CloudinaryService.Service.UploadImageAsync` | `UploadImageAsync_WhenCloudinaryNotConfigured_ShouldThrowServerException` — thiếu env CloudName/ApiKey/ApiSecret → `ServerException` (500) rõ ràng | PASS |
+| | | `UploadImageAsync_WithNullFile_ShouldThrowBadRequest` — file null → `BadRequestException` (400) | PASS |
+| | | `UploadImageAsync_WithEmptyFile_ShouldThrowBadRequest` — file rỗng → `BadRequestException` (400) | PASS |
+| | | `UploadImageAsync_WhenFileExceeds10MB_ShouldThrowBadRequest` — file > 10 MB → `BadRequestException` (400) | PASS |
 
-> **Lưu ý:** Upload thật gọi Cloudinary API (network) → không test được trong CI. Các test chỉ phủ phần **validation** (null/empty/đuôi file) và constructor. Phần gọi `_cloudinary.UploadAsync` cần mock Cloudinary hoặc test tích hợp với credentials thật.
+> **Lưu ý:** Upload thật gọi Cloudinary API (network) → không test được trong CI. Các test chỉ phủ phần **validation** (null/empty/oversize/định dạng) và **cấu hình thiếu** (→ `ServerException` 500). Constructor lazy-init: thiếu env không ném ở DI register, chỉ ném rõ ràng khi gọi `UploadImageAsync`. Phần gọi `_cloudinary.UploadAsync` cần mock hoặc test tích hợp với credentials thật.
 
 ### 2.9. JwtService (internal — không có controller riêng)
 
@@ -199,7 +197,7 @@ Cms.Service.Tests/
 | | `SendMail_WhenConfigMissing_ShouldFailBeforeOrAtConnect` — thiếu config → ném | PASS |
 | `constructor` | `Constructor_WithFullConfig_ShouldBindAllOptions` / `Constructor_WithEmptyConfig_ShouldNotThrowAtConstructionTime` | PASS |
 
-> **Lưu ý:** `SendMail` dùng MailKit `SmtpClient` thật → không có SMTP server trong CI. Test chỉ xác nhận config bind đúng và luồng đi tới bước kết nối. Để test đầy đủ cần SMTP giả (vd: `netDumbster`/`Papercut`) hoặc mock `ISmtpClient`.
+> **Lưu ý:** `SendMail` dùng MailKit `SmtpClient` thật → không có SMTP server trong CI. Service theo **best-effort** (nuốt lỗi SMTP, không làm hỏng luồng form đã lưu) nên 2 test xác nhận `SendMail` **không ném** cả khi config đầy đủ (host giả) và khi thiếu config. Để test đầy đủ cần SMTP giả (vd: `netDumbster`/`Papercut`) hoặc mock `ISmtpClient`.
 
 ### 2.11. Utils.Slug (hàm tiện ích)
 
@@ -226,7 +224,7 @@ Cms.Service.Tests/
 |---|---|---|---|
 | Auth | `Auth\ServiceTests.cs` | 10 | Login (8) + Logout (1) + ... |
 | Blog | `Blog\ServiceTests.cs` | ~13 | CRUD + paging + recentBlogs |
-| Cloudinary | `CloudinaryService\ServiceTests.cs` | 9 | validation + constructor |
+| Cloudinary | `CloudinaryService\ServiceTests.cs` | 4 | validation + config thiếu (ServerException) |
 | Form | `Form\ServiceTests.cs` | ~14 | GetAll/GetByKey + 4 Create* |
 | JwtService | `JwtSvc\ServiceTests.cs` | 10 | GenerateAccessToken |
 | MailService | `MailSvc\ServiceTests.cs` | 4 | constructor + SendMail (network) |
@@ -235,7 +233,7 @@ Cms.Service.Tests/
 | SiteSetting | `SiteSetting\ServiceTests.cs` | ~16 | CRUD + filter id/name/tagline |
 | Taxonomy | `Taxonomy\ServiceTests.cs` | ~20 | CRUD + conflict + delete-in-use + 1 SKIP |
 | Utils.Slug | `Utils\SlugTests.cs` | ~25 | Theory nhiều case |
-| **Tổng** | | **221** (220 pass + 1 skip) | |
+| **Tổng** | | **208** (207 pass + 1 skip) | |
 
 ---
 
