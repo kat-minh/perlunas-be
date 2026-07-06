@@ -283,6 +283,7 @@ public class Service : IService
                     ("Email", request.Email),
                     ("Tên combo", service.Title),
                     ("Phân loại", service.Classify),
+                    ("Mã combo", service.Code),
                     ("Tổng tiền", $"{request.TotalPrice:N0} VNĐ"),
                 },
                 closing: "Vui lòng liên hệ lại khách hàng để xác nhận combo.")
@@ -405,6 +406,7 @@ public class Service : IService
             .AsNoTracking()
             .Include(x => x.FormDetails)
             .Include(x => x.Service)
+                .ThenInclude(s => s.DepartureSchedules)
             .Where(x => !x.IsDeleted);
 
         if (type.HasValue)
@@ -441,6 +443,7 @@ public class Service : IService
             .AsNoTracking()
             .Include(x => x.FormDetails)
             .Include(x => x.Service)
+                .ThenInclude(s => s.DepartureSchedules)
             .FirstOrDefaultAsync(x => !x.IsDeleted && ((isGuid && x.Id == id) || x.Slug == key));
 
         if (form is null) throw new NotFoundException("Form not found.");
@@ -479,6 +482,20 @@ public class Service : IService
         }
         else if (form.Type == FormType.Tour)
         {
+            string? tourCode = null;
+            if (form.Service != null && form.Service.DepartureSchedules != null)
+            {
+                var activeSchedules = form.Service.DepartureSchedules.Where(x => !x.IsDeleted).ToList();
+                if (activeSchedules.Any())
+                {
+                    var matched = activeSchedules.FirstOrDefault(s =>
+                        (!string.IsNullOrEmpty(s.Code) && (form.Note?.Contains(s.Code) == true || form.Title?.Contains(s.Code) == true)) ||
+                        (!string.IsNullOrEmpty(s.StartTime) && (form.Note?.Contains(s.StartTime) == true || form.Title?.Contains(s.StartTime) == true))
+                    );
+                    tourCode = matched?.Code ?? activeSchedules.First().Code;
+                }
+            }
+
             return new Response.TourFormResponse
             {
                 Id = form.Id,
@@ -491,12 +508,15 @@ public class Service : IService
                 Email = form.Email,
                 ServiceId = form.ServiceId,
                 ServiceName = form.Service != null ? form.Service.Title : null,
+                TourCode = tourCode,
                 CreatedAt = form.CreatedAt,
                 UpdatedAt = form.UpdatedAt
             };
         }
         else // Combo or Hotel
         {
+            var roomCategories = string.Join(", ", form.FormDetails.SelectMany(d => d.RoomCategory ?? Enumerable.Empty<string>()).Distinct());
+
             return new Response.BookingFormResponse
             {
                 Id = form.Id,
@@ -510,6 +530,9 @@ public class Service : IService
                 Region = form.Region,
                 ServiceId = form.ServiceId,
                 ServiceName = form.Service != null ? form.Service.Title : null,
+                RoomCategory = roomCategories,
+                Classify = form.Service?.Classify,
+                Code = form.Service?.Code,
                 FormDetails = form.FormDetails.Select(d => new Response.FormDetailsResponse
                 {
                     Id = d.Id,

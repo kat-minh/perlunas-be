@@ -40,6 +40,7 @@ public class Response
         public string? FullName { get; set; }
         public string? Phone { get; set; }
         public string? Email { get; set; }
+        public string? TourCode { get; set; }
     }
 
     public class BookingFormResponse : FormResponse
@@ -49,6 +50,9 @@ public class Response
         public string? Email { get; set; }
         public int? TotalPrice { get; set; }
         public string? Region { get; set; }
+        public string? RoomCategory { get; set; }
+        public string? Classify { get; set; }
+        public string? Code { get; set; }
         public ICollection<FormDetailsResponse> FormDetails { get; set; } = new List<FormDetailsResponse>();
     }
 

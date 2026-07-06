@@ -11,7 +11,7 @@
 | Target | .NET 8 |
 | Project test | `Cms.Service.Tests\Cms.Service.Tests.csproj` |
 | Lệnh chạy | `dotnet test Cms.Service.Tests\Cms.Service.Tests.csproj` |
-| Kết quả hiện tại | **213 PASS, 1 SKIP, 0 FAIL** (tổng 214) |
+| Kết quả hiện tại | **214 PASS, 1 SKIP, 0 FAIL** (tổng 215) |
 
 ### Cấu trúc thư mục test
 
@@ -143,6 +143,7 @@ Cms.Service.Tests/
 | `GET api/forms/{key}` | `Form.Service.GetByKeyAsync` | `GetByKeyAsync_WithValidId_ShouldReturnCorrectForm` — tìm theo Guid | PASS |
 | | | `GetByKeyAsync_WithValidSlug_ShouldReturnCorrectForm` — tìm theo slug | PASS |
 | | | `GetByKeyAsync_WhenNotFound_ShouldThrowNotFoundException` — không có → `NotFoundException` | PASS |
+| | | `GetByKeyAsync_ShouldReturnEnrichedFields` — trả về các field mở rộng (TourCode, RoomCategory, Classify, Code) | PASS |
 | `POST api/forms/advise` | `CreateAdviseAsync` | `CreateAdviseAsync_WithValidRequest_ShouldCreateFormAndSendMail` — tạo FormType.Advise + gửi mail | PASS |
 | | | `CreateAdviseAsync_ShouldSendMailToBothUserAndAdmin` — gửi mail đến cả khách và admin | PASS |
 | | | `CreateAdviseAsync_WhenValidationFails_ShouldThrowValidationException` — dùng validator thật, thiếu FullName + sai email → `ValidationException` | PASS |
@@ -153,7 +154,7 @@ Cms.Service.Tests/
 | `POST api/forms/combo` | `CreateComboAsync` | `CreateComboAsync_WithValidRequest_ShouldCreateFormWithDetails` — tạo FormType.Combo + FormDetails | PASS |
 | | | `CreateComboAsync_WhenServiceNotComboType_ShouldThrowBadRequest` — service không phải Combo → `BadRequestException` | PASS |
 | | | `CreateComboAsync_WithInvalidRoomCategory_ShouldThrowBadRequest` — hạng phòng không tồn tại → `BadRequestException` | PASS |
-| | | `CreateComboAsync_ShouldSendMailWithTitleAndClassify` — gửi mail admin kèm tên combo và classify của combo | PASS |
+| | | `CreateComboAsync_ShouldSendMailWithTitleAndClassify` — gửi mail admin kèm tên combo, classify và mã combo | PASS |
 | `POST api/forms/hotel` | `CreateHotelAsync` | `CreateHotelAsync_WhenServiceNotHotelType_ShouldThrowBadRequest` → `BadRequestException` | PASS |
 | | | `CreateBookingAsync_WhenServiceNotFound_ShouldThrowNotFound` → `NotFoundException` | PASS |
 | | | `CreateHotelAsync_ShouldSendMailWithTitleAndRoomCategory` — gửi mail admin kèm tên phòng và hạng phòng | PASS |

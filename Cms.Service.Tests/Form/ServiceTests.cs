@@ -752,7 +752,8 @@ public class ServiceTests
                 Title = "Deluxe Combo Pack",
                 Slug = "deluxe-combo-pack",
                 Type = ServiceType.Combo,
-                Classify = "Tier 1 Resort"
+                Classify = "Tier 1 Resort",
+                Code = "CB-999"
             });
             ctx.RoomCategories.Add(new RoomCategoryEntity
             {
@@ -797,6 +798,7 @@ public class ServiceTests
             adminMail.Should().NotBeNull();
             adminMail!.Body.Should().Contain("Deluxe Combo Pack");
             adminMail!.Body.Should().Contain("Tier 1 Resort");
+            adminMail!.Body.Should().Contain("CB-999");
         }
     }
 
@@ -863,6 +865,134 @@ public class ServiceTests
             adminMail.Should().NotBeNull();
             adminMail!.Body.Should().Contain("Grand Imperial Hotel");
             adminMail!.Body.Should().Contain("King Room, Queen Room");
+        }
+    }
+
+    [Fact]
+    public async Task GetByKeyAsync_ShouldReturnEnrichedFields()
+    {
+        var options = NewDb();
+        var tourServiceId = Guid.NewGuid();
+        var hotelServiceId = Guid.NewGuid();
+        var comboServiceId = Guid.NewGuid();
+        var tourFormId = Guid.NewGuid();
+        var hotelFormId = Guid.NewGuid();
+        var comboFormId = Guid.NewGuid();
+
+        await using (var ctx = new AppDbContext(options))
+        {
+            // Seed Tour Service & Schedules
+            var tour = new ServiceEntity
+            {
+                Id = tourServiceId,
+                Title = "Amazing Halong Tour",
+                Slug = "amazing-halong-tour",
+                Type = ServiceType.Tour
+            };
+            tour.DepartureSchedules.Add(new DepartureScheduleEntity
+            {
+                Id = Guid.NewGuid(),
+                ServiceId = tourServiceId,
+                Code = "HL-TEST",
+                IsDeleted = false
+            });
+            ctx.Services.Add(tour);
+
+            // Seed Hotel Service
+            ctx.Services.Add(new ServiceEntity
+            {
+                Id = hotelServiceId,
+                Title = "Lunar Bay Resort",
+                Slug = "lunar-bay-resort",
+                Type = ServiceType.Hotel
+            });
+
+            // Seed Combo Service
+            ctx.Services.Add(new ServiceEntity
+            {
+                Id = comboServiceId,
+                Title = "Romantic Escapade Combo",
+                Slug = "romantic-escapade-combo",
+                Type = ServiceType.Combo,
+                Classify = "Luxury",
+                Code = "CB-101"
+            });
+
+            // Seed Forms
+            ctx.Forms.Add(new FormEntity
+            {
+                Id = tourFormId,
+                ServiceId = tourServiceId,
+                Type = FormType.Tour,
+                Title = "Amazing Halong Tour",
+                Note = "Tour code HL-TEST request",
+                FullName = "Guest Tour",
+                CreatedAt = DateTime.UtcNow
+            });
+
+            var hotelForm = new FormEntity
+            {
+                Id = hotelFormId,
+                ServiceId = hotelServiceId,
+                Type = FormType.Hotel,
+                FullName = "Guest Hotel",
+                CreatedAt = DateTime.UtcNow
+            };
+            hotelForm.FormDetails.Add(new FormDetailsEntity
+            {
+                Id = Guid.NewGuid(),
+                FormId = hotelFormId,
+                ServiceId = hotelServiceId,
+                RoomCategory = new List<string> { "Ocean Front", "Presidential Suite" },
+                CreatedAt = DateTime.UtcNow
+            });
+            ctx.Forms.Add(hotelForm);
+
+            var comboForm = new FormEntity
+            {
+                Id = comboFormId,
+                ServiceId = comboServiceId,
+                Type = FormType.Combo,
+                FullName = "Guest Combo",
+                CreatedAt = DateTime.UtcNow
+            };
+            comboForm.FormDetails.Add(new FormDetailsEntity
+            {
+                Id = Guid.NewGuid(),
+                FormId = comboFormId,
+                ServiceId = comboServiceId,
+                RoomCategory = new List<string> { "Standard Room" },
+                CreatedAt = DateTime.UtcNow
+            });
+            ctx.Forms.Add(comboForm);
+
+            await ctx.SaveChangesAsync();
+        }
+
+        await using (var ctx = new AppDbContext(options))
+        {
+            var service = CreateService(ctx);
+
+            // Get Tour Form
+            var tourResult = await service.GetByKeyAsync(tourFormId.ToString());
+            tourResult.Should().BeOfType<Response.TourFormResponse>();
+            var tourFormResp = (Response.TourFormResponse)tourResult;
+            tourFormResp.TourCode.Should().Be("HL-TEST");
+
+            // Get Hotel Form
+            var hotelResult = await service.GetByKeyAsync(hotelFormId.ToString());
+            hotelResult.Should().BeOfType<Response.BookingFormResponse>();
+            var hotelFormResp = (Response.BookingFormResponse)hotelResult;
+            hotelFormResp.RoomCategory.Should().Be("Ocean Front, Presidential Suite");
+            hotelFormResp.ServiceName.Should().Be("Lunar Bay Resort");
+
+            // Get Combo Form
+            var comboResult = await service.GetByKeyAsync(comboFormId.ToString());
+            comboResult.Should().BeOfType<Response.BookingFormResponse>();
+            var comboFormResp = (Response.BookingFormResponse)comboResult;
+            comboFormResp.Classify.Should().Be("Luxury");
+            comboFormResp.Code.Should().Be("CB-101");
+            comboFormResp.ServiceName.Should().Be("Romantic Escapade Combo");
         }
     }
 }
