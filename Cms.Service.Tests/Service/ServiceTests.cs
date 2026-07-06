@@ -55,12 +55,24 @@ public class ServiceTests
         return mock;
     }
 
+    private static Mock<Cms.Service.CloudinaryService.IService> CloudinaryMock()
+    {
+        var mock = new Mock<Cms.Service.CloudinaryService.IService>();
+        mock.Setup(x => x.DeleteImageByUrlAsync(It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+        mock.Setup(x => x.DeleteImagesByUrlsAsync(It.IsAny<IEnumerable<string>>()))
+            .Returns(Task.CompletedTask);
+        return mock;
+    }
+
     private static Cms.Service.Service.Service CreateSvc(AppDbContext ctx,
         Mock<IValidator<Request.CreateTourRequest>>? t = null,
         Mock<IValidator<Request.CreateComboRequest>>? c = null,
         Mock<IValidator<Request.CreateHotelRequest>>? h = null,
-        Mock<IValidator<Request.UpdateServiceRequest>>? u = null) =>
+        Mock<IValidator<Request.UpdateServiceRequest>>? u = null,
+        Mock<Cms.Service.CloudinaryService.IService>? cl = null) =>
         new(ctx,
+            (cl ?? CloudinaryMock()).Object,
             (t ?? TourValidatorMock()).Object,
             (c ?? ComboValidatorMock()).Object,
             (h ?? HotelValidatorMock()).Object,
