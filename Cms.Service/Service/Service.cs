@@ -17,18 +17,21 @@ namespace Cms.Service.Service;
 public class Service : IService
 {
     private readonly AppDbContext _dbContext;
+    private readonly CloudinaryService.IService _cloudinary;
     private readonly IValidator<Request.CreateTourRequest> _createTourValidator;
     private readonly IValidator<Request.CreateComboRequest> _createComboValidator;
     private readonly IValidator<Request.CreateHotelRequest> _createHotelValidator;
     private readonly IValidator<Request.UpdateServiceRequest> _updateValidator;
 
     public Service(AppDbContext dbContext,
+        CloudinaryService.IService cloudinary,
         IValidator<Request.CreateTourRequest> createTourValidator,
         IValidator<Request.CreateComboRequest> createComboValidator,
         IValidator<Request.CreateHotelRequest> createHotelValidator,
         IValidator<Request.UpdateServiceRequest> updateValidator)
     {
         _dbContext = dbContext;
+        _cloudinary = cloudinary;
         _createTourValidator = createTourValidator;
         _createComboValidator = createComboValidator;
         _createHotelValidator = createHotelValidator;
@@ -631,12 +634,14 @@ public class Service : IService
         var service = await _dbContext.Services.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
         if (service is null) throw new NotFoundException("Service not found.");
 
+        // Collect old image URLs before overwriting (for Cloudinary cleanup after save)
+        var oldAlbumUrls = DeserializeAlbum(service.Album);
+        var oldRoomCatUrls = new List<string>();
+
         var now = DateTime.UtcNow;
         var type = request.Type!.Value;
 
         service.Title = request.Title!.Trim();
-        // GIỮ NGUYÊN slug khi sửa (slug chỉ sinh 1 lần lúc tạo) — đổi title không
-        // đổi URL, tránh vỡ link/bookmark/ISR đã build. (KHÔNG regenerate ở đây.)
         service.Album = JsonSerializer.Serialize(request.Album!);
         service.Region = request.Region!.Trim();
         service.IsPublic = request.IsPublic ?? service.IsPublic;
@@ -702,7 +707,11 @@ public class Service : IService
         {
             var oldRoomCats = await _dbContext.RoomCategories
                 .Where(x => x.ServiceId == id && !x.IsDeleted).ToListAsync();
-            foreach (var r in oldRoomCats) { r.IsDeleted = true; r.UpdatedAt = now; }
+            foreach (var r in oldRoomCats)
+            {
+                oldRoomCatUrls.AddRange(DeserializeAlbum(r.Album));
+                r.IsDeleted = true; r.UpdatedAt = now;
+            }
 
             _dbContext.RoomCategories.AddRange(request.RoomCategories.Select(r => new Repository.Entities.RoomCategory
             {
@@ -721,6 +730,20 @@ public class Service : IService
 
         service.UpdatedAt = now;
         await _dbContext.SaveChangesAsync();
+
+        // Xóa ảnh cũ trên Cloudinary (album bị thay thế + room category cũ)
+        var removedUrls = oldAlbumUrls.Except(request.Album ?? new()).ToList();
+        removedUrls.AddRange(oldRoomCatUrls);
+        var distinctRemoved = removedUrls.Distinct().ToList();
+        if (distinctRemoved.Count > 0)
+        {
+            // Fire-and-forget nhẹ: không block response nếu Cloudinary lỗi
+            _ = Task.Run(async () =>
+            {
+                try { await _cloudinary.DeleteImagesByUrlsAsync(distinctRemoved); }
+                catch { /* ngầm — không làm hỏng response update */ }
+            });
+        }
 
         var response = ToResponse(service);
         response.Schedules = (await _dbContext.Schedules
@@ -777,6 +800,10 @@ public class Service : IService
         var service = await _dbContext.Services.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
         if (service is null) throw new NotFoundException("Service not found.");
 
+        // Collect all image URLs before soft-deleting
+        var allUrls = new List<string>();
+        allUrls.AddRange(DeserializeAlbum(service.Album));
+
         var now = DateTime.UtcNow;
         service.IsDeleted = true;
         service.UpdatedAt = now;
@@ -788,12 +815,26 @@ public class Service : IService
         { i.IsDeleted = true; i.UpdatedAt = now; }
 
         foreach (var r in await _dbContext.RoomCategories.Where(x => x.ServiceId == id && !x.IsDeleted).ToListAsync())
-        { r.IsDeleted = true; r.UpdatedAt = now; }
+        {
+            allUrls.AddRange(DeserializeAlbum(r.Album));
+            r.IsDeleted = true; r.UpdatedAt = now;
+        }
 
         foreach (var d in await _dbContext.DepartureSchedules.Where(x => x.ServiceId == id && !x.IsDeleted).ToListAsync())
         { d.IsDeleted = true; d.UpdatedAt = now; }
 
         await _dbContext.SaveChangesAsync();
+
+        // Xóa toàn bộ ảnh trên Cloudinary
+        var distinctUrls = allUrls.Distinct().ToList();
+        if (distinctUrls.Count > 0)
+        {
+            _ = Task.Run(async () =>
+            {
+                try { await _cloudinary.DeleteImagesByUrlsAsync(distinctUrls); }
+                catch { /* ngầm — không làm hỏng response delete */ }
+            });
+        }
 
         return "Service deleted successfully.";
     }

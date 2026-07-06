@@ -74,6 +74,69 @@ public class Service : IService
         return new Response.UploadResponse { Url = uploadResult.SecureUrl.ToString() };
     }
 
+    public async Task DeleteImageByUrlAsync(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return;
+
+        if (string.IsNullOrWhiteSpace(_options.CloudName)
+            || string.IsNullOrWhiteSpace(_options.ApiKey)
+            || string.IsNullOrWhiteSpace(_options.ApiSecret))
+            throw new ServerException("Dịch vụ xóa ảnh chưa được cấu hình (Cloudinary).");
+
+        var publicId = ExtractPublicId(url);
+        if (publicId == null) return;
+
+        try
+        {
+            var deleteParams = new DeletionParams(publicId);
+            await _cloudinary!.DestroyAsync(deleteParams);
+        }
+        catch (Exception ex)
+        {
+            throw new BadGatewayException($"Không kết nối được dịch vụ xóa ảnh: {ex.Message}");
+        }
+    }
+
+    public async Task DeleteImagesByUrlsAsync(IEnumerable<string> urls)
+    {
+        var validUrls = urls.Where(u => !string.IsNullOrWhiteSpace(u)).ToList();
+        foreach (var url in validUrls)
+        {
+            await DeleteImageByUrlAsync(url);
+        }
+    }
+
+    /// <summary>
+    /// Trích xuất public ID từ Cloudinary URL.
+    /// VD: https://res.cloudinary.com/demo/image/upload/v123456/folder/sample.jpg → folder/sample
+    /// </summary>
+    private static string? ExtractPublicId(string url)
+    {
+        // Cloudinary URL pattern: /upload/{version}/{public_id}.{ext}
+        var uploadIndex = url.IndexOf("/image/upload/", StringComparison.OrdinalIgnoreCase);
+        if (uploadIndex < 0) return null;
+
+        var afterUpload = url[(uploadIndex + "/image/upload/".Length)..];
+
+        // Strip version prefix (v1234567/)
+        if (afterUpload.StartsWith('v') && afterUpload.Contains('/'))
+        {
+            var slashIdx = afterUpload.IndexOf('/');
+            var possibleVersion = afterUpload[..slashIdx];
+            if (possibleVersion.Length > 1 && possibleVersion[1..].All(char.IsDigit))
+            {
+                afterUpload = afterUpload[(slashIdx + 1)..];
+            }
+        }
+
+        // Strip file extension
+        var extIdx = afterUpload.LastIndexOf('.');
+        if (extIdx > 0)
+            afterUpload = afterUpload[..extIdx];
+
+        return string.IsNullOrWhiteSpace(afterUpload) ? null : afterUpload;
+    }
+
     private static bool IsImageFile(IFormFile file)
     {
         var extension = Path.GetExtension(file.FileName).ToLowerInvariant();

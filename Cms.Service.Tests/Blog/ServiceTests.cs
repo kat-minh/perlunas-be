@@ -61,6 +61,25 @@ public class ServiceTests
         Content = "<p>Updated content</p>"
     };
 
+    private static Mock<Cms.Service.CloudinaryService.IService> CloudinaryMock()
+    {
+        var mock = new Mock<Cms.Service.CloudinaryService.IService>();
+        mock.Setup(x => x.DeleteImageByUrlAsync(It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+        mock.Setup(x => x.DeleteImagesByUrlsAsync(It.IsAny<IEnumerable<string>>()))
+            .Returns(Task.CompletedTask);
+        return mock;
+    }
+
+    private static Cms.Service.Blog.Service CreateSvc(AppDbContext ctx,
+        Mock<IValidator<Request.CreateBlogRequest>>? createValidator = null,
+        Mock<IValidator<Request.UpdateBlogRequest>>? updateValidator = null,
+        Mock<Cms.Service.CloudinaryService.IService>? cloudinary = null) =>
+        new(ctx,
+            (cloudinary ?? CloudinaryMock()).Object,
+            (createValidator ?? CreateValidatorMock()).Object,
+            (updateValidator ?? UpdateValidatorMock()).Object);
+
     // ===== CreateAsync =====
 
     [Fact]
@@ -71,7 +90,7 @@ public class ServiceTests
         var updateValidator = UpdateValidatorMock();
 
         await using var ctx = new AppDbContext(options);
-        var service = new Cms.Service.Blog.Service(ctx, createValidator.Object, updateValidator.Object);
+        var service = CreateSvc(ctx, createValidator: createValidator, updateValidator: updateValidator);
 
         var result = await service.CreateAsync(ValidCreateRequest);
 
@@ -104,7 +123,7 @@ public class ServiceTests
 
         await using (var ctx = new AppDbContext(options))
         {
-            var service = new Cms.Service.Blog.Service(ctx, createValidator.Object, updateValidator.Object);
+            var service = CreateSvc(ctx, createValidator: createValidator, updateValidator: updateValidator);
             var result = await service.CreateAsync(ValidCreateRequest);
 
             result.Slug.Should().Be("test-blog-title-1");
@@ -130,7 +149,7 @@ public class ServiceTests
         };
 
         await using var ctx = new AppDbContext(options);
-        var service = new Cms.Service.Blog.Service(ctx, createValidator.Object, updateValidator.Object);
+        var service = CreateSvc(ctx, createValidator: createValidator, updateValidator: updateValidator);
 
         var result = await service.CreateAsync(request);
 
@@ -170,7 +189,7 @@ public class ServiceTests
 
         await using (var ctx = new AppDbContext(options))
         {
-            var service = new Cms.Service.Blog.Service(ctx, createValidator.Object, updateValidator.Object);
+            var service = CreateSvc(ctx, createValidator: createValidator, updateValidator: updateValidator);
             var result = await service.UpdateAsync(blogId, ValidUpdateRequest);
 
             result.Titile.Should().Be("Updated Title");
@@ -188,7 +207,7 @@ public class ServiceTests
         var updateValidator = UpdateValidatorMock();
 
         await using var ctx = new AppDbContext(options);
-        var service = new Cms.Service.Blog.Service(ctx, createValidator.Object, updateValidator.Object);
+        var service = CreateSvc(ctx, createValidator: createValidator, updateValidator: updateValidator);
 
         var act = () => service.UpdateAsync(Guid.NewGuid(), ValidUpdateRequest);
 
@@ -213,7 +232,7 @@ public class ServiceTests
 
         await using (var ctx = new AppDbContext(options))
         {
-            var service = new Cms.Service.Blog.Service(ctx, createValidator.Object, updateValidator.Object);
+            var service = CreateSvc(ctx, createValidator: createValidator, updateValidator: updateValidator);
             var result = await service.UpdateAsync(blogId, ValidUpdateRequest);
 
             // fix(slug): Update never regenerates slug even when title matches another blog.
@@ -240,7 +259,7 @@ public class ServiceTests
 
         await using (var ctx = new AppDbContext(options))
         {
-            var service = new Cms.Service.Blog.Service(ctx, createValidator.Object, updateValidator.Object);
+            var service = CreateSvc(ctx, createValidator: createValidator, updateValidator: updateValidator);
             var msg = await service.DeleteAsync(blogId);
 
             msg.Should().Be("Blog deleted successfully.");
@@ -261,7 +280,7 @@ public class ServiceTests
         var updateValidator = UpdateValidatorMock();
 
         await using var ctx = new AppDbContext(options);
-        var service = new Cms.Service.Blog.Service(ctx, createValidator.Object, updateValidator.Object);
+        var service = CreateSvc(ctx, createValidator: createValidator, updateValidator: updateValidator);
 
         var act = () => service.DeleteAsync(Guid.NewGuid());
 
@@ -287,7 +306,7 @@ public class ServiceTests
 
         await using (var ctx = new AppDbContext(options))
         {
-            var service = new Cms.Service.Blog.Service(ctx, createValidator.Object, updateValidator.Object);
+            var service = CreateSvc(ctx, createValidator: createValidator, updateValidator: updateValidator);
             var result = await service.GetByIdAsync(blogId);
 
             result.Titile.Should().Be("Find Me");
@@ -303,7 +322,7 @@ public class ServiceTests
         var updateValidator = UpdateValidatorMock();
 
         await using var ctx = new AppDbContext(options);
-        var service = new Cms.Service.Blog.Service(ctx, createValidator.Object, updateValidator.Object);
+        var service = CreateSvc(ctx, createValidator: createValidator, updateValidator: updateValidator);
 
         var act = () => service.GetByIdAsync(Guid.NewGuid());
 
@@ -327,7 +346,7 @@ public class ServiceTests
 
         await using (var ctx = new AppDbContext(options))
         {
-            var service = new Cms.Service.Blog.Service(ctx, createValidator.Object, updateValidator.Object);
+            var service = CreateSvc(ctx, createValidator: createValidator, updateValidator: updateValidator);
             var act = () => service.GetByIdAsync(blogId);
 
             await act.Should().ThrowAsync<NotFoundException>()
@@ -352,7 +371,7 @@ public class ServiceTests
 
         await using (var ctx = new AppDbContext(options))
         {
-            var service = new Cms.Service.Blog.Service(ctx, createValidator.Object, updateValidator.Object);
+            var service = CreateSvc(ctx, createValidator: createValidator, updateValidator: updateValidator);
             var result = await service.GetBySlugAsync("slug-test");
 
             result.Titile.Should().Be("Slug Test");
@@ -367,7 +386,7 @@ public class ServiceTests
         var updateValidator = UpdateValidatorMock();
 
         await using var ctx = new AppDbContext(options);
-        var service = new Cms.Service.Blog.Service(ctx, createValidator.Object, updateValidator.Object);
+        var service = CreateSvc(ctx, createValidator: createValidator, updateValidator: updateValidator);
 
         var act = () => service.GetBySlugAsync("non-existent-slug");
 
@@ -395,7 +414,7 @@ public class ServiceTests
 
         await using (var ctx = new AppDbContext(options))
         {
-            var service = new Cms.Service.Blog.Service(ctx, createValidator.Object, updateValidator.Object);
+            var service = CreateSvc(ctx, createValidator: createValidator, updateValidator: updateValidator);
             var result = await service.GetAllAsync(1, 3);
 
             result.Value.Items.Should().HaveCount(3);
@@ -423,7 +442,7 @@ public class ServiceTests
 
         await using (var ctx = new AppDbContext(options))
         {
-            var service = new Cms.Service.Blog.Service(ctx, createValidator.Object, updateValidator.Object);
+            var service = CreateSvc(ctx, createValidator: createValidator, updateValidator: updateValidator);
             var result = await service.GetAllAsync(1, 10);
 
             result.Value.TotalCount.Should().Be(1);
@@ -439,7 +458,7 @@ public class ServiceTests
         var updateValidator = UpdateValidatorMock();
 
         await using var ctx = new AppDbContext(options);
-        var service = new Cms.Service.Blog.Service(ctx, createValidator.Object, updateValidator.Object);
+        var service = CreateSvc(ctx, createValidator: createValidator, updateValidator: updateValidator);
 
         var result = await service.GetAllAsync(1, 10);
 
@@ -466,7 +485,7 @@ public class ServiceTests
 
         await using (var ctx = new AppDbContext(options))
         {
-            var service = new Cms.Service.Blog.Service(ctx, CreateValidatorMock().Object, UpdateValidatorMock().Object);
+            var service = CreateSvc(ctx);
             var result = await service.GetByIdAsync(main);
 
             result.Titile.Should().Be("Main");
@@ -479,7 +498,7 @@ public class ServiceTests
     {
         var options = NewDb();
         await using var ctx = new AppDbContext(options);
-        var service = new Cms.Service.Blog.Service(ctx, CreateValidatorMock().Object, UpdateValidatorMock().Object);
+        var service = CreateSvc(ctx);
 
         var act = () => service.GetByIdAsync(Guid.NewGuid());
 
@@ -495,7 +514,7 @@ public class ServiceTests
     {
         var options = NewDb();
         await using var ctx = new AppDbContext(options);
-        var service = new Cms.Service.Blog.Service(ctx, CreateValidatorMock().Object, UpdateValidatorMock().Object);
+        var service = CreateSvc(ctx);
 
         var act = () => service.UpdateAsync(Guid.NewGuid(), ValidUpdateRequest);
 
@@ -519,7 +538,7 @@ public class ServiceTests
 
         await using (var ctx = new AppDbContext(options))
         {
-            var service = new Cms.Service.Blog.Service(ctx, CreateValidatorMock().Object, UpdateValidatorMock().Object);
+            var service = CreateSvc(ctx);
             var result = await service.DeleteAsync(id);
 
             result.Should().Be("Blog deleted successfully.");
@@ -536,7 +555,7 @@ public class ServiceTests
     {
         var options = NewDb();
         await using var ctx = new AppDbContext(options);
-        var service = new Cms.Service.Blog.Service(ctx, CreateValidatorMock().Object, UpdateValidatorMock().Object);
+        var service = CreateSvc(ctx);
 
         var act = () => service.DeleteAsync(Guid.NewGuid());
 
@@ -562,7 +581,7 @@ public class ServiceTests
 
         await using (var ctx = new AppDbContext(options))
         {
-            var service = new Cms.Service.Blog.Service(ctx, CreateValidatorMock().Object, UpdateValidatorMock().Object);
+            var service = CreateSvc(ctx);
             var result = await service.GetAllAsync(pageIndex, pageSize);
 
             result.Value.PageIndex.Should().Be(1);

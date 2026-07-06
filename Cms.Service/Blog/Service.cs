@@ -10,12 +10,14 @@ namespace Cms.Service.Blog;
 public class Service : IService
 {
     private readonly AppDbContext _dbContext;
+    private readonly CloudinaryService.IService _cloudinary;
     private readonly IValidator<Request.CreateBlogRequest> _createValidator;
     private readonly IValidator<Request.UpdateBlogRequest> _updateValidator;
 
-    public Service(AppDbContext dbContext, IValidator<Request.CreateBlogRequest> createValidator, IValidator<Request.UpdateBlogRequest> updateValidator)
+    public Service(AppDbContext dbContext, CloudinaryService.IService cloudinary, IValidator<Request.CreateBlogRequest> createValidator, IValidator<Request.UpdateBlogRequest> updateValidator)
     {
         _dbContext = dbContext;
+        _cloudinary = cloudinary;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
     }
@@ -95,19 +97,29 @@ public class Service : IService
         var blog = await _dbContext.Blogs.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
         if (blog is null) throw new NotFoundException("Blog not found.");
 
+        var oldCover = blog.Cover;
+
         blog.Titile = request.Titile.Trim();
         blog.SubTitile = request.SubTitile.Trim();
         blog.Author = request.Author.Trim();
         blog.ReadingTime = request.ReadingTime.Trim();
         blog.Description = request.Description.Trim();
         blog.Tag = request.Tag.Trim();
-        // GIỮ NGUYÊN slug khi sửa (slug chỉ sinh 1 lần lúc tạo) — đổi tiêu đề không
-        // đổi URL, tránh vỡ link/bookmark/ISR đã build. (KHÔNG regenerate ở đây.)
         blog.Cover = request.Cover.Trim();
         blog.Content = request.Content;
         blog.UpdatedAt = DateTime.UtcNow;
 
         await _dbContext.SaveChangesAsync();
+
+        // Xóa ảnh cũ trên Cloudinary nếu cover đã đổi
+        if (!string.IsNullOrWhiteSpace(oldCover) && oldCover != request.Cover.Trim())
+        {
+            _ = Task.Run(async () =>
+            {
+                try { await _cloudinary.DeleteImageByUrlAsync(oldCover); }
+                catch { /* ngầm */ }
+            });
+        }
 
         return ToResponse(blog);
     }
@@ -117,9 +129,21 @@ public class Service : IService
         var blog = await _dbContext.Blogs.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
         if (blog is null) throw new NotFoundException("Blog not found.");
 
+        var coverUrl = blog.Cover;
+
         blog.IsDeleted = true;
         blog.UpdatedAt = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
+
+        // Xóa ảnh cover trên Cloudinary
+        if (!string.IsNullOrWhiteSpace(coverUrl))
+        {
+            _ = Task.Run(async () =>
+            {
+                try { await _cloudinary.DeleteImageByUrlAsync(coverUrl); }
+                catch { /* ngầm */ }
+            });
+        }
 
         return "Blog deleted successfully.";
     }
