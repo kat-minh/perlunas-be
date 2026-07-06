@@ -13,13 +13,21 @@ public class Service : IService
     private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
 
     private readonly CloudinaryOptions _options;
-    private readonly Cloudinary _cloudinary;
+    private Cloudinary? _cloudinary;
 
     public Service(IConfiguration configuration)
     {
         _options = new CloudinaryOptions();
         configuration.GetSection(nameof(CloudinaryOptions)).Bind(_options);
-        _cloudinary = new Cloudinary(new Account(_options.CloudName, _options.ApiKey, _options.ApiSecret));
+        // Lazy: only init Cloudinary when fully configured.
+        // Missing env (CloudName/ApiKey/ApiSecret) -> constructor does NOT throw (DI register OK);
+        // ServerException is raised clearly only when UploadImageAsync is actually called.
+        if (!string.IsNullOrWhiteSpace(_options.CloudName)
+            && !string.IsNullOrWhiteSpace(_options.ApiKey)
+            && !string.IsNullOrWhiteSpace(_options.ApiSecret))
+        {
+            _cloudinary = new Cloudinary(new Account(_options.CloudName, _options.ApiKey, _options.ApiSecret));
+        }
     }
 
     public async Task<Response.UploadResponse> UploadImageAsync(IFormFile file)
@@ -48,7 +56,7 @@ public class Service : IService
             {
                 File = new FileDescription(file.FileName, stream),
             };
-            uploadResult = await _cloudinary.UploadAsync(uploadParams);
+            uploadResult = await _cloudinary!.UploadAsync(uploadParams);
         }
         catch (Exception ex)
         {

@@ -216,7 +216,7 @@ public class ServiceTests
 
         result.Schedules.Should().ContainSingle(s => s.Day == "Ngày 1");
         result.ImportantInfors.Should().ContainSingle(i => i.Title == "Bao gồm");
-        result.RoomCategories.Should().ContainSingle(r => r.Titile == "Deluxe" && r.Price == null && r.OriginalPrice == "3,000,000");
+        result.RoomCategories.Should().ContainSingle(r => r.Titile == "Deluxe" && r.Price == null && r.OriginalPrice == null && r.Unit == null);
 
         // Combo clears Tour-only fields
         result.Day.Should().Be(0);
@@ -230,6 +230,9 @@ public class ServiceTests
     [Fact]
     public async Task CreateComboAsync_DuplicateTitle_ShouldAppendSuffix()
     {
+        // fix(combo): CreateComboAsync now uses GenerateUniqueSlugAsync (like tour/hotel),
+        // so a duplicate title appends suffix -1, -2...
+
         var options = NewDb();
         await using (var ctx = new AppDbContext(options))
         {
@@ -241,7 +244,9 @@ public class ServiceTests
         var svc = CreateSvc(ctx2);
         var result = await svc.CreateComboAsync(ValidComboReq);
 
+        // InMemory không ép unique-index → slug sinh đúng theo tiêu đề, KHÔNG thêm hậu tố.
         result.Slug.Should().Be("combo-da-nang-1");
+        result.Title.Should().Be("Combo Đà Nẵng");
     }
 
     // ==================================================================
@@ -548,12 +553,20 @@ public class ServiceTests
     [Fact]
     public async Task GetByKeyAsync_ForCombo_ShouldFallbackPriceFromOriginalPrice()
     {
+        // Combo: giá nằm ở cấp GÓI (service.Price / service.OriginalPrice), KHÔNG lấy từ hạng phòng.
+        // PriceFrom = Price > 0 ? Price : (OriginalPrice > 0 ? OriginalPrice : null).
         var options = NewDb();
         var comboId = Guid.NewGuid();
         await using (var ctx = new AppDbContext(options))
         {
-            ctx.Services.Add(new ServiceEntity { Id = comboId, Title = "Combo Giá", Slug = "combo-gia", Type = ServiceType.Combo, IsPublic = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
-            ctx.RoomCategories.Add(new RoomCategoryEntity { Id = Guid.NewGuid(), ServiceId = comboId, Price = null, OriginalPrice = "4,500,000", Titile = "Phòng Combo", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            ctx.Services.Add(new ServiceEntity
+            {
+                Id = comboId, Title = "Combo Giá", Slug = "combo-gia", Type = ServiceType.Combo, IsPublic = true,
+                Price = null, OriginalPrice = "4,500,000",
+                CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
+            });
+            // Hạng phòng combo không mang giá → đặt OriginalPrice trên phòng cũng bị bỏ qua.
+            ctx.RoomCategories.Add(new RoomCategoryEntity { Id = Guid.NewGuid(), ServiceId = comboId, Price = null, OriginalPrice = "9,000,000", Titile = "Phòng Combo", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
             await ctx.SaveChangesAsync();
         }
 
@@ -852,7 +865,8 @@ public class ServiceTests
         var result = await svc.UpdateAsync(svcId, UpdateReq());
 
         result.Title.Should().Be("Updated Title");
-        result.Slug.Should().Be("updated-title");
+        // fix(slug): keep slug fixed after creation - Update does NOT regenerate slug.
+        result.Slug.Should().Be("old-title");
         result.Region.Should().Be("Miền Bắc");
         result.Day.Should().Be(4);
         result.Night.Should().Be(3);
@@ -913,7 +927,7 @@ public class ServiceTests
     }
 
     [Fact]
-    public async Task UpdateAsync_DuplicateTitle_ShouldAppendSuffix()
+    public async Task UpdateAsync_DuplicateTitle_ShouldKeepSlugUnchanged()
     {
         var options = NewDb();
         var svcId = Guid.NewGuid();
@@ -930,7 +944,8 @@ public class ServiceTests
         var svc = CreateSvc(ctx2);
         var result = await svc.UpdateAsync(svcId, UpdateReq("Existing Title"));
 
-        result.Slug.Should().Be("existing-title-1");
+        // fix(slug): Update never regenerates slug even when title matches another service.
+        result.Slug.Should().Be("original");
     }
 
     [Fact]
