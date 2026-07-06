@@ -424,6 +424,38 @@ public class ServiceTests
     }
 
     [Fact]
+    public async Task CreateAdviseAsync_ShouldSendMailToBothUserAndAdmin()
+    {
+        var options = NewDb();
+        await using var ctx = new AppDbContext(options);
+
+        var mailMock = new Mock<MailService.IService>();
+        mailMock.Setup(x => x.SendMail(It.IsAny<MailContent>()))
+            .Returns(Task.CompletedTask);
+
+        var service = new Cms.Service.Form.Service(
+            ctx,
+            AdviseValidatorMock(true).Object,
+            TourValidatorMock().Object,
+            BookingValidatorMock().Object,
+            mailMock.Object
+        );
+
+        var req = new Request.CreateAdviseFormRequest
+        {
+            Where = "Đà Nẵng", Slug = "tu-van-1", Month = "7", Year = "2026",
+            FullName = "Nguyễn Văn A", Phone = "0901234567", Email = "customer@example.com"
+        };
+
+        await service.CreateAdviseAsync(req);
+
+        // Verify mail sent to customer
+        mailMock.Verify(x => x.SendMail(It.Is<MailContent>(m => m.To == "customer@example.com")), Times.Once);
+        // Verify mail sent to admin
+        mailMock.Verify(x => x.SendMail(It.Is<MailContent>(m => m.To == "duongbilly18012004@gmail.com")), Times.Once);
+    }
+
+    [Fact]
     public async Task CreateAdviseAsync_WhenValidationFails_ShouldThrowValidationException()
     {
         var options = NewDb();
@@ -621,4 +653,28 @@ public class ServiceTests
         await act.Should().ThrowAsync<Cms.Service.Exceptions.NotFoundException>().WithMessage("Service not found.");
     }
 
+    [Fact]
+    public async Task CreateAdviseAsync_ShouldSanitizePhoneSpaces()
+    {
+        var options = NewDb();
+        await using var ctx = new AppDbContext(options);
+        var service = CreateService(ctx);
+
+        var req = new Request.CreateAdviseFormRequest
+        {
+            Where = "Đà Nẵng",
+            Slug = "tu-van-phone-sanitize",
+            Month = "7",
+            Year = "2026",
+            FullName = "Nguyễn Văn A",
+            Phone = "090 123 4567",
+            Email = "a@example.com"
+        };
+
+        var result = await service.CreateAdviseAsync(req);
+
+        result.Should().Be("CREATE_ADVISE_FORM_SUCCESS");
+        var form = await ctx.Forms.FirstAsync();
+        form.Phone.Should().Be("0901234567");
+    }
 }

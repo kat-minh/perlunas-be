@@ -11,7 +11,7 @@
 | Target | .NET 8 |
 | Project test | `Cms.Service.Tests\Cms.Service.Tests.csproj` |
 | Lệnh chạy | `dotnet test Cms.Service.Tests\Cms.Service.Tests.csproj` |
-| Kết quả hiện tại | **208 PASS, 1 SKIP, 0 FAIL** (tổng 209) |
+| Kết quả hiện tại | **209 PASS, 1 SKIP, 0 FAIL** (tổng 210) |
 
 ### Cấu trúc thư mục test
 
@@ -144,6 +144,7 @@ Cms.Service.Tests/
 | | | `GetByKeyAsync_WithValidSlug_ShouldReturnCorrectForm` — tìm theo slug | PASS |
 | | | `GetByKeyAsync_WhenNotFound_ShouldThrowNotFoundException` — không có → `NotFoundException` | PASS |
 | `POST api/forms/advise` | `CreateAdviseAsync` | `CreateAdviseAsync_WithValidRequest_ShouldCreateFormAndSendMail` — tạo FormType.Advise + gửi mail | PASS |
+| | | `CreateAdviseAsync_ShouldSendMailToBothUserAndAdmin` — gửi mail đến cả khách và admin | PASS |
 | | | `CreateAdviseAsync_WhenValidationFails_ShouldThrowValidationException` — dùng validator thật, thiếu FullName + sai email → `ValidationException` | PASS |
 | `POST api/forms/tour` | `CreateTourAsync` | `CreateTourAsync_WithValidRequest_ShouldCreateForm` — tạo FormType.Tour | PASS |
 | | | `CreateTourAsync_WhenServiceNotFound_ShouldThrowNotFound` — ServiceId không có → `NotFoundException` | PASS |
@@ -288,7 +289,7 @@ Cms.Service.Tests/
 | Auth | `Auth\ServiceTests.cs` | 10 | Login (8) + Logout (1) + ... |
 | Blog | `Blog\ServiceTests.cs` | 23 | CRUD + paging + slug (create unique, update giữ cố định) |
 | Cloudinary | `CloudinaryService\ServiceTests.cs` | 4 | validation + config thiếu (ServerException) |
-| Form | `Form\ServiceTests.cs` | 16 | GetAll/GetByKey + 4 Create* (advise/tour/combo/hotel) |
+| Form | `Form\ServiceTests.cs` | 17 | GetAll/GetByKey + 4 Create* (advise/tour/combo/hotel) |
 | JwtService | `JwtSvc\ServiceTests.cs` | 10 | GenerateAccessToken |
 | MailService | `MailSvc\ServiceTests.cs` | 4 | constructor + SendMail best-effort (NotThrow) |
 | PageContent | `PageContent\ServiceTests.cs` | 25 | CRUD + tree + cascade delete |
@@ -296,7 +297,7 @@ Cms.Service.Tests/
 | SiteSetting | `SiteSetting\ServiceTests.cs` | 21 | CRUD + filter id/name/tagline |
 | Taxonomy | `Taxonomy\ServiceTests.cs` | 31 | CRUD + conflict + slug + delete-in-use + 1 SKIP (cascade rename) |
 | Utils.Slug | `Utils\SlugTests.cs` | 26 | Theory nhiều case (26 test case) |
-| **Tổng** | | **209** (208 pass + 1 skip) | |
+| **Tổng** | | **210** (209 pass + 1 skip) | |
 
 ---
 

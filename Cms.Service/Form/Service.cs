@@ -9,6 +9,7 @@ namespace Cms.Service.Form;
 
 public class Service : IService
 {
+    private const string AdminEmail = "duongbilly18012004@gmail.com";
     private readonly AppDbContext _dbContext;
     private readonly IValidator<Request.CreateAdviseFormRequest> _createAdviseValidator;
     private readonly IValidator<Request.CreateTourFormRequest> _createTourValidator;
@@ -31,6 +32,8 @@ public class Service : IService
     public async Task<string> CreateAdviseAsync(Request.CreateAdviseFormRequest request)
     {
         await _createAdviseValidator.ValidateAndThrowAsync(request);
+
+        request.Phone = request.Phone.Replace(" ", "");
 
         var now = DateTime.UtcNow;
         var form = new Repository.Entities.Form
@@ -78,12 +81,34 @@ public class Service : IService
                 closing: "Đội ngũ Perlunas sẽ liên hệ với bạn trong thời gian sớm nhất.")
         });
 
+        await _mailService.SendMail(new MailService.MailContent
+        {
+            To = AdminEmail,
+            Subject = $"[Admin] Yêu cầu tư vấn mới từ {request.FullName}",
+            Body = MailService.MailTemplate.Confirmation(
+                heading: "Yêu cầu tư vấn mới",
+                fullName: request.FullName,
+                intro: "Hệ thống ghi nhận một yêu cầu tư vấn mới với thông tin chi tiết bên dưới:",
+                rows: new (string, string?)[]
+                {
+                    ("Họ tên", request.FullName),
+                    ("Số điện thoại", request.Phone),
+                    ("Email", request.Email),
+                    ("Địa điểm", request.Where),
+                    ("Thời gian", $"{request.Month}/{request.Year}"),
+                    ("Ghi chú", request.Note),
+                },
+                closing: "Vui lòng liên hệ lại khách hàng sớm nhất.")
+        });
+
         return "CREATE_ADVISE_FORM_SUCCESS";
     }
 
     public async Task<string> CreateTourAsync(Request.CreateTourFormRequest request)
     {
         await _createTourValidator.ValidateAndThrowAsync(request);
+
+        request.Phone = request.Phone.Replace(" ", "");
 
         var serviceExists = await _dbContext.Services.AnyAsync(x => x.Id == request.ServiceId);
         if (!serviceExists) throw new NotFoundException("Service not found.");
@@ -124,12 +149,33 @@ public class Service : IService
                 closing: "Đội ngũ Perlunas sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận tour.")
         });
 
+        await _mailService.SendMail(new MailService.MailContent
+        {
+            To = AdminEmail,
+            Subject = $"[Admin] Yêu cầu đặt tour mới từ {request.FullName}",
+            Body = MailService.MailTemplate.Confirmation(
+                heading: "Yêu cầu đặt tour mới",
+                fullName: request.FullName,
+                intro: "Hệ thống ghi nhận một yêu cầu đặt tour mới với thông tin chi tiết bên dưới:",
+                rows: new (string, string?)[]
+                {
+                    ("Họ tên", request.FullName),
+                    ("Số điện thoại", request.Phone),
+                    ("Email", request.Email),
+                    ("Tour", request.Title),
+                    ("Chi tiết đặt", request.Note),
+                },
+                closing: "Vui lòng liên hệ lại khách hàng để xác nhận.")
+        });
+
         return "CREATE_TOUR_FORM_SUCCESS";
     }
 
     public async Task<string> CreateComboAsync(Request.CreateBookingFormRequest request)
     {
         await _createBookingValidator.ValidateAndThrowAsync(request);
+
+        request.Phone = request.Phone.Replace(" ", "");
 
         var service = await _dbContext.Services
             .FirstOrDefaultAsync(x => x.Id == request.ServiceId);
@@ -205,12 +251,32 @@ public class Service : IService
                 closing: "Đội ngũ Perlunas sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận.")
         });
 
+        await _mailService.SendMail(new MailService.MailContent
+        {
+            To = AdminEmail,
+            Subject = $"[Admin] Yêu cầu đặt combo mới từ {request.FullName}",
+            Body = MailService.MailTemplate.Confirmation(
+                heading: "Yêu cầu đặt combo mới",
+                fullName: request.FullName,
+                intro: "Hệ thống ghi nhận một yêu cầu đặt combo mới với thông tin chi tiết bên dưới:",
+                rows: new (string, string?)[]
+                {
+                    ("Họ tên", request.FullName),
+                    ("Số điện thoại", request.Phone),
+                    ("Email", request.Email),
+                    ("Tổng tiền", $"{request.TotalPrice:N0} VNĐ"),
+                },
+                closing: "Vui lòng liên hệ lại khách hàng để xác nhận combo.")
+        });
+
         return "CREATE_COMBO_FORM_SUCCESS";
     }
 
     public async Task<string> CreateHotelAsync(Request.CreateBookingFormRequest request)
     {
         await _createBookingValidator.ValidateAndThrowAsync(request);
+
+        request.Phone = request.Phone.Replace(" ", "");
 
         var service = await _dbContext.Services
             .FirstOrDefaultAsync(x => x.Id == request.ServiceId);
@@ -284,6 +350,24 @@ public class Service : IService
                     ("Tổng tiền", $"{request.TotalPrice:N0} VNĐ"),
                 },
                 closing: "Đội ngũ Perlunas sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận.")
+        });
+
+        await _mailService.SendMail(new MailService.MailContent
+        {
+            To = AdminEmail,
+            Subject = $"[Admin] Yêu cầu đặt phòng mới từ {request.FullName}",
+            Body = MailService.MailTemplate.Confirmation(
+                heading: "Yêu cầu đặt phòng mới",
+                fullName: request.FullName,
+                intro: "Hệ thống ghi nhận một yêu cầu đặt phòng mới với thông tin chi tiết bên dưới:",
+                rows: new (string, string?)[]
+                {
+                    ("Họ tên", request.FullName),
+                    ("Số điện thoại", request.Phone),
+                    ("Email", request.Email),
+                    ("Tổng tiền", $"{request.TotalPrice:N0} VNĐ"),
+                },
+                closing: "Vui lòng liên hệ lại khách hàng để xác nhận đặt phòng.")
         });
 
         return "CREATE_HOTEL_FORM_SUCCESS";
