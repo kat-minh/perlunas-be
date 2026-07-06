@@ -3,6 +3,7 @@ using FormEntity = Cms.Repository.Entities.Form;
 using FormDetailsEntity = Cms.Repository.Entities.FormDetails;
 using ServiceEntity = Cms.Repository.Entities.Service;
 using RoomCategoryEntity = Cms.Repository.Entities.RoomCategory;
+using DepartureScheduleEntity = Cms.Repository.Entities.DepartureSchedule;
 using Cms.Repository.Enums;
 using Cms.Service.Exceptions;
 using Cms.Service.Form;
@@ -521,6 +522,66 @@ public class ServiceTests
         await act.Should().ThrowAsync<Cms.Service.Exceptions.NotFoundException>().WithMessage("Service not found.");
     }
 
+    [Fact]
+    public async Task CreateTourAsync_ShouldSendMailWithTourCode()
+    {
+        var options = NewDb();
+        var serviceId = Guid.NewGuid();
+        var scheduleId = Guid.NewGuid();
+
+        await using (var ctx = new AppDbContext(options))
+        {
+            ctx.Services.Add(new ServiceEntity
+            {
+                Id = serviceId,
+                Title = "Amazing Tour",
+                Slug = "amazing-tour",
+                Type = ServiceType.Tour
+            });
+            ctx.DepartureSchedules.Add(new DepartureScheduleEntity
+            {
+                Id = scheduleId,
+                ServiceId = serviceId,
+                Code = "TOUR-1234",
+                StartTime = "12/07/2026",
+                IsDeleted = false
+            });
+            await ctx.SaveChangesAsync();
+        }
+
+        await using (var ctx = new AppDbContext(options))
+        {
+            var sentContents = new List<MailContent>();
+            var mailMock = new Mock<MailService.IService>();
+            mailMock.Setup(x => x.SendMail(It.IsAny<MailContent>()))
+                .Callback<MailContent>(c => sentContents.Add(c))
+                .Returns(Task.CompletedTask);
+
+            var service = new Cms.Service.Form.Service(
+                ctx,
+                AdviseValidatorMock().Object,
+                TourValidatorMock().Object,
+                BookingValidatorMock().Object,
+                mailMock.Object
+            );
+
+            var req = new Request.CreateTourFormRequest
+            {
+                FullName = "Trần B",
+                Phone = "0909876543",
+                Email = "b@example.com",
+                ServiceId = serviceId,
+                Note = "Departure on 12/07/2026"
+            };
+
+            await service.CreateTourAsync(req);
+
+            var adminMail = sentContents.FirstOrDefault(m => m.To == "duongbilly18012004@gmail.com");
+            adminMail.Should().NotBeNull();
+            adminMail!.Body.Should().Contain("TOUR-1234");
+        }
+    }
+
 
     // ==================================================================
     //  CreateComboAsync / CreateHotelAsync / CreateBookingAsync
@@ -676,5 +737,132 @@ public class ServiceTests
         result.Should().Be("CREATE_ADVISE_FORM_SUCCESS");
         var form = await ctx.Forms.FirstAsync();
         form.Phone.Should().Be("0901234567");
+    }
+
+    [Fact]
+    public async Task CreateComboAsync_ShouldSendMailWithTitleAndClassify()
+    {
+        var options = NewDb();
+        var serviceId = Guid.NewGuid();
+        await using (var ctx = new AppDbContext(options))
+        {
+            ctx.Services.Add(new ServiceEntity
+            {
+                Id = serviceId,
+                Title = "Deluxe Combo Pack",
+                Slug = "deluxe-combo-pack",
+                Type = ServiceType.Combo,
+                Classify = "Tier 1 Resort"
+            });
+            ctx.RoomCategories.Add(new RoomCategoryEntity
+            {
+                Id = Guid.NewGuid(),
+                ServiceId = serviceId,
+                Titile = "Ocean Suite"
+            });
+            await ctx.SaveChangesAsync();
+        }
+
+        await using (var ctx = new AppDbContext(options))
+        {
+            var sentContents = new List<MailContent>();
+            var mailMock = new Mock<MailService.IService>();
+            mailMock.Setup(x => x.SendMail(It.IsAny<MailContent>()))
+                .Callback<MailContent>(c => sentContents.Add(c))
+                .Returns(Task.CompletedTask);
+
+            var service = new Cms.Service.Form.Service(
+                ctx,
+                AdviseValidatorMock().Object,
+                TourValidatorMock().Object,
+                BookingValidatorMock().Object,
+                mailMock.Object
+            );
+
+            var req = new Request.CreateBookingFormRequest
+            {
+                FullName = "Nguyễn Combo",
+                Phone = "0901234567",
+                Email = "combo@example.com",
+                ServiceId = serviceId,
+                FormDetails = new List<Request.CreateFormDetailsRequest>
+                {
+                    new() { RoomCategory = new List<string> { "Ocean Suite" }, Adults = 2 }
+                }
+            };
+
+            await service.CreateComboAsync(req);
+
+            var adminMail = sentContents.FirstOrDefault(m => m.To == "duongbilly18012004@gmail.com");
+            adminMail.Should().NotBeNull();
+            adminMail!.Body.Should().Contain("Deluxe Combo Pack");
+            adminMail!.Body.Should().Contain("Tier 1 Resort");
+        }
+    }
+
+    [Fact]
+    public async Task CreateHotelAsync_ShouldSendMailWithTitleAndRoomCategory()
+    {
+        var options = NewDb();
+        var serviceId = Guid.NewGuid();
+        await using (var ctx = new AppDbContext(options))
+        {
+            ctx.Services.Add(new ServiceEntity
+            {
+                Id = serviceId,
+                Title = "Grand Imperial Hotel",
+                Slug = "grand-imperial-hotel",
+                Type = ServiceType.Hotel
+            });
+            ctx.RoomCategories.Add(new RoomCategoryEntity
+            {
+                Id = Guid.NewGuid(),
+                ServiceId = serviceId,
+                Titile = "King Room"
+            });
+            ctx.RoomCategories.Add(new RoomCategoryEntity
+            {
+                Id = Guid.NewGuid(),
+                ServiceId = serviceId,
+                Titile = "Queen Room"
+            });
+            await ctx.SaveChangesAsync();
+        }
+
+        await using (var ctx = new AppDbContext(options))
+        {
+            var sentContents = new List<MailContent>();
+            var mailMock = new Mock<MailService.IService>();
+            mailMock.Setup(x => x.SendMail(It.IsAny<MailContent>()))
+                .Callback<MailContent>(c => sentContents.Add(c))
+                .Returns(Task.CompletedTask);
+
+            var service = new Cms.Service.Form.Service(
+                ctx,
+                AdviseValidatorMock().Object,
+                TourValidatorMock().Object,
+                BookingValidatorMock().Object,
+                mailMock.Object
+            );
+
+            var req = new Request.CreateBookingFormRequest
+            {
+                FullName = "Lê Hotel",
+                Phone = "0901234567",
+                Email = "hotel@example.com",
+                ServiceId = serviceId,
+                FormDetails = new List<Request.CreateFormDetailsRequest>
+                {
+                    new() { RoomCategory = new List<string> { "King Room", "Queen Room" }, Adults = 2 }
+                }
+            };
+
+            await service.CreateHotelAsync(req);
+
+            var adminMail = sentContents.FirstOrDefault(m => m.To == "duongbilly18012004@gmail.com");
+            adminMail.Should().NotBeNull();
+            adminMail!.Body.Should().Contain("Grand Imperial Hotel");
+            adminMail!.Body.Should().Contain("King Room, Queen Room");
+        }
     }
 }

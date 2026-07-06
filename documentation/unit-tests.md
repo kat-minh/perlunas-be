@@ -11,7 +11,7 @@
 | Target | .NET 8 |
 | Project test | `Cms.Service.Tests\Cms.Service.Tests.csproj` |
 | Lệnh chạy | `dotnet test Cms.Service.Tests\Cms.Service.Tests.csproj` |
-| Kết quả hiện tại | **209 PASS, 1 SKIP, 0 FAIL** (tổng 210) |
+| Kết quả hiện tại | **213 PASS, 1 SKIP, 0 FAIL** (tổng 214) |
 
 ### Cấu trúc thư mục test
 
@@ -146,13 +146,17 @@ Cms.Service.Tests/
 | `POST api/forms/advise` | `CreateAdviseAsync` | `CreateAdviseAsync_WithValidRequest_ShouldCreateFormAndSendMail` — tạo FormType.Advise + gửi mail | PASS |
 | | | `CreateAdviseAsync_ShouldSendMailToBothUserAndAdmin` — gửi mail đến cả khách và admin | PASS |
 | | | `CreateAdviseAsync_WhenValidationFails_ShouldThrowValidationException` — dùng validator thật, thiếu FullName + sai email → `ValidationException` | PASS |
+| | | `CreateAdviseAsync_ShouldSanitizePhoneSpaces` — loại bỏ khoảng cách trong số điện thoại trước khi lưu | PASS |
 | `POST api/forms/tour` | `CreateTourAsync` | `CreateTourAsync_WithValidRequest_ShouldCreateForm` — tạo FormType.Tour | PASS |
 | | | `CreateTourAsync_WhenServiceNotFound_ShouldThrowNotFound` — ServiceId không có → `NotFoundException` | PASS |
+| | | `CreateTourAsync_ShouldSendMailWithTourCode` — gửi mail admin kèm mã tour lấy từ DepartureSchedule | PASS |
 | `POST api/forms/combo` | `CreateComboAsync` | `CreateComboAsync_WithValidRequest_ShouldCreateFormWithDetails` — tạo FormType.Combo + FormDetails | PASS |
 | | | `CreateComboAsync_WhenServiceNotComboType_ShouldThrowBadRequest` — service không phải Combo → `BadRequestException` | PASS |
 | | | `CreateComboAsync_WithInvalidRoomCategory_ShouldThrowBadRequest` — hạng phòng không tồn tại → `BadRequestException` | PASS |
+| | | `CreateComboAsync_ShouldSendMailWithTitleAndClassify` — gửi mail admin kèm tên combo và classify của combo | PASS |
 | `POST api/forms/hotel` | `CreateHotelAsync` | `CreateHotelAsync_WhenServiceNotHotelType_ShouldThrowBadRequest` → `BadRequestException` | PASS |
 | | | `CreateBookingAsync_WhenServiceNotFound_ShouldThrowNotFound` → `NotFoundException` | PASS |
+| | | `CreateHotelAsync_ShouldSendMailWithTitleAndRoomCategory` — gửi mail admin kèm tên phòng và hạng phòng | PASS |
 
 ### 2.5. PageContents — `api/page-contents` (`PageContentsController`)
 

@@ -110,8 +110,24 @@ public class Service : IService
 
         request.Phone = request.Phone.Replace(" ", "");
 
-        var serviceExists = await _dbContext.Services.AnyAsync(x => x.Id == request.ServiceId);
-        if (!serviceExists) throw new NotFoundException("Service not found.");
+        var service = await _dbContext.Services
+            .Include(x => x.DepartureSchedules)
+            .FirstOrDefaultAsync(x => x.Id == request.ServiceId);
+        if (service is null) throw new NotFoundException("Service not found.");
+
+        var activeSchedules = service.DepartureSchedules != null
+            ? service.DepartureSchedules.Where(x => !x.IsDeleted).ToList()
+            : new List<Repository.Entities.DepartureSchedule>();
+
+        string? tourCode = null;
+        if (activeSchedules.Any())
+        {
+            var matched = activeSchedules.FirstOrDefault(s =>
+                (!string.IsNullOrEmpty(s.Code) && (request.Note?.Contains(s.Code) == true || request.Title?.Contains(s.Code) == true)) ||
+                (!string.IsNullOrEmpty(s.StartTime) && (request.Note?.Contains(s.StartTime) == true || request.Title?.Contains(s.StartTime) == true))
+            );
+            tourCode = matched?.Code ?? activeSchedules.First().Code;
+        }
 
         var now = DateTime.UtcNow;
         var form = new Repository.Entities.Form
@@ -163,6 +179,7 @@ public class Service : IService
                     ("Số điện thoại", request.Phone),
                     ("Email", request.Email),
                     ("Tour", request.Title),
+                    ("Mã tour", tourCode),
                     ("Chi tiết đặt", request.Note),
                 },
                 closing: "Vui lòng liên hệ lại khách hàng để xác nhận.")
@@ -264,6 +281,8 @@ public class Service : IService
                     ("Họ tên", request.FullName),
                     ("Số điện thoại", request.Phone),
                     ("Email", request.Email),
+                    ("Tên combo", service.Title),
+                    ("Phân loại", service.Classify),
                     ("Tổng tiền", $"{request.TotalPrice:N0} VNĐ"),
                 },
                 closing: "Vui lòng liên hệ lại khách hàng để xác nhận combo.")
@@ -334,6 +353,8 @@ public class Service : IService
         _dbContext.Forms.Add(form);
         await _dbContext.SaveChangesAsync();
 
+        var roomCategories = string.Join(", ", request.FormDetails.SelectMany(d => d.RoomCategory ?? Enumerable.Empty<string>()).Distinct());
+
         await _mailService.SendMail(new MailService.MailContent
         {
             To = request.Email,
@@ -365,6 +386,8 @@ public class Service : IService
                     ("Họ tên", request.FullName),
                     ("Số điện thoại", request.Phone),
                     ("Email", request.Email),
+                    ("Tên phòng", service.Title),
+                    ("Hạng phòng", roomCategories),
                     ("Tổng tiền", $"{request.TotalPrice:N0} VNĐ"),
                 },
                 closing: "Vui lòng liên hệ lại khách hàng để xác nhận đặt phòng.")
