@@ -33,6 +33,8 @@ public class Service : IService
     {
         await _createAdviseValidator.ValidateAndThrowAsync(request);
 
+        request.Phone = request.Phone.Replace(" ", "");
+
         var now = DateTime.UtcNow;
         var form = new Repository.Entities.Form
         {
@@ -106,6 +108,8 @@ public class Service : IService
     {
         await _createTourValidator.ValidateAndThrowAsync(request);
 
+        request.Phone = request.Phone.Replace(" ", "");
+
         var serviceExists = await _dbContext.Services.AnyAsync(x => x.Id == request.ServiceId);
         if (!serviceExists) throw new NotFoundException("Service not found.");
 
@@ -170,6 +174,8 @@ public class Service : IService
     public async Task<string> CreateComboAsync(Request.CreateBookingFormRequest request)
     {
         await _createBookingValidator.ValidateAndThrowAsync(request);
+
+        request.Phone = request.Phone.Replace(" ", "");
 
         var service = await _dbContext.Services
             .FirstOrDefaultAsync(x => x.Id == request.ServiceId);
@@ -269,6 +275,8 @@ public class Service : IService
     public async Task<string> CreateHotelAsync(Request.CreateBookingFormRequest request)
     {
         await _createBookingValidator.ValidateAndThrowAsync(request);
+
+        request.Phone = request.Phone.Replace(" ", "");
 
         var service = await _dbContext.Services
             .FirstOrDefaultAsync(x => x.Id == request.ServiceId);

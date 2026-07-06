@@ -653,4 +653,28 @@ public class ServiceTests
         await act.Should().ThrowAsync<Cms.Service.Exceptions.NotFoundException>().WithMessage("Service not found.");
     }
 
+    [Fact]
+    public async Task CreateAdviseAsync_ShouldSanitizePhoneSpaces()
+    {
+        var options = NewDb();
+        await using var ctx = new AppDbContext(options);
+        var service = CreateService(ctx);
+
+        var req = new Request.CreateAdviseFormRequest
+        {
+            Where = "Đà Nẵng",
+            Slug = "tu-van-phone-sanitize",
+            Month = "7",
+            Year = "2026",
+            FullName = "Nguyễn Văn A",
+            Phone = "090 123 4567",
+            Email = "a@example.com"
+        };
+
+        var result = await service.CreateAdviseAsync(req);
+
+        result.Should().Be("CREATE_ADVISE_FORM_SUCCESS");
+        var form = await ctx.Forms.FirstAsync();
+        form.Phone.Should().Be("0901234567");
+    }
 }
