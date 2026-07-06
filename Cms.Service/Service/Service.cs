@@ -926,7 +926,13 @@ public class Service : IService
             Price = service.Price ?? string.Empty,
             OriginalPrice = service.OriginalPrice ?? string.Empty,
             PriceText = service.PriceText ?? string.Empty,
-            Code = service.Code ?? string.Empty,
+            // Combo: mã hiển thị sinh tất định từ slug (khớp FE) khi admin chưa set Code,
+            // để website/email/admin cùng một mã.
+            Code = !string.IsNullOrEmpty(service.Code)
+                ? service.Code
+                : service.Type == ServiceType.Combo
+                    ? ServiceCode.ForCombo(service.Slug)
+                    : string.Empty,
             Instruct = service.Instruct ?? string.Empty,
             Feature = service.Feature ?? string.Empty,
             Type = service.Type,
