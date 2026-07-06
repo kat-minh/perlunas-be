@@ -101,7 +101,8 @@ public class Service : IService
         blog.ReadingTime = request.ReadingTime.Trim();
         blog.Description = request.Description.Trim();
         blog.Tag = request.Tag.Trim();
-        blog.Slug = await GenerateUniqueSlugAsync(request.Titile, id);
+        // GIỮ NGUYÊN slug khi sửa (slug chỉ sinh 1 lần lúc tạo) — đổi tiêu đề không
+        // đổi URL, tránh vỡ link/bookmark/ISR đã build. (KHÔNG regenerate ở đây.)
         blog.Cover = request.Cover.Trim();
         blog.Content = request.Content;
         blog.UpdatedAt = DateTime.UtcNow;

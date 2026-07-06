@@ -17,7 +17,8 @@ public class CreateComboRequestValidator : AbstractValidator<Request.CreateCombo
         RuleFor(x => x.Destination).NotEmpty().WithMessage("DESTINATION_REQUIRED");
         RuleFor(x => x.Form).NotEmpty().WithMessage("FORM_REQUIRED");
         RuleFor(x => x.Classify).NotEmpty().WithMessage("CLASSIFY_REQUIRED");
-        RuleFor(x => x.Schedules).NotEmpty().WithMessage("SCHEDULES_REQUIRED");
+        // Lịch trình gợi ý KHÔNG bắt buộc cho combo — combo bỏ trống thì trang combo
+        // tự ẩn mục "Lịch trình gợi ý". Nếu có nhập thì mỗi ngày vẫn cần tiêu đề + nội dung.
         RuleForEach(x => x.Schedules).ChildRules(s =>
         {
             s.RuleFor(x => x.Titile).NotEmpty().WithMessage("SCHEDULE_TITLE_REQUIRED");

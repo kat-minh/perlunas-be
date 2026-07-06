@@ -45,6 +45,11 @@ services:
       # the site. On the VPS, point the URL at the site's public address.
       SITE_REVALIDATE_URL: "${SITE_REVALIDATE_URL:-}"
       SITE_REVALIDATE_SECRET: "${SITE_REVALIDATE_SECRET:-}"
+      # Cloudinary — nơi ô ảnh admin (prod mode) upload lên. Bỏ trống thì API
+      # upload trả lỗi rõ ràng (500 "chưa cấu hình"). Giá trị lấy từ .env.
+      CloudinaryOptions__CloudName: "${CLOUDINARY_CLOUD_NAME:-}"
+      CloudinaryOptions__ApiKey: "${CLOUDINARY_API_KEY:-}"
+      CloudinaryOptions__ApiSecret: "${CLOUDINARY_API_SECRET:-}"
     ports:
       # Host 5080 -> container 8080. Your Next.js app calls http://localhost:5080
       - "5080:8080"

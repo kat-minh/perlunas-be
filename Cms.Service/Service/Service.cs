@@ -434,7 +434,9 @@ public class Service : IService
         {
             Id = serviceId,
             Title = request.Title.Trim(),
-            Slug = Slug.GenerateSlug(request.Title),
+            // Đảm bảo slug duy nhất (thêm hậu tố -2, -3… khi trùng) như tour/hotel;
+            // slug cố định sau khi tạo (UpdateAsync không regenerate).
+            Slug = await GenerateUniqueSlugAsync(request.Title),
             BestSeller = request.BestSeller,
             Type = ServiceType.Combo,
             Day = request.Day > 0 ? request.Day : (int?)null,
@@ -634,8 +636,7 @@ public class Service : IService
 
         service.Title = request.Title!.Trim();
         // GIỮ NGUYÊN slug khi sửa (slug chỉ sinh 1 lần lúc tạo) — đổi title không
-        // đổi URL, tránh vỡ link/bookmark/ISR đã build.
-        service.Slug = await GenerateUniqueSlugAsync(service.Title, id);
+        // đổi URL, tránh vỡ link/bookmark/ISR đã build. (KHÔNG regenerate ở đây.)
         service.Album = JsonSerializer.Serialize(request.Album!);
         service.Region = request.Region!.Trim();
         service.IsPublic = request.IsPublic ?? service.IsPublic;

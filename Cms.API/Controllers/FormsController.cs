@@ -21,9 +21,10 @@ public class FormsController : ControllerBase
     public async Task<IActionResult> GetAll(
         [FromQuery] int pageIndex = 1,
         [FromQuery] int pageSize = 10,
-        [FromQuery] FormType? type = null)
+        [FromQuery] FormType? type = null,
+        [FromQuery] string? search = null)
     {
-        var result = await _formService.GetAllAsync(pageIndex, pageSize, type);
+        var result = await _formService.GetAllAsync(pageIndex, pageSize, type, search);
         result.TraceId = HttpContext.TraceIdentifier;
         return Ok(result);
     }
