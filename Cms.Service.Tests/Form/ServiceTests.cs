@@ -180,6 +180,69 @@ public class ServiceTests
     }
 
     [Fact]
+    public async Task GetAllAsync_WithSearchQuery_ShouldReturnMatchingForms()
+    {
+        var options = NewDb();
+        var serviceId = Guid.NewGuid();
+
+        await using (var ctx = new AppDbContext(options))
+        {
+            ctx.Services.Add(new ServiceEntity
+            {
+                Id = serviceId,
+                Title = "Test Service",
+                Slug = "test-service",
+                Type = ServiceType.Tour
+            });
+
+            ctx.Forms.AddRange(
+                new FormEntity
+                {
+                    Id = Guid.NewGuid(),
+                    ServiceId = serviceId,
+                    Type = FormType.Tour,
+                    FullName = "Nguyen Van A",
+                    Email = "nva@example.com",
+                    Phone = "0901234567",
+                    CreatedAt = DateTime.UtcNow.AddMinutes(-10)
+                },
+                new FormEntity
+                {
+                    Id = Guid.NewGuid(),
+                    ServiceId = serviceId,
+                    Type = FormType.Tour,
+                    FullName = "Tran Thi B",
+                    Email = "ttb@test.com",
+                    Phone = "0911111111",
+                    CreatedAt = DateTime.UtcNow.AddMinutes(-5)
+                }
+            );
+
+            await ctx.SaveChangesAsync();
+        }
+
+        await using (var ctx = new AppDbContext(options))
+        {
+            var service = CreateService(ctx);
+
+            // Test search by name
+            var resultName = await service.GetAllAsync(1, 10, null, "van a");
+            resultName.Value.Items.Should().HaveCount(1);
+            ((Response.TourFormResponse)resultName.Value.Items[0]).FullName.Should().Be("Nguyen Van A");
+
+            // Test search by email
+            var resultEmail = await service.GetAllAsync(1, 10, null, "test.com");
+            resultEmail.Value.Items.Should().HaveCount(1);
+            ((Response.TourFormResponse)resultEmail.Value.Items[0]).FullName.Should().Be("Tran Thi B");
+
+            // Test search by phone
+            var resultPhone = await service.GetAllAsync(1, 10, null, "091111");
+            resultPhone.Value.Items.Should().HaveCount(1);
+            ((Response.TourFormResponse)resultPhone.Value.Items[0]).FullName.Should().Be("Tran Thi B");
+        }
+    }
+
+    [Fact]
     public async Task GetAllAsync_WithDetails_ShouldIncludeFormDetailsNested()
     {
         var options = NewDb();

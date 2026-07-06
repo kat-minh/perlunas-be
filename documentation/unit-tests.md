@@ -11,7 +11,7 @@
 | Target | .NET 8 |
 | Project test | `Cms.Service.Tests\Cms.Service.Tests.csproj` |
 | Lệnh chạy | `dotnet test Cms.Service.Tests\Cms.Service.Tests.csproj` |
-| Kết quả hiện tại | **220 PASS, 1 SKIP, 0 FAIL** (tổng 221) |
+| Kết quả hiện tại | **208 PASS, 1 SKIP, 0 FAIL** (tổng 209) |
 
 ### Cấu trúc thư mục test
 
@@ -64,15 +64,25 @@ Cms.Service.Tests/
 | `GET api/blogs` | `Blog.Service.GetAllAsync` | `GetAllAsync_WithBlogs_ShouldReturnPaginatedResult` — phân trang đúng | PASS |
 | | | `GetAllAsync_WithDeletedBlogs_ShouldExcludeDeleted` — bỏ qua soft-deleted | PASS |
 | | | `GetAllAsync_WithNoBlogs_ShouldReturnEmpty` — không có data → rỗng | PASS |
-| | | `GetAllAsync_WithNonPositivePaging_ShouldUseDefaults` — pageIndex/pageSize ≤0 → mặc định 1/10 | PASS |
-| `GET api/blogs/{id:guid}` | `Blog.Service.GetByIdAsync` | `GetByIdAsync_WhenExists_ShouldReturnBlogWithRecentBlogs` — trả blog + 3 recent | PASS |
-| | | `GetByIdAsync_WhenNotFound_ShouldThrowNotFound` — không có → `NotFoundException` | PASS |
-| `GET api/blogs/slug/{slug}` | `Blog.Service.GetBySlugAsync` | `GetBySlugAsync_WhenBlogDoesNotExist_ShouldThrowNotFound` — slug không có → `NotFoundException` | PASS |
-| `POST api/blogs` | `Blog.Service.CreateAsync` | `CreateAsync_WithValidRequest_ShouldCreateBlog` — tạo + sinh slug `test-blog-title` | PASS |
+| | | `GetAllAsync_WithNonPositivePaging_ShouldUseDefaults` — pageIndex/pageSize ≤0 → mặc định 1/10 (Theory 2 case) | PASS |
+| `GET api/blogs/{id:guid}` | `Blog.Service.GetByIdAsync` | `GetByIdAsync_WhenBlogExists_ShouldReturnBlog` | PASS |
+| | | `GetByIdAsync_WhenBlogDoesNotExist_ShouldThrowNotFound` | PASS |
+| | | `GetByIdAsync_WhenBlogIsDeleted_ShouldThrowNotFound` | PASS |
+| | | `GetByIdAsync_WhenExists_ShouldReturnBlogWithRecentBlogs` — trả blog + 3 recent | PASS |
+| | | `GetByIdAsync_WhenNotFound_ShouldThrowNotFound` | PASS |
+| `GET api/blogs/slug/{slug}` | `Blog.Service.GetBySlugAsync` | `GetBySlugAsync_WhenBlogExists_ShouldReturnBlog` | PASS |
+| | | `GetBySlugAsync_WhenBlogDoesNotExist_ShouldThrowNotFound` | PASS |
+| `POST api/blogs` | `Blog.Service.CreateAsync` | `CreateAsync_WithValidRequest_ShouldCreateBlog` — tạo + sinh slug | PASS |
 | | | `CreateAsync_WithDuplicateTitle_ShouldAppendSuffix` — trùng tiêu đề → slug thêm `-1` | PASS |
-| `PUT api/blogs/{id:guid}` | `Blog.Service.UpdateAsync` | `UpdateAsync_WhenNotFound_ShouldThrowNotFound` — không có → `NotFoundException` | PASS |
-| `DELETE api/blogs/{id:guid}` | `Blog.Service.DeleteAsync` | `DeleteAsync_WhenExists_ShouldSoftDeleteAndReturnMessage` — soft-delete + message | PASS |
-| | | `DeleteAsync_WhenNotFound_ShouldThrowNotFound` — không có → `NotFoundException` | PASS |
+| | | `CreateAsync_WithTitleGeneratingEmptySlug_ShouldFallbackToGuid` — tiêu đề chỉ ký tự đặc biệt → fallback Guid | PASS |
+| `PUT api/blogs/{id:guid}` | `Blog.Service.UpdateAsync` | `UpdateAsync_WithValidRequest_ShouldUpdateBlog` — cập nhật title, **giữ slug cũ** | PASS |
+| | | `UpdateAsync_WhenBlogDoesNotExist_ShouldThrowNotFound` | PASS |
+| | | `UpdateAsync_WhenNotFound_ShouldThrowNotFound` | PASS |
+| | | `UpdateAsync_WithTitleExistingElsewhere_ShouldKeepSlugUnchanged` — đổi title trùng blog khác → vẫn giữ slug cũ | PASS |
+| `DELETE api/blogs/{id:guid}` | `Blog.Service.DeleteAsync` | `DeleteAsync_WhenBlogExists_ShouldSoftDelete` | PASS |
+| | | `DeleteAsync_WhenBlogDoesNotExist_ShouldThrowNotFound` | PASS |
+| | | `DeleteAsync_WhenExists_ShouldSoftDeleteAndReturnMessage` — soft-delete + message | PASS |
+| | | `DeleteAsync_WhenNotFound_ShouldThrowNotFound` | PASS |
 
 - Pagination: kiểm tra `PageIndex`, `PageSize`, `TotalCount`, `HasNextPage`, `HasPreviousPage`.
 - Exception: dùng `FluentAssertions` `.Should().ThrowAsync<TException>()`.
@@ -80,22 +90,45 @@ Cms.Service.Tests/
 
 | API | Service method | Test cases | Trạng thái |
 |---|---|---|---|
-| `GET api/services` | `Service.Service.GetAllAsync` | `GetAllAsync_WithMixedTypes_ShouldReturnAllNonDeleted` *(các test GetAll/GetTours/GetCombos/GetHotels đã có)* | PASS |
-| `GET api/services/tours` | `GetToursAsync` | `GetToursAsync_WithKeyword_ShouldFilterByTitleAndRegion` | PASS |
-| `GET api/services/combos` | `GetCombosAsync` | `GetCombosAsync_WithFilters_ShouldApplyAllFilters` | PASS |
-| `GET api/services/hotels` | `GetHotelsAsync` | `GetHotelsAsync_WithKeyword_ShouldFilter` | PASS |
-| `GET api/services/{key}` | `GetByKeyAsync` | `GetByKeyAsync_ForTour_ShouldReturnFullDetail` | PASS |
-| | | `GetByKeyAsync_ForCombo_ShouldFallbackPriceFromOriginalPrice` — giá cấp gói (OriginalPrice 4.500.000), không lấy hạng phòng | PASS |
+| `GET api/services` | `Service.Service.GetAllAsync` | `GetAllAsync_ShouldReturnPaginated` | PASS |
+| | | `GetAllAsync_InvalidPage_ShouldClamp` | PASS |
+| | | `GetAllAsync_ShouldExcludeDeleted` | PASS |
+| | | `GetAllLists_WithNoData_ShouldReturnEmpty` | PASS |
+| | | `Slug_ShouldBeUniqueAcrossAllTypes` | PASS |
+| `GET api/services/tours` | `GetToursAsync` | `GetToursAsync_ShouldOnlyReturnTours` | PASS |
+| | | `GetToursAsync_KeywordFilterByTitle` | PASS |
+| | | `GetToursAsync_KeywordFilterByRegion` | PASS |
+| `GET api/services/combos` | `GetCombosAsync` | `GetCombosAsync_ShouldOnlyReturnCombos` | PASS |
+| | | `GetCombosAsync_WithMultipleFilters_ShouldIntersect` | PASS |
+| `GET api/services/hotels` | `GetHotelsAsync` | `GetHotelsAsync_ShouldOnlyReturnHotels` | PASS |
+| | | `GetHotelsAsync_WithFilters_ShouldIntersect` | PASS |
+| `GET api/services/{key}` | `GetByKeyAsync` | `GetByKeyAsync_BySlug_ShouldReturnService` | PASS |
+| | | `GetByKeyAsync_ById_ShouldReturnService` | PASS |
+| | | `GetByKeyAsync_WhenNotFound_ShouldThrowNotFound` | PASS |
+| | | `GetByKeyAsync_WhenDeleted_ShouldThrowNotFound` | PASS |
+| | | `GetByKeyAsync_ForTour_ShouldIncludeRelatedHotels` | PASS |
+| | | `GetByKeyAsync_ForTourWithNoRegion_ShouldReturnEmptyRelatedHotels` | PASS |
+| | | `GetByKeyAsync_ForNonTour_ShouldNotIncludeRelated` | PASS |
+| | | `GetByKeyAsync_ForTour_ShouldRankRelatedToursBySameRegionThenClosestPrice` | PASS |
+| | | `GetByKeyAsync_ForTour_ShouldComputePriceFromDepartureSchedule` | PASS |
+| | | `GetByKeyAsync_ForHotel_ShouldComputePriceFromRoomCategory` | PASS |
+| | | `GetByKeyAsync_ForCombo_ShouldFallbackPriceFromOriginalPrice` — giá cấp gói (OriginalPrice), không lấy hạng phòng | PASS |
+| | | `GetByKeyAsync_ShouldIncludeAllChildren` | PASS |
+| | | `GetByKeyAsync_DeletedService_ShouldStillBeAccessibleViaIdIfNotDeletedInSameScope` | PASS |
 | `POST api/services/tours` | `CreateTourAsync` | `CreateTourAsync_WithValidRequest_ShouldCreateTourWithChildren` | PASS |
-| | | `CreateTourAsync_WhenValidationFails_ShouldThrow` | PASS |
+| | | `CreateTourAsync_DuplicateTitle_ShouldAppendSuffix` — trùng tiêu đề → slug thêm `-1` | PASS |
+| | | `CreateTourAsync_EmptySlugTitle_ShouldFallbackToGuid` | PASS |
 | `POST api/services/combos` | `CreateComboAsync` | `CreateComboAsync_WithValidRequest_ShouldCreateComboWithChildren` — hạng phòng KHÔNG mang giá (Price/OriginalPrice/Unit = null) | PASS |
 | | | `CreateComboAsync_DuplicateTitle_ShouldAppendSuffix` — combo dùng `GenerateUniqueSlugAsync` như tour/hotel → trùng tiêu đề thêm hậu tố -1 | PASS |
-| `POST api/services/hotels` | `CreateHotelAsync` | `CreateHotelAsync_WithValidRequest_ShouldCreateHotelWithRoomCategories` | PASS |
+| `POST api/services/hotels` | `CreateHotelAsync` | `CreateHotelAsync_WithValidRequest_ShouldCreateHotelWithChildren` | PASS |
+| | | `CreateHotelAsync_DuplicateSlug_ShouldAppendSuffix` | PASS |
 | `PUT api/services/{id:guid}` | `UpdateAsync` | `UpdateAsync_WithValidRequest_ShouldUpdateAndReplaceChildren` — đổi title KHÔNG đổi slug (giữ slug cũ) | PASS |
 | | | `UpdateAsync_ForHotel_ShouldReplaceRoomCategories` | PASS |
-| | | `UpdateAsync_DuplicateTitle_ShouldKeepSlugUnchanged` — Update không regenerate slug ngay cả khi trùng title khác | PASS |
 | | | `UpdateAsync_WhenNotFound_ShouldThrow` | PASS |
-| `DELETE api/services/{id:guid}` | `DeleteAsync` | *(test delete soft-delete service)* | PASS |
+| | | `UpdateAsync_DuplicateTitle_ShouldKeepSlugUnchanged` — Update không regenerate slug ngay cả khi trùng title khác | PASS |
+| | | `UpdateAsync_SameTitle_ShouldRegenerateSameSlug` | PASS |
+| `DELETE api/services/{id:guid}` | `DeleteAsync` | `DeleteAsync_WhenServiceExists_ShouldSoftDeleteWithChildren` | PASS |
+| | | `DeleteAsync_WhenNotFound_ShouldThrow` | PASS |
 
 > **Lưu ý:** `CreateComboAsync` đã được sửa dùng `GenerateUniqueSlugAsync` (như Tour/Hotel) → tạo combo trùng tiêu đề tự thêm hậu tố `-1`, `-2`... không còn `DbUpdateException` khi DB có unique-index. `UpdateAsync` **giữ slug cố định** sau khi tạo (đổi title không đổi URL) — tránh vỡ link/bookmark/ISR đã build.
 
@@ -104,7 +137,9 @@ Cms.Service.Tests/
 | API | Service method | Test cases | Trạng thái |
 |---|---|---|---|
 | `GET api/forms` | `Form.Service.GetAllAsync` | `GetAllAsync_ShouldReturnPagedForms` — phân trang theo type | PASS |
-| | | `GetAllAsync_ShouldReturnBookingFormWithRoomCategoryDetails` — BookingForm có FormDetails | PASS |
+| | | `GetAllAsync_WithFilterType_ShouldReturnOnlyMatchingType` — lọc theo FormType | PASS |
+| | | `GetAllAsync_WithSearchQuery_ShouldReturnMatchingForms` — tìm kiếm theo email/fullname/phone | PASS |
+| | | `GetAllAsync_WithDetails_ShouldIncludeFormDetailsNested` — BookingForm có FormDetails lồng | PASS |
 | `GET api/forms/{key}` | `Form.Service.GetByKeyAsync` | `GetByKeyAsync_WithValidId_ShouldReturnCorrectForm` — tìm theo Guid | PASS |
 | | | `GetByKeyAsync_WithValidSlug_ShouldReturnCorrectForm` — tìm theo slug | PASS |
 | | | `GetByKeyAsync_WhenNotFound_ShouldThrowNotFoundException` — không có → `NotFoundException` | PASS |
@@ -113,53 +148,81 @@ Cms.Service.Tests/
 | `POST api/forms/tour` | `CreateTourAsync` | `CreateTourAsync_WithValidRequest_ShouldCreateForm` — tạo FormType.Tour | PASS |
 | | | `CreateTourAsync_WhenServiceNotFound_ShouldThrowNotFound` — ServiceId không có → `NotFoundException` | PASS |
 | `POST api/forms/combo` | `CreateComboAsync` | `CreateComboAsync_WithValidRequest_ShouldCreateFormWithDetails` — tạo FormType.Combo + FormDetails | PASS |
-| | | `CreateComboAsync_WhenServiceNotComboType_ShouldThrowBadRequest` — service không phải Combo → `BadRequestException(SERVICE_MUST_BE_COMBO_TYPE)` | PASS |
-| | | `CreateComboAsync_WithInvalidRoomCategory_ShouldThrowBadRequest` — hạng phòng không tồn tại → `BadRequestException(INVALID_ROOM_CATEGORY)` | PASS |
-| `POST api/forms/hotel` | `CreateHotelAsync` | `CreateHotelAsync_WhenServiceNotHotelType_ShouldThrowBadRequest` → `BadRequestException(SERVICE_MUST_BE_HOTEL_TYPE)` | PASS |
+| | | `CreateComboAsync_WhenServiceNotComboType_ShouldThrowBadRequest` — service không phải Combo → `BadRequestException` | PASS |
+| | | `CreateComboAsync_WithInvalidRoomCategory_ShouldThrowBadRequest` — hạng phòng không tồn tại → `BadRequestException` | PASS |
+| `POST api/forms/hotel` | `CreateHotelAsync` | `CreateHotelAsync_WhenServiceNotHotelType_ShouldThrowBadRequest` → `BadRequestException` | PASS |
 | | | `CreateBookingAsync_WhenServiceNotFound_ShouldThrowNotFound` → `NotFoundException` | PASS |
 
 ### 2.5. PageContents — `api/page-contents` (`PageContentsController`)
 
 | API | Service method | Test cases | Trạng thái |
 |---|---|---|---|
-| `GET api/page-contents` | `PageContent.Service.GetAllAsync` | `GetAllAsync_WithPageKeyFilter` / `GetAllAsync_WithSectionKeyFilter` / `GetAllAsync_CombinedFilters_ShouldIntersect` | PASS |
-| | | `GetAllAsync_ShouldExcludeDeleted` / `GetAllAsync_WithNoData_ShouldReturnEmpty` | PASS |
-| `GET api/page-contents/{id:guid}` | `GetByIdAsync` | `GetByIdAsync_WhenExists_ShouldReturnWithChildrenTree` — trả cây con | PASS |
-| | | `GetByIdAsync_WhenNotFound_ShouldThrowNotFound` / `GetByIdAsync_WhenDeleted_ShouldThrowNotFound` | PASS |
+| `GET api/page-contents` | `PageContent.Service.GetAllAsync` | `GetAllAsync_WithNoFilters_ShouldReturnAllOrdered` | PASS |
+| | | `GetAllAsync_ByPageKey_ShouldReturnMatching` | PASS |
+| | | `GetAllAsync_BySectionKey_ShouldReturnMatching` | PASS |
+| | | `GetAllAsync_CombinedFilters_ShouldIntersect` | PASS |
+| | | `GetAllAsync_ShouldExcludeDeleted` | PASS |
+| | | `GetAllAsync_WithNoData_ShouldReturnEmpty` | PASS |
+| `GET api/page-contents/{id:guid}` | `GetByIdAsync` | `GetByIdAsync_WhenPageContentExists_ShouldReturnPageContent` | PASS |
+| | | `GetByIdAsync_WhenPageContentDoesNotExist_ShouldThrowNotFound` | PASS |
+| | | `GetByIdAsync_WhenPageContentIsDeleted_ShouldThrowNotFound` | PASS |
+| | | `GetByIdAsync_WithChildren_ShouldBuildTree` — trả cây con | PASS |
 | `POST api/page-contents` | `CreateAsync` | `CreateAsync_WithValidRequest_ShouldCreatePageContent` | PASS |
-| | | `CreateAsync_WithParentId_WhenParentExists_ShouldCreateWithParent` / `CreateAsync_WithParentId_WhenParentNotExists_ShouldThrow` | PASS |
-| `PUT api/page-contents/{id:guid}` | `UpdateAsync` | *(test update có parent)* | PASS |
-| `DELETE api/page-contents/{id:guid}` | `DeleteAsync` | `DeleteAsync_WhenExists_ShouldSoftDeleteAndReturnMessage` | PASS |
-| | | `DeleteAsync_ShouldCascadeSoftDeleteDescendants` — xoá cha → xoá con/cháu (cascade) | PASS |
-| | | `DeleteAsync_WhenNotFound_ShouldThrowNotFound` | PASS |
+| | | `CreateAsync_WithParentId_WhenParentExists_ShouldCreateWithParent` | PASS |
+| | | `CreateAsync_WithParentId_WhenParentNotFound_ShouldThrowNotFound` | PASS |
+| `PUT api/page-contents/{id:guid}` | `UpdateAsync` | `UpdateAsync_WithValidRequest_ShouldUpdatePageContent` | PASS |
+| | | `UpdateAsync_WhenPageContentDoesNotExist_ShouldThrowNotFound` | PASS |
+| | | `UpdateAsync_WithNewParentId_WhenParentNotFound_ShouldThrowNotFound` | PASS |
+| `DELETE api/page-contents/{id:guid}` | `DeleteAsync` | `DeleteAsync_WhenPageContentExists_ShouldSoftDelete` | PASS |
+| | | `DeleteAsync_WhenPageContentDoesNotExist_ShouldThrowNotFound` | PASS |
+| | | `DeleteAsync_ShouldCascadeToChildren` — xoá cha → xoá con (cascade) | PASS |
+| | | `DeleteAsync_ShouldCascadeSoftDeleteDescendants` — xoá cha → xoá con/cháu (cascade sâu) | PASS |
 
 ### 2.6. SiteSettings — `api/site-settings` (`SiteSettingsController`)
 
 | API | Service method | Test cases | Trạng thái |
 |---|---|---|---|
-| `GET api/site-settings` | `SiteSetting.Service.GetAllAsync` | `GetAllAsync_WithNameFilter` / `GetAllAsync_WithTaglineFilter` / `GetAllAsync_WithIdFilter_ShouldReturnSingleMatching` | PASS |
-| | | `GetAllAsync_ShouldExcludeDeleted` / `GetAllAsync_WithNoData_ShouldReturnEmpty` | PASS |
-| `GET api/site-settings/{id:guid}` | `GetByIdAsync` | `GetByIdAsync_WhenExists_ShouldReturnSiteSetting` / `GetByIdAsync_WhenNotFound_ShouldThrowNotFound` / `GetByIdAsync_WhenDeleted_ShouldThrowNotFound` | PASS |
+| `GET api/site-settings` | `SiteSetting.Service.GetAllAsync` | `GetAllAsync_WithNoFilters_ShouldReturnAllNonDeleted` | PASS |
+| | | `GetAllAsync_WithIdFilter_ShouldReturnMatching` | PASS |
+| | | `GetAllAsync_WithIdFilter_ShouldReturnSingleMatching` | PASS |
+| | | `GetAllAsync_WithNameFilter_ShouldReturnMatching` | PASS |
+| | | `GetAllAsync_WithTaglineFilter_ShouldReturnMatching` | PASS |
+| | | `GetAllAsync_ShouldExcludeDeleted` | PASS |
+| | | `GetAllAsync_WithNoData_ShouldReturnEmpty` | PASS |
+| `GET api/site-settings/{id:guid}` | `GetByIdAsync` | `GetByIdAsync_WhenSiteSettingExists_ShouldReturnSiteSetting` | PASS |
+| | | `GetByIdAsync_WhenSiteSettingDoesNotExist_ShouldThrowNotFound` | PASS |
+| | | `GetByIdAsync_WhenSiteSettingIsDeleted_ShouldThrowNotFound` | PASS |
 | `POST api/site-settings` | `CreateAsync` | `CreateAsync_WithValidRequest_ShouldCreateSiteSetting` | PASS |
-| `PUT api/site-settings/{id:guid}` | `UpdateAsync` | `UpdateAsync_WhenNotFound_ShouldThrowNotFound` *(+ update thành công)* | PASS |
-| `DELETE api/site-settings/{id:guid}` | `DeleteAsync` | `DeleteAsync_WhenExists_ShouldSoftDeleteAndReturnMessage` / `DeleteAsync_WhenNotFound_ShouldThrowNotFound` | PASS |
+| `PUT api/site-settings/{id:guid}` | `UpdateAsync` | `UpdateAsync_WithValidRequest_ShouldUpdateSiteSetting` | PASS |
+| | | `UpdateAsync_WhenSiteSettingDoesNotExist_ShouldThrowNotFound` | PASS |
+| `DELETE api/site-settings/{id:guid}` | `DeleteAsync` | `DeleteAsync_WhenSiteSettingExists_ShouldSoftDelete` | PASS |
+| | | `DeleteAsync_WhenSiteSettingDoesNotExist_ShouldThrowNotFound` | PASS |
 
 ### 2.7. Taxonomies — `api/taxonomies` (`TaxonomiesController`)
 
 | API | Service method | Test cases | Trạng thái |
 |---|---|---|---|
-| `GET api/taxonomies` | `Taxonomy.Service.GetAllAsync` | `GetAllAsync_ShouldOrderByGroupThenSortOrder` / `GetAllAsync_WithGroupFilter_ShouldReturnMatching` / `GetAllAsync_ShouldExcludeDeleted` / `GetAllAsync_WithNoData_ShouldReturnEmpty` | PASS |
-| `GET api/taxonomies/{id:guid}` | `GetByIdAsync` | `GetByIdAsync_WhenExists_ShouldReturnTaxonomy` / `GetByIdAsync_WhenNotFound_ShouldThrowNotFound` / `GetByIdAsync_WhenDeleted_ShouldThrowNotFound` | PASS |
+| `GET api/taxonomies` | `Taxonomy.Service.GetAllAsync` | `GetAllAsync_WithNoFilter_ShouldReturnAllOrdered` | PASS |
+| | | `GetAllAsync_WithGroupFilter_ShouldReturnMatching` | PASS |
+| | | `GetAllAsync_ShouldExcludeDeleted` | PASS |
+| | | `GetAllAsync_WithNoData_ShouldReturnEmpty` | PASS |
+| `GET api/taxonomies/{id:guid}` | `GetByIdAsync` | `GetByIdAsync_WhenTaxonomyExists_ShouldReturnTaxonomy` | PASS |
+| | | `GetByIdAsync_WhenTaxonomyDoesNotExist_ShouldThrowNotFound` | PASS |
+| | | `GetByIdAsync_WhenTaxonomyIsDeleted_ShouldThrowNotFound` | PASS |
 | `POST api/taxonomies` | `CreateAsync` | `CreateAsync_WithValidRequest_ShouldCreateTaxonomy` — sinh slug `mien-bac` | PASS |
 | | | `CreateAsync_WithDuplicateGroupAndName_ShouldThrowConflict` — trùng group+name → `ConflictException` | PASS |
+| | | `CreateAsync_SameNameDifferentGroup_ShouldCreate` — cùng name khác group → OK | PASS |
+| | | `CreateAsync_WithDuplicateSlug_ShouldAppendSuffix` — trùng slug → thêm `-1` | PASS |
+| | | `CreateAsync_WithEmptySlugGeneration_ShouldFallbackToGuid` | PASS |
 | `PUT api/taxonomies/{id:guid}` | `UpdateAsync` | `UpdateAsync_WithValidRequest_ShouldUpdateFields` — đổi Color/SortOrder (không đổi name để tránh cascade) | PASS |
-| | | `UpdateAsync_WhenNotFound_ShouldThrowNotFound` | PASS |
-| | | `UpdateAsync_WhenNewNameConflictsInSameGroup_ShouldThrowConflict` | PASS |
+| | | `UpdateAsync_WhenTaxonomyDoesNotExist_ShouldThrowNotFound` | PASS |
+| | | `UpdateAsync_WithNameConflictingInSameGroup_ShouldThrowConflict` | PASS |
+| | | `UpdateAsync_SameNameInDifferentGroups_ShouldNotConflict` | PASS |
 | | | `UpdateAsync_WhenRenameRegion_ShouldCascadeToServices` — cascade rename vào Service.Region | **SKIP** |
-| `DELETE api/taxonomies/{id:guid}` | `DeleteAsync` | `DeleteAsync_WhenExists_ShouldSoftDeleteAndReturnMessage` | PASS |
-| | | `DeleteAsync_WhenNotFound_ShouldThrowNotFound` | PASS |
-| | | `DeleteAsync_WhenInUseByService_ShouldThrowConflict` — đang được Service dùng → `ConflictException` | PASS |
-| | | `DeleteAsync_WhenInUseByDeletedService_ShouldAllowDelete` — Service đã soft-delete → cho xoá | PASS |
+| `DELETE api/taxonomies/{id:guid}` | `DeleteAsync` | `DeleteAsync_WhenTaxonomyExists_ShouldSoftDelete` | PASS |
+| | | `DeleteAsync_WhenTaxonomyDoesNotExist_ShouldThrowNotFound` | PASS |
+| | | `DeleteAsync_WhenTaxonomyIsReferencedByService_ShouldThrowConflict` — đang được Service dùng → `ConflictException` | PASS |
+| | | `DeleteAsync_WhenReferencingServiceIsDeleted_ShouldAllowDelete` — Service đã soft-delete → cho xoá | PASS |
 
 > **SKIP `UpdateAsync_WhenRenameRegion_ShouldCascadeToServices`:** Service dùng `ExecuteUpdateAsync` (bulk update) để cascade rename. EF Core **InMemory provider không hỗ trợ** `ExecuteUpdateAsync` (ném "could not be translated"). Để test nhánh này cần chuyển sang **SQLite in-memory** hoặc **Testcontainers + PostgreSQL**. Logic cascade đã được review mã nguồn.
 
@@ -193,8 +256,8 @@ Cms.Service.Tests/
 
 | Service method | Test cases | Trạng thái |
 |---|---|---|
-| `MailService.Service.SendMail` | `SendMail_WithValidMailContent_ShouldAttemptSmtpConnect` — config đầy đủ → đi tới bước ConnectAsync (host giả → ném) | PASS |
-| | `SendMail_WhenConfigMissing_ShouldFailBeforeOrAtConnect` — thiếu config → ném | PASS |
+| `MailService.Service.SendMail` | `SendMail_WithValidMailContent_ShouldNotThrow_BestEffort` — host giả (smtp.invalid.example) → MailKit ném khi ConnectAsync, nhưng Service nuốt lỗi (best-effort) → không ném | PASS |
+| | `SendMail_WhenConfigMissing_ShouldNotThrow_BestEffort` — thiếu config → Service return sớm, không ném | PASS |
 | `constructor` | `Constructor_WithFullConfig_ShouldBindAllOptions` / `Constructor_WithEmptyConfig_ShouldNotThrowAtConstructionTime` | PASS |
 
 > **Lưu ý:** `SendMail` dùng MailKit `SmtpClient` thật → không có SMTP server trong CI. Service theo **best-effort** (nuốt lỗi SMTP, không làm hỏng luồng form đã lưu) nên 2 test xác nhận `SendMail` **không ném** cả khi config đầy đủ (host giả) và khi thiếu config. Để test đầy đủ cần SMTP giả (vd: `netDumbster`/`Papercut`) hoặc mock `ISmtpClient`.
@@ -223,33 +286,36 @@ Cms.Service.Tests/
 | Service | File test | Số test | Ghi chú |
 |---|---|---|---|
 | Auth | `Auth\ServiceTests.cs` | 10 | Login (8) + Logout (1) + ... |
-| Blog | `Blog\ServiceTests.cs` | ~13 | CRUD + paging + recentBlogs |
+| Blog | `Blog\ServiceTests.cs` | 23 | CRUD + paging + slug (create unique, update giữ cố định) |
 | Cloudinary | `CloudinaryService\ServiceTests.cs` | 4 | validation + config thiếu (ServerException) |
-| Form | `Form\ServiceTests.cs` | ~14 | GetAll/GetByKey + 4 Create* |
+| Form | `Form\ServiceTests.cs` | 16 | GetAll/GetByKey + 4 Create* (advise/tour/combo/hotel) |
 | JwtService | `JwtSvc\ServiceTests.cs` | 10 | GenerateAccessToken |
-| MailService | `MailSvc\ServiceTests.cs` | 4 | constructor + SendMail (network) |
-| PageContent | `PageContent\ServiceTests.cs` | ~13 | CRUD + tree + cascade delete |
-| Service (Tour/Combo/Hotel) | `Service\ServiceTests.cs` | ~50+ | CRUD 3 loại + filter + update children |
-| SiteSetting | `SiteSetting\ServiceTests.cs` | ~16 | CRUD + filter id/name/tagline |
-| Taxonomy | `Taxonomy\ServiceTests.cs` | ~20 | CRUD + conflict + delete-in-use + 1 SKIP |
-| Utils.Slug | `Utils\SlugTests.cs` | ~25 | Theory nhiều case |
-| **Tổng** | | **208** (207 pass + 1 skip) | |
+| MailService | `MailSvc\ServiceTests.cs` | 4 | constructor + SendMail best-effort (NotThrow) |
+| PageContent | `PageContent\ServiceTests.cs` | 25 | CRUD + tree + cascade delete |
+| Service (Tour/Combo/Hotel) | `Service\ServiceTests.cs` | 39 | CRUD 3 loại + filter + GetByKey (related/price) + update children + slug |
+| SiteSetting | `SiteSetting\ServiceTests.cs` | 21 | CRUD + filter id/name/tagline |
+| Taxonomy | `Taxonomy\ServiceTests.cs` | 31 | CRUD + conflict + slug + delete-in-use + 1 SKIP (cascade rename) |
+| Utils.Slug | `Utils\SlugTests.cs` | 26 | Theory nhiều case (26 test case) |
+| **Tổng** | | **209** (208 pass + 1 skip) | |
 
 ---
 
 ## 4. Các điểm cần cải thiện (phát hiện khi viết test)
 
-1. **`CreateComboAsync` không kiểm tra slug trùng** — dùng `Slug.GenerateSlug(title)` thay vì `GenerateUniqueSlugAsync` như Tour. Khi DB có unique-index, tạo combo trùng tiêu đề sẽ `DbUpdateException`. **Gợi ý:** dùng `GenerateUniqueSlugAsync` cho combo giống tour.
+1. **`Taxonomy.CascadeRenameAsync` dùng `ExecuteUpdateAsync`** — không tương thích EF Core InMemory. Để test cần SQLite/Postgres. **Gợi ý:** thêm test project dùng SQLite in-memory cho các nhánh bulk-update.
 
-2. **`Taxonomy.CascadeRenameAsync` dùng `ExecuteUpdateAsync`** — không tương thích EF Core InMemory. Để test cần SQLite/Postgres. **Gợi ý:** thêm test project dùng SQLite in-memory cho các nhánh bulk-update.
+2. **`Slug.GenerateSlug` không trim `-` đầu/cuối** — `"- Đà Nẵng - "` → `"-da-nang-"`. Có thể gây slug lỗi nếu input có space đầu/cuối. **Gợi ý:** thêm `.Trim('-')` cuối.
 
-3. **`Slug.GenerateSlug` không trim `-` đầu/cuối** — `"- Đà Nẵng - "` → `"-da-nang-"`. Có thể gây slug lỗi nếu input có space đầu/cuối. **Gợi ý:** thêm `.Trim('-')` cuối.
+3. **`CloudinaryService.UploadImageAsync` chỉ kiểm tra đuôi file + content-type** — không kiểm tra magic-bytes, file `.jpg` chứa PDF vẫn qua (nếu content-type là image/*). Đã thêm giới hạn 10 MB và exception rõ ràng (`BadRequestException`/`ServerException`/`BadGatewayException`), constructor lazy-init. **Gợi ý:** kiểm tra magic-bytes để chặn triệt để file giả mạo đuôi.
 
-4. **`CloudinaryService.UploadImageAsync` chỉ kiểm tra đuôi file** — không kiểm tra magic-bytes, file `.jpg` chứa PDF vẫn qua. **Gợi ý:** kiểm tra cả content-type hoặc magic-bytes.
+4. **`MailService.SendMail` hard-depend `SmtpClient`** — khó test đơn vị (đã chuyển sang best-effort, nuốt lỗi để không phá luồng form). **Gợi ý:** bọc `ISmtpClient` abstraction để mock được.
 
-5. **`MailService.SendMail` hard-depend `SmtpClient`** — khó test đơn vị. **Gợi ý:** bọc `ISmtpClient` abstraction để mock được.
+5. **Form validator mock** trong test cũ setup `ValidateAsync(ValidationContext<T>)` nhưng `ValidateAndThrowAsync` có thể gọi overload khác → test validation-fail dùng **validator thật** (`CreateAdviseFormRequestValidator`) để đảm bảo chạy rule.
 
-6. **Form validator mock** trong test cũ setup `ValidateAsync(ValidationContext<T>)` nhưng `ValidateAndThrowAsync` có thể gọi overload khác → test validation-fail dùng **validator thật** (`CreateAdviseFormRequestValidator`) để đảm bảo chạy rule.
+> **Đã xử lý (cập nhật gần đây):**
+> - `CreateComboAsync` giờ dùng `GenerateUniqueSlugAsync` (như Tour/Hotel) → combo trùng tiêu đề tự thêm hậu tố `-1`, `-2`..., không còn `DbUpdateException`.
+> - `Blog/Service.UpdateAsync` và `Service.UpdateAsync` **giữ slug cố định** sau tạo (đổi title không đổi URL) → tránh vỡ link/bookmark/ISR đã build.
+> - `CloudinaryService` constructor lazy-init (thiếu env không ném khi DI register, chỉ ném `ServerException` rõ ràng khi gọi upload).
 
 ---
 
