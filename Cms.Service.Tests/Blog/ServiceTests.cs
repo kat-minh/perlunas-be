@@ -443,4 +443,130 @@ public class ServiceTests
         result.Value.Items.Should().BeEmpty();
         result.Value.TotalCount.Should().Be(0);
     }
+
+    // ==================================================================
+    //  GetByIdAsync
+    // ==================================================================
+
+    [Fact]
+    public async Task GetByIdAsync_WhenExists_ShouldReturnBlogWithRecentBlogs()
+    {
+        var options = NewDb();
+        var main = Guid.NewGuid();
+        await using (var ctx = new AppDbContext(options))
+        {
+            ctx.Blogs.Add(new BlogEntity { Id = main, Titile = "Main", Slug = "main", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            for (int i = 0; i < 3; i++)
+                ctx.Blogs.Add(new BlogEntity { Id = Guid.NewGuid(), Titile = $"Recent {i}", Slug = $"recent-{i}", CreatedAt = DateTime.UtcNow.AddMinutes(-i), UpdatedAt = DateTime.UtcNow });
+            await ctx.SaveChangesAsync();
+        }
+
+        await using (var ctx = new AppDbContext(options))
+        {
+            var service = new Cms.Service.Blog.Service(ctx, CreateValidatorMock().Object, UpdateValidatorMock().Object);
+            var result = await service.GetByIdAsync(main);
+
+            result.Titile.Should().Be("Main");
+            result.RecentBlogs.Should().HaveCount(3);
+        }
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_WhenNotFound_ShouldThrowNotFound()
+    {
+        var options = NewDb();
+        await using var ctx = new AppDbContext(options);
+        var service = new Cms.Service.Blog.Service(ctx, CreateValidatorMock().Object, UpdateValidatorMock().Object);
+
+        var act = () => service.GetByIdAsync(Guid.NewGuid());
+
+        await act.Should().ThrowAsync<NotFoundException>().WithMessage("Blog not found.");
+    }
+
+    // ==================================================================
+    //  UpdateAsync
+    // ==================================================================
+
+    [Fact]
+    public async Task UpdateAsync_WhenNotFound_ShouldThrowNotFound()
+    {
+        var options = NewDb();
+        await using var ctx = new AppDbContext(options);
+        var service = new Cms.Service.Blog.Service(ctx, CreateValidatorMock().Object, UpdateValidatorMock().Object);
+
+        var act = () => service.UpdateAsync(Guid.NewGuid(), ValidUpdateRequest);
+
+        await act.Should().ThrowAsync<NotFoundException>().WithMessage("Blog not found.");
+    }
+
+    // ==================================================================
+    //  DeleteAsync
+    // ==================================================================
+
+    [Fact]
+    public async Task DeleteAsync_WhenExists_ShouldSoftDeleteAndReturnMessage()
+    {
+        var options = NewDb();
+        var id = Guid.NewGuid();
+        await using (var ctx = new AppDbContext(options))
+        {
+            ctx.Blogs.Add(new BlogEntity { Id = id, Titile = "Xoá", Slug = "xoa", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            await ctx.SaveChangesAsync();
+        }
+
+        await using (var ctx = new AppDbContext(options))
+        {
+            var service = new Cms.Service.Blog.Service(ctx, CreateValidatorMock().Object, UpdateValidatorMock().Object);
+            var result = await service.DeleteAsync(id);
+
+            result.Should().Be("Blog deleted successfully.");
+        }
+
+        await using (var ctx = new AppDbContext(options))
+        {
+            (await ctx.Blogs.IgnoreQueryFilters().FirstAsync(x => x.Id == id)).IsDeleted.Should().BeTrue();
+        }
+    }
+
+    [Fact]
+    public async Task DeleteAsync_WhenNotFound_ShouldThrowNotFound()
+    {
+        var options = NewDb();
+        await using var ctx = new AppDbContext(options);
+        var service = new Cms.Service.Blog.Service(ctx, CreateValidatorMock().Object, UpdateValidatorMock().Object);
+
+        var act = () => service.DeleteAsync(Guid.NewGuid());
+
+        await act.Should().ThrowAsync<NotFoundException>().WithMessage("Blog not found.");
+    }
+
+    // ==================================================================
+    //  GetAllAsync — paging defaults
+    // ==================================================================
+
+    [Theory]
+    [InlineData(0, 0)]   // pageIndex/pageSize <= 0 → mặc định 1/10
+    [InlineData(-1, -5)]
+    public async Task GetAllAsync_WithNonPositivePaging_ShouldUseDefaults(int pageIndex, int pageSize)
+    {
+        var options = NewDb();
+        await using (var ctx = new AppDbContext(options))
+        {
+            for (int i = 0; i < 12; i++)
+                ctx.Blogs.Add(new BlogEntity { Id = Guid.NewGuid(), Titile = $"B{i}", Slug = $"b-{i}", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            await ctx.SaveChangesAsync();
+        }
+
+        await using (var ctx = new AppDbContext(options))
+        {
+            var service = new Cms.Service.Blog.Service(ctx, CreateValidatorMock().Object, UpdateValidatorMock().Object);
+            var result = await service.GetAllAsync(pageIndex, pageSize);
+
+            result.Value.PageIndex.Should().Be(1);
+            result.Value.PageSize.Should().Be(10);
+            result.Value.TotalCount.Should().Be(12);
+            result.Value.Items.Should().HaveCount(10);
+        }
+    }
+
 }

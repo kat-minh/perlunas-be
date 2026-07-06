@@ -466,4 +466,142 @@ public class ServiceTests
         var items = result.Value.Should().BeAssignableTo<List<Response.SiteSettingResponse>>().Subject;
         items.Should().BeEmpty();
     }
+
+    // ==================================================================
+    //  GetByIdAsync
+    // ==================================================================
+
+    [Fact]
+    public async Task GetByIdAsync_WhenExists_ShouldReturnSiteSetting()
+    {
+        var options = NewDb();
+        var id = Guid.NewGuid();
+        await using (var ctx = new AppDbContext(options))
+        {
+            ctx.SiteSettings.Add(new SiteSettingEntity { Id = id, Name = "Perlunas", Tagline = "Explore", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            await ctx.SaveChangesAsync();
+        }
+
+        await using (var ctx = new AppDbContext(options))
+        {
+            var service = new Cms.Service.SiteSetting.Service(ctx, CreateValidatorMock().Object, UpdateValidatorMock().Object);
+            var result = await service.GetByIdAsync(id);
+
+            result.Name.Should().Be("Perlunas");
+            result.Tagline.Should().Be("Explore");
+        }
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_WhenNotFound_ShouldThrowNotFound()
+    {
+        var options = NewDb();
+        await using var ctx = new AppDbContext(options);
+        var service = new Cms.Service.SiteSetting.Service(ctx, CreateValidatorMock().Object, UpdateValidatorMock().Object);
+
+        var act = () => service.GetByIdAsync(Guid.NewGuid());
+
+        await act.Should().ThrowAsync<NotFoundException>().WithMessage("Site setting not found.");
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_WhenDeleted_ShouldThrowNotFound()
+    {
+        var options = NewDb();
+        var id = Guid.NewGuid();
+        await using (var ctx = new AppDbContext(options))
+        {
+            ctx.SiteSettings.Add(new SiteSettingEntity { Id = id, Name = "Xoá", IsDeleted = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            await ctx.SaveChangesAsync();
+        }
+
+        await using (var ctx = new AppDbContext(options))
+        {
+            var service = new Cms.Service.SiteSetting.Service(ctx, CreateValidatorMock().Object, UpdateValidatorMock().Object);
+            var act = () => service.GetByIdAsync(id);
+
+            await act.Should().ThrowAsync<NotFoundException>().WithMessage("Site setting not found.");
+        }
+    }
+
+    // ==================================================================
+    //  UpdateAsync / DeleteAsync
+    // ==================================================================
+
+    [Fact]
+    public async Task UpdateAsync_WhenNotFound_ShouldThrowNotFound()
+    {
+        var options = NewDb();
+        await using var ctx = new AppDbContext(options);
+        var service = new Cms.Service.SiteSetting.Service(ctx, CreateValidatorMock().Object, UpdateValidatorMock().Object);
+
+        var act = () => service.UpdateAsync(Guid.NewGuid(), ValidUpdateRequest);
+
+        await act.Should().ThrowAsync<NotFoundException>().WithMessage("Site setting not found.");
+    }
+
+    [Fact]
+    public async Task DeleteAsync_WhenExists_ShouldSoftDeleteAndReturnMessage()
+    {
+        var options = NewDb();
+        var id = Guid.NewGuid();
+        await using (var ctx = new AppDbContext(options))
+        {
+            ctx.SiteSettings.Add(new SiteSettingEntity { Id = id, Name = "Perlunas", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            await ctx.SaveChangesAsync();
+        }
+
+        await using (var ctx = new AppDbContext(options))
+        {
+            var service = new Cms.Service.SiteSetting.Service(ctx, CreateValidatorMock().Object, UpdateValidatorMock().Object);
+            var result = await service.DeleteAsync(id);
+
+            result.Should().Be("Site setting deleted successfully.");
+        }
+
+        await using (var ctx = new AppDbContext(options))
+        {
+            var entity = await ctx.SiteSettings.IgnoreQueryFilters().FirstAsync(x => x.Id == id);
+            entity.IsDeleted.Should().BeTrue();
+        }
+    }
+
+    [Fact]
+    public async Task DeleteAsync_WhenNotFound_ShouldThrowNotFound()
+    {
+        var options = NewDb();
+        await using var ctx = new AppDbContext(options);
+        var service = new Cms.Service.SiteSetting.Service(ctx, CreateValidatorMock().Object, UpdateValidatorMock().Object);
+
+        var act = () => service.DeleteAsync(Guid.NewGuid());
+
+        await act.Should().ThrowAsync<NotFoundException>().WithMessage("Site setting not found.");
+    }
+
+    // ==================================================================
+    //  GetAllAsync — filter id
+    // ==================================================================
+
+    [Fact]
+    public async Task GetAllAsync_WithIdFilter_ShouldReturnSingleMatching()
+    {
+        var options = NewDb();
+        var targetId = Guid.NewGuid();
+        await using (var ctx = new AppDbContext(options))
+        {
+            ctx.SiteSettings.Add(new SiteSettingEntity { Id = targetId, Name = "Target", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            ctx.SiteSettings.Add(new SiteSettingEntity { Id = Guid.NewGuid(), Name = "Other", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            await ctx.SaveChangesAsync();
+        }
+
+        await using (var ctx = new AppDbContext(options))
+        {
+            var service = new Cms.Service.SiteSetting.Service(ctx, CreateValidatorMock().Object, UpdateValidatorMock().Object);
+            var result = await service.GetAllAsync(targetId, null, null);
+
+            var items = result.Value.Should().BeAssignableTo<List<Response.SiteSettingResponse>>().Subject;
+            items.Should().ContainSingle(x => x.Name == "Target");
+        }
+    }
+
 }

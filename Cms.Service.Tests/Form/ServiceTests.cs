@@ -2,6 +2,7 @@ using Cms.Repository;
 using FormEntity = Cms.Repository.Entities.Form;
 using FormDetailsEntity = Cms.Repository.Entities.FormDetails;
 using ServiceEntity = Cms.Repository.Entities.Service;
+using RoomCategoryEntity = Cms.Repository.Entities.RoomCategory;
 using Cms.Repository.Enums;
 using Cms.Service.Exceptions;
 using Cms.Service.Form;
@@ -333,4 +334,228 @@ public class ServiceTests
                 .WithMessage("Form not found.");
         }
     }
+
+    // ==================================================================
+    //  CreateAdviseAsync
+    // ==================================================================
+
+    [Fact]
+    public async Task CreateAdviseAsync_WithValidRequest_ShouldCreateFormAndSendMail()
+    {
+        var options = NewDb();
+        await using var ctx = new AppDbContext(options);
+        var service = CreateService(ctx);
+
+        var req = new Request.CreateAdviseFormRequest
+        {
+            Where = "Đà Nẵng", Slug = "tu-van-1", Month = "7", Year = "2026",
+            FullName = "Nguyễn Văn A", Phone = "0901234567", Email = "a@example.com"
+        };
+
+        var result = await service.CreateAdviseAsync(req);
+
+        result.Should().Be("CREATE_ADVISE_FORM_SUCCESS");
+        var form = await ctx.Forms.FirstAsync();
+        form.Type.Should().Be(FormType.Advise);
+        form.FullName.Should().Be("Nguyễn Văn A");
+    }
+
+    [Fact]
+    public async Task CreateAdviseAsync_WhenValidationFails_ShouldThrowValidationException()
+    {
+        var options = NewDb();
+        await using var ctx = new AppDbContext(options);
+        // Use the REAL validator so ValidateAndThrowAsync actually runs the rules.
+        var service = new Cms.Service.Form.Service(ctx,
+            new Cms.Service.Form.Validations.CreateAdviseFormRequestValidator(),
+            TourValidatorMock().Object, BookingValidatorMock().Object, MailServiceMock().Object);
+
+        // Request missing FullName + invalid email => validator throws ValidationException.
+        var req = new Request.CreateAdviseFormRequest
+        {
+            Where = "DN", Slug = "s", Month = "7", Year = "2026",
+            FullName = "", Phone = "1", Email = "bad"
+        };
+
+        var act = () => service.CreateAdviseAsync(req);
+
+        await act.Should().ThrowAsync<FluentValidation.ValidationException>();
+    }
+
+    // ==================================================================
+    //  CreateTourAsync
+    // ==================================================================
+
+    [Fact]
+    public async Task CreateTourAsync_WithValidRequest_ShouldCreateForm()
+    {
+        var options = NewDb();
+        var serviceId = Guid.NewGuid();
+        await using (var ctx = new AppDbContext(options))
+        {
+            ctx.Services.Add(new ServiceEntity { Id = serviceId, Title = "Tour", Slug = "tour", Type = ServiceType.Tour });
+            await ctx.SaveChangesAsync();
+        }
+
+        await using var ctx2 = new AppDbContext(options);
+        var service = CreateService(ctx2);
+        var req = new Request.CreateTourFormRequest
+        {
+            FullName = "Trần B", Phone = "0909876543", Email = "b@example.com", ServiceId = serviceId
+        };
+
+        var result = await service.CreateTourAsync(req);
+
+        result.Should().Be("CREATE_TOUR_FORM_SUCCESS");
+        (await ctx2.Forms.FirstAsync()).Type.Should().Be(FormType.Tour);
+    }
+
+    [Fact]
+    public async Task CreateTourAsync_WhenServiceNotFound_ShouldThrowNotFound()
+    {
+        var options = NewDb();
+        await using var ctx = new AppDbContext(options);
+        var service = CreateService(ctx);
+        var req = new Request.CreateTourFormRequest
+        {
+            FullName = "A", Phone = "1", Email = "a@example.com", ServiceId = Guid.NewGuid()
+        };
+
+        var act = () => service.CreateTourAsync(req);
+
+        await act.Should().ThrowAsync<Cms.Service.Exceptions.NotFoundException>().WithMessage("Service not found.");
+    }
+
+
+    // ==================================================================
+    //  CreateComboAsync / CreateHotelAsync / CreateBookingAsync
+    // ==================================================================
+
+    [Fact]
+    public async Task CreateComboAsync_WithValidRequest_ShouldCreateFormWithDetails()
+    {
+        var options = NewDb();
+        var serviceId = Guid.NewGuid();
+        await using (var ctx = new AppDbContext(options))
+        {
+            ctx.Services.Add(new ServiceEntity { Id = serviceId, Title = "Combo", Slug = "combo", Type = ServiceType.Combo });
+            ctx.RoomCategories.Add(new RoomCategoryEntity { Id = Guid.NewGuid(), ServiceId = serviceId, Titile = "Deluxe" });
+            await ctx.SaveChangesAsync();
+        }
+
+        await using var ctx2 = new AppDbContext(options);
+        var service = CreateService(ctx2);
+        var req = new Request.CreateBookingFormRequest
+        {
+            FullName = "C", Phone = "1", Email = "c@example.com", ServiceId = serviceId,
+            FormDetails = new List<Request.CreateFormDetailsRequest>
+            {
+                new() { RoomCategory = new List<string> { "Deluxe" }, Adults = 2, Price = 1500000 }
+            }
+        };
+
+        var result = await service.CreateComboAsync(req);
+
+        result.Should().Be("CREATE_COMBO_FORM_SUCCESS");
+        var form = await ctx2.Forms.Include(f => f.FormDetails).FirstAsync();
+        form.Type.Should().Be(FormType.Combo);
+        form.FormDetails.Should().ContainSingle(d => d.RoomCategory!.Contains("Deluxe"));
+    }
+
+    [Fact]
+    public async Task CreateComboAsync_WhenServiceNotComboType_ShouldThrowBadRequest()
+    {
+        var options = NewDb();
+        var serviceId = Guid.NewGuid();
+        await using (var ctx = new AppDbContext(options))
+        {
+            ctx.Services.Add(new ServiceEntity { Id = serviceId, Title = "Hotel", Slug = "hotel", Type = ServiceType.Hotel });
+            await ctx.SaveChangesAsync();
+        }
+
+        await using var ctx2 = new AppDbContext(options);
+        var service = CreateService(ctx2);
+        var req = new Request.CreateBookingFormRequest
+        {
+            FullName = "C", Phone = "1", Email = "c@example.com", ServiceId = serviceId,
+            FormDetails = new List<Request.CreateFormDetailsRequest> { new() { RoomCategory = new List<string>() } }
+        };
+
+        var act = () => service.CreateComboAsync(req);
+
+        await act.Should().ThrowAsync<Cms.Service.Exceptions.BadRequestException>()
+            .WithMessage("SERVICE_MUST_BE_COMBO_TYPE");
+    }
+
+    [Fact]
+    public async Task CreateComboAsync_WithInvalidRoomCategory_ShouldThrowBadRequest()
+    {
+        var options = NewDb();
+        var serviceId = Guid.NewGuid();
+        await using (var ctx = new AppDbContext(options))
+        {
+            ctx.Services.Add(new ServiceEntity { Id = serviceId, Title = "Combo", Slug = "combo", Type = ServiceType.Combo });
+            ctx.RoomCategories.Add(new RoomCategoryEntity { Id = Guid.NewGuid(), ServiceId = serviceId, Titile = "Deluxe" });
+            await ctx.SaveChangesAsync();
+        }
+
+        await using var ctx2 = new AppDbContext(options);
+        var service = CreateService(ctx2);
+        var req = new Request.CreateBookingFormRequest
+        {
+            FullName = "C", Phone = "1", Email = "c@example.com", ServiceId = serviceId,
+            FormDetails = new List<Request.CreateFormDetailsRequest>
+            {
+                new() { RoomCategory = new List<string> { "Phòng Không Tồn Tại" } }
+            }
+        };
+
+        var act = () => service.CreateComboAsync(req);
+
+        await act.Should().ThrowAsync<Cms.Service.Exceptions.BadRequestException>()
+            .WithMessage("INVALID_ROOM_CATEGORY*Phòng Không Tồn Tại*");
+    }
+
+    [Fact]
+    public async Task CreateHotelAsync_WhenServiceNotHotelType_ShouldThrowBadRequest()
+    {
+        var options = NewDb();
+        var serviceId = Guid.NewGuid();
+        await using (var ctx = new AppDbContext(options))
+        {
+            ctx.Services.Add(new ServiceEntity { Id = serviceId, Title = "Tour", Slug = "tour", Type = ServiceType.Tour });
+            await ctx.SaveChangesAsync();
+        }
+
+        await using var ctx2 = new AppDbContext(options);
+        var service = CreateService(ctx2);
+        var req = new Request.CreateBookingFormRequest
+        {
+            FullName = "C", Phone = "1", Email = "c@example.com", ServiceId = serviceId,
+            FormDetails = new List<Request.CreateFormDetailsRequest> { new() { RoomCategory = new List<string>() } }
+        };
+
+        var act = () => service.CreateHotelAsync(req);
+
+        await act.Should().ThrowAsync<Cms.Service.Exceptions.BadRequestException>()
+            .WithMessage("SERVICE_MUST_BE_HOTEL_TYPE");
+    }
+
+    [Fact]
+    public async Task CreateBookingAsync_WhenServiceNotFound_ShouldThrowNotFound()
+    {
+        var options = NewDb();
+        await using var ctx = new AppDbContext(options);
+        var service = CreateService(ctx);
+        var req = new Request.CreateBookingFormRequest
+        {
+            FullName = "C", Phone = "1", Email = "c@example.com", ServiceId = Guid.NewGuid(),
+            FormDetails = new List<Request.CreateFormDetailsRequest> { new() { RoomCategory = new List<string>() } }
+        };
+
+        var act = () => service.CreateHotelAsync(req);
+
+        await act.Should().ThrowAsync<Cms.Service.Exceptions.NotFoundException>().WithMessage("Service not found.");
+    }
+
 }

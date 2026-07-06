@@ -613,4 +613,134 @@ public class ServiceTests
         var items = result.Value.Should().BeAssignableTo<List<Response.PageContentResponse>>().Subject;
         items.Should().BeEmpty();
     }
+
+    // ==================================================================
+    //  GetByIdAsync
+    // ==================================================================
+
+    [Fact]
+    public async Task GetByIdAsync_WhenExists_ShouldReturnWithChildrenTree()
+    {
+        var options = NewDb();
+        var parent = Guid.NewGuid();
+        var child = Guid.NewGuid();
+        await using (var ctx = new AppDbContext(options))
+        {
+            ctx.PageContents.Add(new PageContentEntity { Id = parent, PageKey = "home", SectionKey = "hero", Key = "banner", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            ctx.PageContents.Add(new PageContentEntity { Id = child, ParentId = parent, PageKey = "home", SectionKey = "hero", Key = "title", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            await ctx.SaveChangesAsync();
+        }
+
+        await using (var ctx = new AppDbContext(options))
+        {
+            var service = new Cms.Service.PageContent.Service(ctx, CreateValidatorMock().Object, UpdateValidatorMock().Object);
+            var result = await service.GetByIdAsync(parent);
+
+            result.Key.Should().Be("banner");
+            result.Children.Should().ContainSingle(c => c.Key == "title");
+        }
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_WhenNotFound_ShouldThrowNotFound()
+    {
+        var options = NewDb();
+        await using var ctx = new AppDbContext(options);
+        var service = new Cms.Service.PageContent.Service(ctx, CreateValidatorMock().Object, UpdateValidatorMock().Object);
+
+        var act = () => service.GetByIdAsync(Guid.NewGuid());
+
+        await act.Should().ThrowAsync<NotFoundException>().WithMessage("Page content not found.");
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_WhenDeleted_ShouldThrowNotFound()
+    {
+        var options = NewDb();
+        var id = Guid.NewGuid();
+        await using (var ctx = new AppDbContext(options))
+        {
+            ctx.PageContents.Add(new PageContentEntity { Id = id, PageKey = "home", Key = "deleted", IsDeleted = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            await ctx.SaveChangesAsync();
+        }
+
+        await using (var ctx = new AppDbContext(options))
+        {
+            var service = new Cms.Service.PageContent.Service(ctx, CreateValidatorMock().Object, UpdateValidatorMock().Object);
+            var act = () => service.GetByIdAsync(id);
+
+            await act.Should().ThrowAsync<NotFoundException>().WithMessage("Page content not found.");
+        }
+    }
+
+    // ==================================================================
+    //  DeleteAsync
+    // ==================================================================
+
+    [Fact]
+    public async Task DeleteAsync_WhenExists_ShouldSoftDeleteAndReturnMessage()
+    {
+        var options = NewDb();
+        var id = Guid.NewGuid();
+        await using (var ctx = new AppDbContext(options))
+        {
+            ctx.PageContents.Add(new PageContentEntity { Id = id, PageKey = "home", Key = "title", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            await ctx.SaveChangesAsync();
+        }
+
+        await using (var ctx = new AppDbContext(options))
+        {
+            var service = new Cms.Service.PageContent.Service(ctx, CreateValidatorMock().Object, UpdateValidatorMock().Object);
+            var result = await service.DeleteAsync(id);
+
+            result.Should().Be("Page content deleted successfully.");
+        }
+
+        await using (var ctx = new AppDbContext(options))
+        {
+            var entity = await ctx.PageContents.IgnoreQueryFilters().FirstAsync(x => x.Id == id);
+            entity.IsDeleted.Should().BeTrue();
+        }
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldCascadeSoftDeleteDescendants()
+    {
+        var options = NewDb();
+        var parent = Guid.NewGuid();
+        var child = Guid.NewGuid();
+        var grandchild = Guid.NewGuid();
+        await using (var ctx = new AppDbContext(options))
+        {
+            ctx.PageContents.Add(new PageContentEntity { Id = parent, PageKey = "home", Key = "banner", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            ctx.PageContents.Add(new PageContentEntity { Id = child, ParentId = parent, PageKey = "home", Key = "title", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            ctx.PageContents.Add(new PageContentEntity { Id = grandchild, ParentId = child, PageKey = "home", Key = "subtitle", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            await ctx.SaveChangesAsync();
+        }
+
+        await using (var ctx = new AppDbContext(options))
+        {
+            var service = new Cms.Service.PageContent.Service(ctx, CreateValidatorMock().Object, UpdateValidatorMock().Object);
+            await service.DeleteAsync(parent);
+        }
+
+        await using (var ctx = new AppDbContext(options))
+        {
+            (await ctx.PageContents.IgnoreQueryFilters().FirstAsync(x => x.Id == child)).IsDeleted.Should().BeTrue();
+            (await ctx.PageContents.IgnoreQueryFilters().FirstAsync(x => x.Id == grandchild)).IsDeleted.Should().BeTrue();
+        }
+    }
+
+    [Fact]
+    public async Task DeleteAsync_WhenNotFound_ShouldThrowNotFound()
+    {
+        var options = NewDb();
+        await using var ctx = new AppDbContext(options);
+        var service = new Cms.Service.PageContent.Service(ctx, CreateValidatorMock().Object, UpdateValidatorMock().Object);
+
+        var act = () => service.DeleteAsync(Guid.NewGuid());
+
+        await act.Should().ThrowAsync<NotFoundException>().WithMessage("Page content not found.");
+    }
+
 }
