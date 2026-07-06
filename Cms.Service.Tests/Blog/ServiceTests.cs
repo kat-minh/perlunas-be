@@ -42,7 +42,7 @@ public class ServiceTests
         Titile = "Test Blog Title",
         SubTitile = "Test Subtitle",
         Author = "Test Author",
-        ReadingTime = "5 phÃºt",
+        ReadingTime = "5 phút",
         Description = "Test Description",
         Tag = "test",
         Cover = "https://example.com/cover.jpg",
@@ -54,7 +54,7 @@ public class ServiceTests
         Titile = "Updated Title",
         SubTitile = "Updated Subtitle",
         Author = "Updated Author",
-        ReadingTime = "10 phÃºt",
+        ReadingTime = "10 phút",
         Description = "Updated Description",
         Tag = "updated",
         Cover = "https://example.com/cover2.jpg",
@@ -122,7 +122,7 @@ public class ServiceTests
             Titile = "@#$%^&*()",
             SubTitile = "Test Subtitle",
             Author = "Test Author",
-            ReadingTime = "5 phÃºt",
+            ReadingTime = "5 phút",
             Description = "Test Description",
             Tag = "test",
             Cover = "https://example.com/cover.jpg",
@@ -157,7 +157,7 @@ public class ServiceTests
                 Slug = "original-title",
                 Author = "Original Author",
                 SubTitile = "Original Sub",
-                ReadingTime = "5 phÃºt",
+                ReadingTime = "5 phút",
                 Description = "Original desc",
                 Tag = "original",
                 Cover = "https://example.com/cover.jpg",
@@ -513,7 +513,7 @@ public class ServiceTests
         var id = Guid.NewGuid();
         await using (var ctx = new AppDbContext(options))
         {
-            ctx.Blogs.Add(new BlogEntity { Id = id, Titile = "XoÃ¡", Slug = "xoa", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            ctx.Blogs.Add(new BlogEntity { Id = id, Titile = "Xoá", Slug = "xoa", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
             await ctx.SaveChangesAsync();
         }
 
@@ -544,11 +544,11 @@ public class ServiceTests
     }
 
     // ==================================================================
-    //  GetAllAsync â€” paging defaults
+    //  GetAllAsync — paging defaults
     // ==================================================================
 
     [Theory]
-    [InlineData(0, 0)]   // pageIndex/pageSize <= 0 â†’ máº·c Ä‘á»‹nh 1/10
+    [InlineData(0, 0)]   // pageIndex/pageSize <= 0 -> mặc định 1/10
     [InlineData(-1, -5)]
     public async Task GetAllAsync_WithNonPositivePaging_ShouldUseDefaults(int pageIndex, int pageSize)
     {
