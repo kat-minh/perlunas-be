@@ -1,5 +1,6 @@
 using Cms.Repository;
 using Cms.Repository.Enums;
+using Cms.Service.Configurations;
 using Cms.Service.Exceptions;
 using Cms.Service.Models;
 using FluentValidation;
@@ -200,6 +201,11 @@ public class Service : IService
         if (service.Type != ServiceType.Combo)
             throw new BadRequestException("SERVICE_MUST_BE_COMBO_TYPE");
 
+        // Mã combo hiển thị: dùng Code admin set nếu có, ngược lại sinh từ slug (khớp FE).
+        var comboCode = !string.IsNullOrEmpty(service.Code)
+            ? service.Code
+            : ServiceCode.ForCombo(service.Slug);
+
         var validRoomCategoryTitles = await _dbContext.RoomCategories
             .Where(x => x.ServiceId == request.ServiceId)
             .Select(x => x.Titile)
@@ -263,6 +269,8 @@ public class Service : IService
                     ("Họ tên", request.FullName),
                     ("Số điện thoại", request.Phone),
                     ("Email", request.Email),
+                    ("Tên combo", service.Title),
+                    ("Mã combo", comboCode),
                     ("Tổng tiền", $"{request.TotalPrice:N0} VNĐ"),
                 },
                 closing: "Đội ngũ Perlunas sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận.")
@@ -283,7 +291,7 @@ public class Service : IService
                     ("Email", request.Email),
                     ("Tên combo", service.Title),
                     ("Phân loại", service.Classify),
-                    ("Mã combo", service.Code),
+                    ("Mã combo", comboCode),
                     ("Tổng tiền", $"{request.TotalPrice:N0} VNĐ"),
                 },
                 closing: "Vui lòng liên hệ lại khách hàng để xác nhận combo.")
@@ -532,7 +540,14 @@ public class Service : IService
                 ServiceName = form.Service != null ? form.Service.Title : null,
                 RoomCategory = roomCategories,
                 Classify = form.Service?.Classify,
-                Code = form.Service?.Code,
+                // Combo: fallback mã sinh từ slug (khớp FE) khi chưa set Code.
+                Code = form.Service == null
+                    ? null
+                    : !string.IsNullOrEmpty(form.Service.Code)
+                        ? form.Service.Code
+                        : form.Service.Type == ServiceType.Combo
+                            ? ServiceCode.ForCombo(form.Service.Slug)
+                            : form.Service.Code,
                 FormDetails = form.FormDetails.Select(d => new Response.FormDetailsResponse
                 {
                     Id = d.Id,
