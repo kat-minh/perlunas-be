@@ -330,6 +330,7 @@ public class Service : IService
             BestSeller = request.BestSeller,
             ComingSoon = request.ComingSoon,
             Type = ServiceType.Tour,
+            Introducetion = string.IsNullOrWhiteSpace(request.Introducetion) ? null : request.Introducetion.Trim(),
             Day = request.Day,
             Night = request.Night,
             DurationText = string.IsNullOrWhiteSpace(request.DurationText) ? null : request.DurationText.Trim(),
@@ -850,7 +851,6 @@ public class Service : IService
         switch (type)
         {
             case ServiceType.Tour:
-                service.Introducetion = null;
                 service.Label = null;
                 service.Instruct = null;
                 service.Feature = null;
@@ -862,6 +862,8 @@ public class Service : IService
                 service.OriginalPrice = null;
                 service.Facilities = new List<string>(); // tiện nghi chỉ dành cho hotel
 
+                // Giới thiệu ngắn (teaser) dưới tên tour — tour CÓ dùng field này.
+                if (introducetion is not null) service.Introducetion = string.IsNullOrWhiteSpace(introducetion) ? null : introducetion.Trim();
                 if (day.HasValue) service.Day = day.Value;
                 if (night.HasValue) service.Night = night.Value;
                 if (durationText is not null) service.DurationText = string.IsNullOrWhiteSpace(durationText) ? null : durationText.Trim();

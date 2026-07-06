@@ -46,6 +46,8 @@ public class Request
     public class CreateTourRequest
     {
         public string Title { get; set; } = string.Empty;
+        /// <summary>Giới thiệu ngắn (teaser) hiển thị dưới tên tour ở trang danh sách.</summary>
+        public string Introducetion { get; set; } = string.Empty;
         public int Day { get; set; }
         public int Night { get; set; }
         /// <summary>Thời lượng chuỗi tự do admin nhập (vd "3 ngày 2 đêm", "1 tuần").</summary>
