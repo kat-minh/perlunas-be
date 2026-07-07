@@ -693,7 +693,7 @@ public class ServiceTests
 
         await using var ctx2 = new AppDbContext(options);
         var svc = CreateSvc(ctx2);
-        var result = await svc.GetToursAsync(null, null, 1, 10);
+        var result = await svc.GetToursAsync(null, null, null, 1, 10);
 
         result.Value.Items.Should().HaveCount(1);
         result.Value.TotalCount.Should().Be(1);
@@ -714,7 +714,7 @@ public class ServiceTests
 
         await using var ctx2 = new AppDbContext(options);
         var svc = CreateSvc(ctx2);
-        var result = await svc.GetToursAsync("Phú Quốc", null, 1, 10);
+        var result = await svc.GetToursAsync("Phú Quốc", null, null, 1, 10);
 
         result.Value.Items.Should().ContainSingle();
     }
@@ -734,7 +734,27 @@ public class ServiceTests
 
         await using var ctx2 = new AppDbContext(options);
         var svc = CreateSvc(ctx2);
-        var result = await svc.GetToursAsync("Miền Trung", null, 1, 10);
+        var result = await svc.GetToursAsync("Miền Trung", null, null, 1, 10);
+
+        result.Value.Items.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task GetToursAsync_CityFilterByDestinations()
+    {
+        var options = NewDb();
+        await using (var ctx = new AppDbContext(options))
+        {
+            ctx.Services.AddRange(
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour Đà Lạt", Slug = "tour-da-lat", Type = ServiceType.Tour, Region = "Tây Nguyên", Destinations = new List<string> { "da-lat" }, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour Đà Nẵng", Slug = "tour-da-nang", Type = ServiceType.Tour, Region = "Miền Trung", Destinations = new List<string> { "da-nang", "hue" }, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
+            );
+            await ctx.SaveChangesAsync();
+        }
+
+        await using var ctx2 = new AppDbContext(options);
+        var svc = CreateSvc(ctx2);
+        var result = await svc.GetToursAsync(null, null, "da-nang", 1, 10);
 
         result.Value.Items.Should().ContainSingle();
     }
@@ -1043,7 +1063,7 @@ public class ServiceTests
         var svc = CreateSvc(ctx);
 
         (await svc.GetAllAsync(1, 10)).Value.Items.Should().BeEmpty();
-        (await svc.GetToursAsync(null, null, 1, 10)).Value.Items.Should().BeEmpty();
+        (await svc.GetToursAsync(null, null, null, 1, 10)).Value.Items.Should().BeEmpty();
         (await svc.GetCombosAsync(null, null, null, null, null, 1, 10)).Value.Items.Should().BeEmpty();
         (await svc.GetHotelsAsync(null, null, null, null, 1, 10)).Value.Items.Should().BeEmpty();
     }

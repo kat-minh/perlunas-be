@@ -98,6 +98,7 @@ Cms.Service.Tests/
 | `GET api/services/tours` | `GetToursAsync` | `GetToursAsync_ShouldOnlyReturnTours` | PASS |
 | | | `GetToursAsync_KeywordFilterByTitle` | PASS |
 | | | `GetToursAsync_KeywordFilterByRegion` | PASS |
+| | | `GetToursAsync_CityFilterByDestinations` | PASS |
 | `GET api/services/combos` | `GetCombosAsync` | `GetCombosAsync_ShouldOnlyReturnCombos` | PASS |
 | | | `GetCombosAsync_WithMultipleFilters_ShouldIntersect` | PASS |
 | `GET api/services/hotels` | `GetHotelsAsync` | `GetHotelsAsync_ShouldOnlyReturnHotels` | PASS |
