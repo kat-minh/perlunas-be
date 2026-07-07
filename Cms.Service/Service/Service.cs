@@ -350,7 +350,7 @@ public class Service : IService
         };
         _dbContext.Services.Add(service);
 
-        var schedules = request.Schedules.Select(s => new Repository.Entities.Schedule
+        var schedules = request.Schedules.Select((s, i) => new Repository.Entities.Schedule
         {
             Id = Guid.NewGuid(),
             ServiceId = serviceId,
@@ -358,6 +358,7 @@ public class Service : IService
             Titile = s.Titile.Trim(),
             Sumary = s.Sumary.Trim(),
             Description = s.Description.Trim(),
+            SortOrder = i,
             CreatedAt = now,
             UpdatedAt = now,
         }).ToList();
@@ -400,6 +401,7 @@ public class Service : IService
             Titile = s.Titile ?? string.Empty,
             Sumary = s.Sumary ?? string.Empty,
             Description = s.Description ?? string.Empty,
+            SortOrder = s.SortOrder,
             CreatedAt = s.CreatedAt,
             UpdatedAt = s.UpdatedAt,
         }).ToList();
@@ -469,7 +471,7 @@ public class Service : IService
         };
         _dbContext.Services.Add(service);
 
-        var schedules = request.Schedules.Select(s => new Repository.Entities.Schedule
+        var schedules = request.Schedules.Select((s, i) => new Repository.Entities.Schedule
         {
             Id = Guid.NewGuid(),
             ServiceId = serviceId,
@@ -477,6 +479,7 @@ public class Service : IService
             Titile = s.Titile.Trim(),
             Sumary = s.Sumary.Trim(),
             Description = s.Description.Trim(),
+            SortOrder = i,
             CreatedAt = now,
             UpdatedAt = now,
         }).ToList();
@@ -525,6 +528,7 @@ public class Service : IService
             Titile = s.Titile ?? string.Empty,
             Sumary = s.Sumary ?? string.Empty,
             Description = s.Description ?? string.Empty,
+            SortOrder = s.SortOrder,
             CreatedAt = s.CreatedAt,
             UpdatedAt = s.UpdatedAt,
         }).ToList();
@@ -664,12 +668,12 @@ public class Service : IService
                 .Where(x => x.ServiceId == id && !x.IsDeleted).ToListAsync();
             foreach (var s in oldSchedules) { s.IsDeleted = true; s.UpdatedAt = now; }
 
-            _dbContext.Schedules.AddRange(request.Schedules.Select(s => new Repository.Entities.Schedule
+            _dbContext.Schedules.AddRange(request.Schedules.Select((s, i) => new Repository.Entities.Schedule
             {
                 Id = Guid.NewGuid(), ServiceId = id,
                 Day = s.Day.Trim(), Titile = s.Titile.Trim(),
                 Sumary = s.Sumary.Trim(), Description = s.Description.Trim(),
-                CreatedAt = now, UpdatedAt = now,
+                SortOrder = i, CreatedAt = now, UpdatedAt = now,
             }));
         }
 
@@ -750,12 +754,14 @@ public class Service : IService
         response.Schedules = (await _dbContext.Schedules
             .AsNoTracking()
             .Where(x => x.ServiceId == id && !x.IsDeleted)
+            .OrderBy(x => x.SortOrder).ThenBy(x => x.CreatedAt)
             .ToListAsync())
             .Select(s => new SchedResponse
             {
                 Id = s.Id, ServiceId = s.ServiceId, Day = s.Day ?? string.Empty,
                 Titile = s.Titile ?? string.Empty, Sumary = s.Sumary ?? string.Empty,
-                Description = s.Description ?? string.Empty, CreatedAt = s.CreatedAt, UpdatedAt = s.UpdatedAt,
+                Description = s.Description ?? string.Empty, SortOrder = s.SortOrder,
+                CreatedAt = s.CreatedAt, UpdatedAt = s.UpdatedAt,
             }).ToList();
         response.ImportantInfors = (await _dbContext.ImportantInfors
             .AsNoTracking()
@@ -990,7 +996,9 @@ public class Service : IService
 
         if (service.Schedules != null && service.Schedules.Any())
         {
-            response.Schedules = service.Schedules.Where(s => !s.IsDeleted).Select(s => new SchedResponse
+            response.Schedules = service.Schedules.Where(s => !s.IsDeleted)
+                .OrderBy(s => s.SortOrder).ThenBy(s => s.CreatedAt)
+                .Select(s => new SchedResponse
             {
                 Id = s.Id,
                 ServiceId = s.ServiceId,
@@ -998,6 +1006,7 @@ public class Service : IService
                 Titile = s.Titile ?? string.Empty,
                 Sumary = s.Sumary ?? string.Empty,
                 Description = s.Description ?? string.Empty,
+                SortOrder = s.SortOrder,
                 CreatedAt = s.CreatedAt,
                 UpdatedAt = s.UpdatedAt,
             }).ToList();

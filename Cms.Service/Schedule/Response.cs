@@ -10,6 +10,7 @@ public class Response
         public string Titile { get; set; } = string.Empty;
         public string Sumary { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
+        public int SortOrder { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }
