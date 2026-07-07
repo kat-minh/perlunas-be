@@ -500,7 +500,7 @@ public class Service : IService
         }).ToList();
         _dbContext.ImportantInfors.AddRange(importantInfors);
 
-        var roomCategories = request.RoomCategories.Select(r => new Repository.Entities.RoomCategory
+        var roomCategories = request.RoomCategories.Select((r, idx) => new Repository.Entities.RoomCategory
         {
             Id = Guid.NewGuid(),
             ServiceId = serviceId,
@@ -515,6 +515,7 @@ public class Service : IService
             Price = null,
             OriginalPrice = null,
             Unit = null,
+            SortOrder = idx,
             CreatedAt = now,
             UpdatedAt = now,
         }).ToList();
@@ -560,6 +561,7 @@ public class Service : IService
             Price = r.Price,
             OriginalPrice = r.OriginalPrice,
             Unit = r.Unit,
+            SortOrder = r.SortOrder,
             CreatedAt = r.CreatedAt,
             UpdatedAt = r.UpdatedAt,
         }).ToList();
@@ -594,7 +596,7 @@ public class Service : IService
 
         _dbContext.Services.Add(service);
 
-        var roomCategories = request.RoomCategories.Select(r => new Repository.Entities.RoomCategory
+        var roomCategories = request.RoomCategories.Select((r, idx) => new Repository.Entities.RoomCategory
         {
             Id = Guid.NewGuid(),
             ServiceId = service.Id,
@@ -608,6 +610,7 @@ public class Service : IService
             Price = r.Price?.Trim(),
             OriginalPrice = r.OriginalPrice?.Trim(),
             Unit = r.Unit?.Trim(),
+            SortOrder = idx,
             CreatedAt = now,
             UpdatedAt = now,
         }).ToList();
@@ -630,6 +633,7 @@ public class Service : IService
             Price = r.Price,
             OriginalPrice = r.OriginalPrice,
             Unit = r.Unit,
+            SortOrder = r.SortOrder,
             CreatedAt = r.CreatedAt,
             UpdatedAt = r.UpdatedAt,
         }).ToList();
@@ -722,7 +726,7 @@ public class Service : IService
                 r.IsDeleted = true; r.UpdatedAt = now;
             }
 
-            _dbContext.RoomCategories.AddRange(request.RoomCategories.Select(r => new Repository.Entities.RoomCategory
+            _dbContext.RoomCategories.AddRange(request.RoomCategories.Select((r, idx) => new Repository.Entities.RoomCategory
             {
                 Id = Guid.NewGuid(), ServiceId = id,
                 Album = JsonSerializer.Serialize(r.Album),
@@ -733,7 +737,7 @@ public class Service : IService
                 Price = type == ServiceType.Combo ? null : r.Price?.Trim(),
                 OriginalPrice = type == ServiceType.Combo ? null : r.OriginalPrice?.Trim(),
                 Unit = type == ServiceType.Combo ? null : r.Unit?.Trim(),
-                CreatedAt = now, UpdatedAt = now,
+                SortOrder = idx, CreatedAt = now, UpdatedAt = now,
             }));
         }
 
@@ -792,6 +796,7 @@ public class Service : IService
         response.RoomCategories = (await _dbContext.RoomCategories
             .AsNoTracking()
             .Where(x => x.ServiceId == id && !x.IsDeleted)
+            .OrderBy(x => x.SortOrder).ThenBy(x => x.CreatedAt)
             .ToListAsync())
             .Select(r => new RoomCatResponse
             {
@@ -802,7 +807,7 @@ public class Service : IService
                 Description = r.Description ?? string.Empty,
                 Feature = DeserializeFeature(r.Feature),
                 Price = r.Price, OriginalPrice = r.OriginalPrice, Unit = r.Unit,
-                CreatedAt = r.CreatedAt, UpdatedAt = r.UpdatedAt,
+                SortOrder = r.SortOrder, CreatedAt = r.CreatedAt, UpdatedAt = r.UpdatedAt,
             }).ToList();
         return response;
     }
@@ -1052,7 +1057,9 @@ public class Service : IService
 
         if (service.RoomCategories != null && service.RoomCategories.Any())
         {
-            response.RoomCategories = service.RoomCategories.Where(r => !r.IsDeleted).Select(r => new RoomCatResponse
+            response.RoomCategories = service.RoomCategories.Where(r => !r.IsDeleted)
+                .OrderBy(r => r.SortOrder).ThenBy(r => r.CreatedAt)
+                .Select(r => new RoomCatResponse
             {
                 Id = r.Id,
                 ServiceId = r.ServiceId,
@@ -1066,6 +1073,7 @@ public class Service : IService
                 Price = r.Price,
                 OriginalPrice = r.OriginalPrice,
                 Unit = r.Unit,
+                SortOrder = r.SortOrder,
                 CreatedAt = r.CreatedAt,
                 UpdatedAt = r.UpdatedAt,
             }).ToList();

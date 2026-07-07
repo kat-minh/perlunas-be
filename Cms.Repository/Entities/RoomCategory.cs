@@ -16,6 +16,9 @@ public class RoomCategory : BaseEntity<Guid>, IAuditableEntity
     public string? OriginalPrice { get; set; }
     public string? Unit { get; set; }
 
+    /// <summary>Thứ tự hiển thị (theo mảng admin nhập) — giữ đúng thứ tự hạng phòng.</summary>
+    public int SortOrder { get; set; }
+
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 
