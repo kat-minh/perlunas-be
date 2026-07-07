@@ -21,6 +21,9 @@ public class Taxonomy : BaseEntity<Guid>, IAuditableEntity
     /// <summary>Màu chip — chỉ nhóm "purpose" cần, vd "#3F9D6B".</summary>
     public string? Color { get; set; }
 
+    /// <summary>Ảnh — chỉ nhóm "city" cần (ô "vùng đất" ở trang chủ).</summary>
+    public string? Image { get; set; }
+
     public int SortOrder { get; set; }
 
     public DateTime CreatedAt { get; set; }

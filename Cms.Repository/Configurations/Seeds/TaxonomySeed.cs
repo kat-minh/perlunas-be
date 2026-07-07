@@ -16,6 +16,8 @@ public static class TaxonomySeed
             Name = name,
             Slug = slug,
             Color = color,
+            // Nhóm "city": ảnh placeholder tạm (theo slug) — admin đổi ảnh thật sau.
+            Image = group == "city" && slug != null ? $"https://picsum.photos/seed/perlunas-place-{slug}/800/1000" : null,
             SortOrder = sort,
             CreatedAt = SeedIds.CreatedAt,
             UpdatedAt = SeedIds.CreatedAt,

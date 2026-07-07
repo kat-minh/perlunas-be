@@ -8,6 +8,7 @@ public class Request
         public string Group { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string? Color { get; set; }
+        public string? Image { get; set; }
         public int SortOrder { get; set; }
     }
 
@@ -15,6 +16,7 @@ public class Request
     {
         public string Name { get; set; } = string.Empty;
         public string? Color { get; set; }
+        public string? Image { get; set; }
         public int SortOrder { get; set; }
     }
 }

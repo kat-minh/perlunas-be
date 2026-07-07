@@ -69,6 +69,7 @@ public class Service : IService
             Name = name,
             Slug = await GenerateUniqueSlugAsync(request.Name),
             Color = string.IsNullOrWhiteSpace(request.Color) ? null : request.Color.Trim(),
+            Image = string.IsNullOrWhiteSpace(request.Image) ? null : request.Image.Trim(),
             SortOrder = request.SortOrder,
             CreatedAt = now,
             UpdatedAt = now,
@@ -96,6 +97,7 @@ public class Service : IService
         item.Name = newName;
         item.Slug = await GenerateUniqueSlugAsync(request.Name, id);
         item.Color = string.IsNullOrWhiteSpace(request.Color) ? null : request.Color.Trim();
+        item.Image = string.IsNullOrWhiteSpace(request.Image) ? null : request.Image.Trim();
         item.SortOrder = request.SortOrder;
         item.UpdatedAt = DateTime.UtcNow;
 
@@ -205,6 +207,7 @@ public class Service : IService
             Name = item.Name,
             Slug = item.Slug,
             Color = item.Color,
+            Image = item.Image,
             SortOrder = item.SortOrder,
             CreatedAt = item.CreatedAt,
             UpdatedAt = item.UpdatedAt,
