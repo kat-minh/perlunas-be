@@ -214,6 +214,8 @@ public class Service : IService
 
         if (service is null) throw new NotFoundException("Service not found.");
 
+        try
+        {
         var response = ToResponse(service);
 
         if (service.Type == ServiceType.Tour)
@@ -308,6 +310,11 @@ public class Service : IService
         }
 
         return response;
+        }
+        catch (Exception ex) when (ex is not NotFoundException)
+        {
+            throw new NotFoundException($"DEBUG {ex.GetType().Name}: {ex.Message} || INNER {ex.InnerException?.GetType().Name}: {ex.InnerException?.Message}");
+        }
     }
 
     private static decimal ParseNumericPrice(string? priceStr)
