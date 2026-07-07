@@ -364,13 +364,14 @@ public class Service : IService
         }).ToList();
         _dbContext.Schedules.AddRange(schedules);
 
-        var importantInfors = request.ImportantInfors.Select(i => new Repository.Entities.ImportantInfor
+        var importantInfors = request.ImportantInfors.Select((i, idx) => new Repository.Entities.ImportantInfor
         {
             Id = Guid.NewGuid(),
             ServiceId = serviceId,
             Title = i.Title.Trim(),
             SubTitle = i.SubTitle.Trim(),
             Description = i.Description.Trim(),
+            SortOrder = idx,
             CreatedAt = now,
             UpdatedAt = now,
         }).ToList();
@@ -412,6 +413,7 @@ public class Service : IService
             Title = i.Title ?? string.Empty,
             SubTitle = i.SubTitle ?? string.Empty,
             Description = i.Description ?? string.Empty,
+            SortOrder = i.SortOrder,
             CreatedAt = i.CreatedAt,
             UpdatedAt = i.UpdatedAt,
         }).ToList();
@@ -485,13 +487,14 @@ public class Service : IService
         }).ToList();
         _dbContext.Schedules.AddRange(schedules);
 
-        var importantInfors = request.ImportantInfors.Select(i => new Repository.Entities.ImportantInfor
+        var importantInfors = request.ImportantInfors.Select((i, idx) => new Repository.Entities.ImportantInfor
         {
             Id = Guid.NewGuid(),
             ServiceId = serviceId,
             Title = i.Title.Trim(),
             SubTitle = i.SubTitle.Trim(),
             Description = i.Description.Trim(),
+            SortOrder = idx,
             CreatedAt = now,
             UpdatedAt = now,
         }).ToList();
@@ -539,6 +542,7 @@ public class Service : IService
             Title = i.Title ?? string.Empty,
             SubTitle = i.SubTitle ?? string.Empty,
             Description = i.Description ?? string.Empty,
+            SortOrder = i.SortOrder,
             CreatedAt = i.CreatedAt,
             UpdatedAt = i.UpdatedAt,
         }).ToList();
@@ -683,11 +687,11 @@ public class Service : IService
                 .Where(x => x.ServiceId == id && !x.IsDeleted).ToListAsync();
             foreach (var i in oldInfors) { i.IsDeleted = true; i.UpdatedAt = now; }
 
-            _dbContext.ImportantInfors.AddRange(request.ImportantInfors.Select(i => new Repository.Entities.ImportantInfor
+            _dbContext.ImportantInfors.AddRange(request.ImportantInfors.Select((i, idx) => new Repository.Entities.ImportantInfor
             {
                 Id = Guid.NewGuid(), ServiceId = id,
                 Title = i.Title.Trim(), SubTitle = i.SubTitle.Trim(),
-                Description = i.Description.Trim(), CreatedAt = now, UpdatedAt = now,
+                Description = i.Description.Trim(), SortOrder = idx, CreatedAt = now, UpdatedAt = now,
             }));
         }
 
@@ -766,12 +770,13 @@ public class Service : IService
         response.ImportantInfors = (await _dbContext.ImportantInfors
             .AsNoTracking()
             .Where(x => x.ServiceId == id && !x.IsDeleted)
+            .OrderBy(x => x.SortOrder).ThenBy(x => x.CreatedAt)
             .ToListAsync())
             .Select(i => new ImpInforResponse
             {
                 Id = i.Id, ServiceId = i.ServiceId, Title = i.Title ?? string.Empty,
                 SubTitle = i.SubTitle ?? string.Empty, Description = i.Description ?? string.Empty,
-                CreatedAt = i.CreatedAt, UpdatedAt = i.UpdatedAt,
+                SortOrder = i.SortOrder, CreatedAt = i.CreatedAt, UpdatedAt = i.UpdatedAt,
             }).ToList();
         response.DepartureSchedules = (await _dbContext.DepartureSchedules
             .AsNoTracking()
@@ -1014,13 +1019,16 @@ public class Service : IService
 
         if (service.ImportantInfors != null && service.ImportantInfors.Any())
         {
-            response.ImportantInfors = service.ImportantInfors.Where(i => !i.IsDeleted).Select(i => new ImpInforResponse
+            response.ImportantInfors = service.ImportantInfors.Where(i => !i.IsDeleted)
+                .OrderBy(i => i.SortOrder).ThenBy(i => i.CreatedAt)
+                .Select(i => new ImpInforResponse
             {
                 Id = i.Id,
                 ServiceId = i.ServiceId,
                 Title = i.Title ?? string.Empty,
                 SubTitle = i.SubTitle ?? string.Empty,
                 Description = i.Description ?? string.Empty,
+                SortOrder = i.SortOrder,
                 CreatedAt = i.CreatedAt,
                 UpdatedAt = i.UpdatedAt,
             }).ToList();

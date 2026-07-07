@@ -97,6 +97,7 @@ public static class ImportantInforSeed
                     Title = Blocks[b].Title,
                     SubTitle = null,
                     Description = Blocks[b].Desc,
+                    SortOrder = b,
                     CreatedAt = SeedIds.CreatedAt,
                     UpdatedAt = SeedIds.CreatedAt,
                 });
@@ -114,6 +115,7 @@ public static class ImportantInforSeed
                     Title = ComboBlocks[b].Title,
                     SubTitle = null,
                     Description = ComboBlocks[b].Desc,
+                    SortOrder = b,
                     CreatedAt = SeedIds.CreatedAt,
                     UpdatedAt = SeedIds.CreatedAt,
                 });
