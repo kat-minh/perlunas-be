@@ -186,7 +186,9 @@ public class Service : IService
         var entities = await query
             .Include(x => x.DepartureSchedules)
             .Include(x => x.RoomCategories)
-            .OrderByDescending(x => x.CreatedAt)
+            // Khách sạn "Nổi bật" (BestSeller) ưu tiên hiện lên đầu trang danh sách.
+            .OrderByDescending(x => x.BestSeller)
+            .ThenByDescending(x => x.CreatedAt)
             .ThenBy(x => x.Id)
             .Skip((pageIndex - 1) * pageSize)
             .Take(pageSize)
