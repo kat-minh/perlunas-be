@@ -61,7 +61,7 @@ public class Service : IService
         return ApiResponseFactory.BasePagination(items, pageIndex, pageSize, totalCount);
     }
 
-    public async Task<BasePaginationResponse> GetToursAsync(string? keyword, string? destination, string? city, int pageIndex, int pageSize)
+    public async Task<BasePaginationResponse> GetToursAsync(string? keyword, string? destination, string? city, bool? bestSeller, int pageIndex, int pageSize)
     {
         pageIndex = pageIndex <= 0 ? 1 : pageIndex;
         pageSize = pageSize <= 0 ? 10 : Math.Min(pageSize, 100);
@@ -69,6 +69,10 @@ public class Service : IService
         var query = _dbContext.Services
             .AsNoTracking()
             .Where(x => !x.IsDeleted && x.Type == ServiceType.Tour);
+
+        // Lọc Nổi bật (BestSeller): true = chỉ nổi bật, false = chỉ không nổi bật.
+        if (bestSeller.HasValue)
+            query = query.Where(x => x.BestSeller == bestSeller.Value);
 
         if (!string.IsNullOrWhiteSpace(keyword))
         {
@@ -158,7 +162,7 @@ public class Service : IService
         return ApiResponseFactory.BasePagination(items, pageIndex, pageSize, totalCount);
     }
 
-    public async Task<BasePaginationResponse> GetHotelsAsync(string? keyword, string? destination, string? form, string? purposeOfTrip, int pageIndex, int pageSize)
+    public async Task<BasePaginationResponse> GetHotelsAsync(string? keyword, string? destination, string? form, string? purposeOfTrip, bool? bestSeller, int pageIndex, int pageSize)
     {
         pageIndex = pageIndex <= 0 ? 1 : pageIndex;
         pageSize = pageSize <= 0 ? 10 : Math.Min(pageSize, 100);
@@ -166,6 +170,10 @@ public class Service : IService
         var query = _dbContext.Services
             .AsNoTracking()
             .Where(x => !x.IsDeleted && x.Type == ServiceType.Hotel);
+
+        // Lọc Nổi bật (BestSeller): true = chỉ nổi bật, false = chỉ không nổi bật.
+        if (bestSeller.HasValue)
+            query = query.Where(x => x.BestSeller == bestSeller.Value);
 
         if (!string.IsNullOrWhiteSpace(keyword))
         {

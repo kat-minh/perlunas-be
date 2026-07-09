@@ -693,7 +693,7 @@ public class ServiceTests
 
         await using var ctx2 = new AppDbContext(options);
         var svc = CreateSvc(ctx2);
-        var result = await svc.GetToursAsync(null, null, null, 1, 10);
+        var result = await svc.GetToursAsync(null, null, null, null, 1, 10);
 
         result.Value.Items.Should().HaveCount(1);
         result.Value.TotalCount.Should().Be(1);
@@ -714,7 +714,7 @@ public class ServiceTests
 
         await using var ctx2 = new AppDbContext(options);
         var svc = CreateSvc(ctx2);
-        var result = await svc.GetToursAsync("Phú Quốc", null, null, 1, 10);
+        var result = await svc.GetToursAsync("Phú Quốc", null, null, null, 1, 10);
 
         result.Value.Items.Should().ContainSingle();
     }
@@ -734,7 +734,7 @@ public class ServiceTests
 
         await using var ctx2 = new AppDbContext(options);
         var svc = CreateSvc(ctx2);
-        var result = await svc.GetToursAsync("Miền Trung", null, null, 1, 10);
+        var result = await svc.GetToursAsync("Miền Trung", null, null, null, 1, 10);
 
         result.Value.Items.Should().ContainSingle();
     }
@@ -754,9 +754,30 @@ public class ServiceTests
 
         await using var ctx2 = new AppDbContext(options);
         var svc = CreateSvc(ctx2);
-        var result = await svc.GetToursAsync(null, null, "da-nang", 1, 10);
+        var result = await svc.GetToursAsync(null, null, "da-nang", null, 1, 10);
 
         result.Value.Items.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task GetToursAsync_BestSellerFilter()
+    {
+        var options = NewDb();
+        await using (var ctx = new AppDbContext(options))
+        {
+            ctx.Services.AddRange(
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour nổi bật", Slug = "tour-noi-bat", Type = ServiceType.Tour, BestSeller = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour thường", Slug = "tour-thuong", Type = ServiceType.Tour, BestSeller = false, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
+            );
+            await ctx.SaveChangesAsync();
+        }
+
+        await using var ctx2 = new AppDbContext(options);
+        var svc = CreateSvc(ctx2);
+
+        (await svc.GetToursAsync(null, null, null, true, 1, 10)).Value.TotalCount.Should().Be(1);
+        (await svc.GetToursAsync(null, null, null, false, 1, 10)).Value.TotalCount.Should().Be(1);
+        (await svc.GetToursAsync(null, null, null, null, 1, 10)).Value.TotalCount.Should().Be(2);
     }
 
     // ==================================================================
@@ -823,7 +844,7 @@ public class ServiceTests
 
         await using var ctx2 = new AppDbContext(options);
         var svc = CreateSvc(ctx2);
-        var result = await svc.GetHotelsAsync(null, null, null, null, 1, 10);
+        var result = await svc.GetHotelsAsync(null, null, null, null, null, 1, 10);
 
         result.Value.TotalCount.Should().Be(1);
     }
@@ -843,7 +864,7 @@ public class ServiceTests
 
         await using var ctx2 = new AppDbContext(options);
         var svc = CreateSvc(ctx2);
-        var result = await svc.GetHotelsAsync(null, "Đà Nẵng", null, null, 1, 10);
+        var result = await svc.GetHotelsAsync(null, "Đà Nẵng", null, null, null, 1, 10);
 
         result.Value.Items.Should().ContainSingle();
     }
@@ -1063,9 +1084,9 @@ public class ServiceTests
         var svc = CreateSvc(ctx);
 
         (await svc.GetAllAsync(1, 10)).Value.Items.Should().BeEmpty();
-        (await svc.GetToursAsync(null, null, null, 1, 10)).Value.Items.Should().BeEmpty();
+        (await svc.GetToursAsync(null, null, null, null, 1, 10)).Value.Items.Should().BeEmpty();
         (await svc.GetCombosAsync(null, null, null, null, null, 1, 10)).Value.Items.Should().BeEmpty();
-        (await svc.GetHotelsAsync(null, null, null, null, 1, 10)).Value.Items.Should().BeEmpty();
+        (await svc.GetHotelsAsync(null, null, null, null, null, 1, 10)).Value.Items.Should().BeEmpty();
     }
 
     [Fact]

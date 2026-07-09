@@ -26,9 +26,9 @@ public class ServicesController : ControllerBase
     }
 
     [HttpGet("tours")]
-    public async Task<IActionResult> GetTours([FromQuery] string? keyword, [FromQuery] string? destination, [FromQuery] string? city, [FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> GetTours([FromQuery] string? keyword, [FromQuery] string? destination, [FromQuery] string? city, [FromQuery] bool? bestSeller, [FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
     {
-        var result = await _serviceService.GetToursAsync(keyword, destination, city, pageIndex, pageSize);
+        var result = await _serviceService.GetToursAsync(keyword, destination, city, bestSeller, pageIndex, pageSize);
         result.TraceId = HttpContext.TraceIdentifier;
         return Ok(result);
     }
@@ -54,10 +54,11 @@ public class ServicesController : ControllerBase
         [FromQuery] string? destination,
         [FromQuery] string? form,
         [FromQuery] string? purposeOfTrip,
+        [FromQuery] bool? bestSeller,
         [FromQuery] int pageIndex = 1,
         [FromQuery] int pageSize = 10)
     {
-        var result = await _serviceService.GetHotelsAsync(keyword, destination, form, purposeOfTrip, pageIndex, pageSize);
+        var result = await _serviceService.GetHotelsAsync(keyword, destination, form, purposeOfTrip, bestSeller, pageIndex, pageSize);
         result.TraceId = HttpContext.TraceIdentifier;
         return Ok(result);
     }
