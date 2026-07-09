@@ -405,7 +405,10 @@ public class Service : IService
         return "CREATE_HOTEL_FORM_SUCCESS";
     }
 
-    public async Task<BasePaginationResponse> GetAllAsync(int pageIndex, int pageSize, FormType? type, string? search)
+    // Giờ Việt Nam (UTC+7): ngày booking admin chọn được hiểu theo giờ VN rồi quy về mốc UTC để so với CreatedAt.
+    private static readonly TimeSpan VietnamOffset = TimeSpan.FromHours(7);
+
+    public async Task<BasePaginationResponse> GetAllAsync(int pageIndex, int pageSize, FormType? type, string? search, DateTime? fromDate = null, DateTime? toDate = null)
     {
         pageIndex = pageIndex <= 0 ? 1 : pageIndex;
         pageSize = pageSize <= 0 ? 10 : Math.Min(pageSize, 100);
@@ -420,6 +423,20 @@ public class Service : IService
         if (type.HasValue)
         {
             query = query.Where(x => x.Type == type.Value);
+        }
+
+        // Lọc theo khoảng ngày booking (CreatedAt lưu timestamptz → tham số phải Kind=Utc;
+        // ngày admin chọn hiểu theo giờ VN rồi quy về mốc UTC).
+        if (fromDate.HasValue)
+        {
+            var fromUtc = DateTime.SpecifyKind(fromDate.Value.Date - VietnamOffset, DateTimeKind.Utc);
+            query = query.Where(x => x.CreatedAt >= fromUtc);
+        }
+
+        if (toDate.HasValue)
+        {
+            var toUtc = DateTime.SpecifyKind(toDate.Value.Date.AddDays(1) - VietnamOffset, DateTimeKind.Utc);
+            query = query.Where(x => x.CreatedAt < toUtc);
         }
 
         if (!string.IsNullOrWhiteSpace(search))

@@ -22,9 +22,11 @@ public class FormsController : ControllerBase
         [FromQuery] int pageIndex = 1,
         [FromQuery] int pageSize = 10,
         [FromQuery] FormType? type = null,
-        [FromQuery] string? search = null)
+        [FromQuery] string? search = null,
+        [FromQuery] DateTime? fromDate = null,
+        [FromQuery] DateTime? toDate = null)
     {
-        var result = await _formService.GetAllAsync(pageIndex, pageSize, type, search);
+        var result = await _formService.GetAllAsync(pageIndex, pageSize, type, search, fromDate, toDate);
         result.TraceId = HttpContext.TraceIdentifier;
         return Ok(result);
     }
