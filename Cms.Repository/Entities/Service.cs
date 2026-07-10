@@ -60,6 +60,10 @@ public class Service : BaseEntity<Guid>, IAuditableEntity
     public string? Form { get; set; }
     /// <summary>Tham chiếu danh mục nhóm "tier" (theo Name). Trước là enum.</summary>
     public string? Classify { get; set; }
+    /// <summary>Tour: các điểm đón khách (tham chiếu danh mục nhóm "pickup" theo Name).</summary>
+    public List<string> PickupPoints { get; set; } = new();
+    /// <summary>Tour: các điểm trả khách (tham chiếu danh mục nhóm "pickup" theo Name).</summary>
+    public List<string> DropoffPoints { get; set; } = new();
 
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

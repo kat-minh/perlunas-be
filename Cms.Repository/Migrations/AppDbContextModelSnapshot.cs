@@ -11878,6 +11878,10 @@ namespace Cms.Repository.Migrations
                         .IsRequired()
                         .HasColumnType("text[]");
 
+                    b.Property<List<string>>("DropoffPoints")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
                     b.Property<string>("DurationText")
                         .HasColumnType("text");
 
@@ -11923,6 +11927,10 @@ namespace Cms.Repository.Migrations
 
                     b.Property<string>("OriginalPrice")
                         .HasColumnType("text");
+
+                    b.Property<List<string>>("PickupPoints")
+                        .IsRequired()
+                        .HasColumnType("text[]");
 
                     b.Property<string>("Price")
                         .HasColumnType("text");

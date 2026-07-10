@@ -25,6 +25,10 @@ public class Response
         public List<string> Highlight { get; set; } = new();
         /// <summary>Tour: điểm đến (tên/slug tỉnh) để gợi ý khách sạn tại nơi đến.</summary>
         public List<string> Destinations { get; set; } = new();
+        /// <summary>Tour: các điểm đón khách (danh mục nhóm "pickup").</summary>
+        public List<string> PickupPoints { get; set; } = new();
+        /// <summary>Tour: các điểm trả khách (danh mục nhóm "pickup").</summary>
+        public List<string> DropoffPoints { get; set; } = new();
         /// <summary>Hotel: tiện nghi nổi bật cấp khách sạn.</summary>
         public List<string> Facilities { get; set; } = new();
         /// <summary>Tour: "Điểm nổi bật" dạng richtext (HTML) admin tự soạn.</summary>

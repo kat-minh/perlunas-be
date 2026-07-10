@@ -358,6 +358,8 @@ public class Service : IService
             Infor = request.Infor.Trim(),
             Highlight = request.Highlight.Select(h => h.Trim()).ToList(),
             Destinations = request.Destinations.Select(d => d.Trim()).ToList(),
+            PickupPoints = request.PickupPoints.Select(p => p.Trim()).Where(p => p.Length > 0).ToList(),
+            DropoffPoints = request.DropoffPoints.Select(p => p.Trim()).Where(p => p.Length > 0).ToList(),
             HighlightContent = request.HighlightContent.Trim(),
             TripInfoJson = string.IsNullOrWhiteSpace(request.TripInfoJson) ? null : request.TripInfoJson.Trim(),
             PriceUnit = string.IsNullOrWhiteSpace(request.PriceUnit) ? null : request.PriceUnit.Trim(),
@@ -880,7 +882,8 @@ public class Service : IService
         string? instruct, string? feature,
         string? purposeOfTrip, string? destination, string? form, string? classify,
         List<string>? destinations, List<string>? facilities, string? highlightContent,
-        string? tripInfoJson, string? priceUnit, string? price, string? originalPrice, string? durationText)
+        string? tripInfoJson, string? priceUnit, string? price, string? originalPrice, string? durationText,
+        List<string>? pickupPoints, List<string>? dropoffPoints)
     {
         switch (type)
         {
@@ -905,6 +908,8 @@ public class Service : IService
                 if (infor is not null) service.Infor = infor.Trim();
                 if (highlight is not null) service.Highlight = highlight.Select(h => h.Trim()).ToList();
                 if (destinations is not null) service.Destinations = destinations.Select(d => d.Trim()).ToList();
+                if (pickupPoints is not null) service.PickupPoints = pickupPoints.Select(p => p.Trim()).Where(p => p.Length > 0).ToList();
+                if (dropoffPoints is not null) service.DropoffPoints = dropoffPoints.Select(p => p.Trim()).Where(p => p.Length > 0).ToList();
                 if (highlightContent is not null) service.HighlightContent = highlightContent.Trim();
                 if (tripInfoJson is not null) service.TripInfoJson = string.IsNullOrWhiteSpace(tripInfoJson) ? null : tripInfoJson.Trim();
                 if (priceUnit is not null) service.PriceUnit = string.IsNullOrWhiteSpace(priceUnit) ? null : priceUnit.Trim();
@@ -916,6 +921,8 @@ public class Service : IService
                 service.Instruct = null;
                 service.Feature = null;
                 service.Destinations = new List<string>(); // combo không có điểm đến kiểu tour
+                service.PickupPoints = new List<string>(); // điểm đón/trả chỉ dành cho tour
+                service.DropoffPoints = new List<string>();
                 service.Facilities = new List<string>();
                 // Day + HighlightContent: combo CÓ dùng (thời lượng "x ngày y đêm" +
                 // "Điểm nổi bật") — set từ request bên dưới, KHÔNG null hoá.
@@ -951,6 +958,8 @@ public class Service : IService
                 service.Code = null;
                 service.Classify = null;
                 service.Destinations = new List<string>(); // điểm đến chỉ dành cho tour
+                service.PickupPoints = new List<string>(); // điểm đón/trả chỉ dành cho tour
+                service.DropoffPoints = new List<string>();
                 service.HighlightContent = null; // richtext điểm nổi bật chỉ dành cho tour
                 service.TripInfoJson = null; // 4 ô "Thông tin chính" chỉ dành cho tour
                 service.PriceUnit = null; // đơn vị giá tour chỉ dành cho tour
@@ -974,7 +983,8 @@ public class Service : IService
             request.Instruct, request.Feature,
             request.PurposeOfTrip, request.Destination, request.Form, request.Classify,
             request.Destinations, request.Facilities, request.HighlightContent, request.TripInfoJson, request.PriceUnit,
-            request.Price, request.OriginalPrice, request.DurationText);
+            request.Price, request.OriginalPrice, request.DurationText,
+            request.PickupPoints, request.DropoffPoints);
 
     private static Response.ServiceResponse ToResponse(Repository.Entities.Service service)
     {
@@ -996,6 +1006,8 @@ public class Service : IService
             Infor = service.Infor ?? string.Empty,
             Highlight = service.Highlight ?? new(),
             Destinations = service.Destinations ?? new(),
+            PickupPoints = service.PickupPoints ?? new(),
+            DropoffPoints = service.DropoffPoints ?? new(),
             Facilities = service.Facilities ?? new(),
             HighlightContent = service.HighlightContent ?? string.Empty,
             TripInfoJson = service.TripInfoJson ?? string.Empty,

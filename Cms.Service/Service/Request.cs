@@ -58,6 +58,10 @@ public class Request
         public string Infor { get; set; } = string.Empty;
         public List<string> Highlight { get; set; } = new();
         public List<string> Destinations { get; set; } = new();
+        /// <summary>Tour: các điểm đón khách (danh mục nhóm "pickup").</summary>
+        public List<string> PickupPoints { get; set; } = new();
+        /// <summary>Tour: các điểm trả khách (danh mục nhóm "pickup").</summary>
+        public List<string> DropoffPoints { get; set; } = new();
         public string HighlightContent { get; set; } = string.Empty;
         /// <summary>JSON {"stay","sightsee","food","transport"} — 4 ô "Thông tin chính về chuyến đi".</summary>
         public string TripInfoJson { get; set; } = string.Empty;
@@ -140,6 +144,10 @@ public class Request
         public string? Infor { get; set; }
         public List<string>? Highlight { get; set; }
         public List<string>? Destinations { get; set; }
+        /// <summary>Tour: các điểm đón khách (danh mục nhóm "pickup").</summary>
+        public List<string>? PickupPoints { get; set; }
+        /// <summary>Tour: các điểm trả khách (danh mục nhóm "pickup").</summary>
+        public List<string>? DropoffPoints { get; set; }
         public List<string>? Facilities { get; set; }
         public string? HighlightContent { get; set; }
         /// <summary>JSON {"stay","sightsee","food","transport"} — 4 ô "Thông tin chính về chuyến đi".</summary>
