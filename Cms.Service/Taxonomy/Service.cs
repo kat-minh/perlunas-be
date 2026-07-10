@@ -24,16 +24,18 @@ public class Service : IService
     {
         var query = _dbContext.Taxonomies.AsNoTracking().Where(x => !x.IsDeleted);
 
-        if (!string.IsNullOrWhiteSpace(group))
-        {
-            var g = group.Trim().ToLower();
+        var g = group?.Trim().ToLower();
+        if (!string.IsNullOrWhiteSpace(g))
             query = query.Where(x => x.Group.ToLower() == g);
-        }
 
-        var items = await query
-            .OrderBy(x => x.Group)
-            .ThenBy(x => x.SortOrder)
-            .ThenBy(x => x.Name)
+        // Nhóm "pickup" (điểm đón/trả): mục mới thêm nằm TRÊN ĐẦU (CreatedAt desc) —
+        // khớp yêu cầu hiển thị ở Danh mục + dropdown chọn điểm. Nhóm khác giữ thứ
+        // tự thủ công (SortOrder) rồi tên.
+        var ordered = g == "pickup"
+            ? query.OrderByDescending(x => x.CreatedAt).ThenByDescending(x => x.Id)
+            : query.OrderBy(x => x.Group).ThenBy(x => x.SortOrder).ThenBy(x => x.Name);
+
+        var items = await ordered
             .Select(x => ToResponse(x))
             .ToListAsync();
 
