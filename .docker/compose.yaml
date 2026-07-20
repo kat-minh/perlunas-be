@@ -1,0 +1,141 @@
+x-postgres-base: &postgres-base
+  image: postgres:15-alpine
+  restart: unless-stopped
+  environment:
+    POSTGRES_DB: ${POSTGRES_DBNAME}
+    POSTGRES_USER: ${POSTGRES_USERNAME}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    TZ: UTC
+    PGTZ: UTC
+
+x-cloudflare-tunnel: &cloudflare-tunnel
+  image: cloudflare/cloudflared
+  restart: unless-stopped
+  command: tunnel run
+  environment:
+    - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+
+x-api-env: &api-env
+  TZ: Asia/Bangkok
+  Environment: ${ENVIRONMENT}
+  ASPNETCORE_ENVIRONMENT: ${ENVIRONMENT}
+  ASPNETCORE_URLS: http://+:8080
+
+  # Admin credentials (admin login — AdminAuth section)
+  AdminAuth__Username: ${ADMIN_USERNAME}
+  AdminAuth__Password: ${ADMIN_PASSWORD}
+
+  # JWT (this service issues and validates its own tokens).
+  JwtOption__Issuer: ${JWT_ISSUER}
+  JwtOption__Audience: ${JWT_AUDIENCE}
+  JwtOption__AccessTokenKey: ${JWT_ACCESS_TOKEN_KEY}
+  JwtOption__AccessTokenExpireMin: ${JWT_ACCESS_TOKEN_EXPIRE_MIN}
+
+  # Cloudinary (admin image upload — POST /api/cloudinary/upload)
+  CloudinaryOptions__CloudName: ${CLOUDINARY_CLOUD_NAME}
+  CloudinaryOptions__ApiKey: ${CLOUDINARY_API_KEY}
+  CloudinaryOptions__ApiSecret: ${CLOUDINARY_API_SECRET}
+
+  # Mail (SMTP — MailOptions section)
+  MailOptions__Mail: ${MAIL_ADDRESS}
+  MailOptions__DisplayName: ${MAIL_DISPLAY_NAME}
+  MailOptions__Password: ${MAIL_PASSWORD}
+  MailOptions__Host: ${MAIL_HOST}
+  MailOptions__Port: ${MAIL_PORT}
+
+  # Site revalidate (on-demand ISR webhook to the public site; app reads these
+  # env names directly via RevalidationMiddleware).
+  SITE_REVALIDATE_URL: ${SITE_REVALIDATE_URL}
+  SITE_REVALIDATE_SECRET: ${SITE_REVALIDATE_SECRET}
+
+  # CORS allowed origins (Cors:AllowedOrigins array — one env per index)
+  Cors__AllowedOrigins__0: ${CORS_ALLOWED_ORIGINS_0}
+  Cors__AllowedOrigins__1: ${CORS_ALLOWED_ORIGINS_1}
+
+  AllowedHosts: "*"
+
+x-api-base: &api-base
+  image: ${REGISTRY}/perlunas-api:${TAG:-latest}
+  build:
+    context: ..
+    dockerfile: .docker/Dockerfile
+  restart: unless-stopped
+
+services:
+  perlunas-postgres-dev:
+    <<: *postgres-base
+    container_name: perlunas-postgres-dev
+    hostname: perlunas-postgres-dev
+    ports: ["${POSTGRES_PORT:-5432}:5432"]
+    networks: [perlunas-network-dev]
+    volumes:
+      - postgres-perlunas-data-dev:/var/lib/postgresql/data
+    profiles: [dev, database-dev, database, dev-pull]
+
+  perlunas-postgres-prod:
+    <<: *postgres-base
+    container_name: perlunas-postgres-prod
+    hostname: perlunas-postgres-prod
+    ports: ["${POSTGRES_PORT:-5433}:5432"]
+    networks: [perlunas-network-prod]
+    volumes:
+      - postgres-perlunas-data-prod:/var/lib/postgresql/data
+    profiles: [prod, database-prod, database, prod-pull]
+
+  perlunas-api-dev:
+    <<: *api-base
+    container_name: perlunas-api-dev
+    hostname: perlunas-api-dev
+    environment:
+      <<: *api-env
+      ConnectionStrings__DefaultConnection: Host=perlunas-postgres-dev;Port=5432;Database=${POSTGRES_DBNAME};Username=${POSTGRES_USERNAME};Password=${POSTGRES_PASSWORD}
+    # ports:
+    #   - "${HTTP_PORT}:8080"
+    networks: [perlunas-network-dev]
+    profiles: [dev, api-dev, api, dev-pull]
+
+  perlunas-api-prod:
+    <<: *api-base
+    container_name: perlunas-api-prod
+    hostname: perlunas-api-prod
+    environment:
+      <<: *api-env
+      ConnectionStrings__DefaultConnection: Host=perlunas-postgres-prod;Port=5432;Database=${POSTGRES_DBNAME};Username=${POSTGRES_USERNAME};Password=${POSTGRES_PASSWORD}
+    # ports:
+    #   - "${HTTP_PORT}:8080"
+    networks: [perlunas-network-prod]
+    profiles: [prod, api-prod, api, prod-pull]
+
+  perlunas-cloudflare-dev:
+    <<: *cloudflare-tunnel
+    container_name: perlunas-cloudflare-dev
+    hostname: perlunas-cloudflare-dev
+    networks: [perlunas-network-dev]
+    profiles: [dev, cloudflare-dev, proxy, dev-pull]
+
+  perlunas-cloudflare-prod:
+    <<: *cloudflare-tunnel
+    container_name: perlunas-cloudflare-prod
+    hostname: perlunas-cloudflare-prod
+    networks: [perlunas-network-prod]
+    profiles: [prod, cloudflare-prod, proxy, prod-pull]
+
+volumes:
+  postgres-perlunas-data-dev:
+    name: postgres-perlunas-data-dev
+    driver: local
+  postgres-perlunas-data-prod:
+    name: postgres-perlunas-data-prod
+    driver: local
+
+networks:
+  perlunas-network-dev:
+    name: perlunas-network-dev
+    driver: bridge
+    ipam:
+      driver: default
+  perlunas-network-prod:
+    name: perlunas-network-prod
+    driver: bridge
+    ipam:
+      driver: default

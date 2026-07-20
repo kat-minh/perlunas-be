@@ -1,0 +1,69 @@
+# Prod overlay for docker-compose.yml — prod container names, prod-scoped volumes, prod environment.
+# Usage: docker compose -f .docker/docker-compose.yml -f .docker/compose.prod.yml up -d
+# (Run one environment at a time with its own .env; use compose.yaml profiles to run dev + prod side by side.)
+services:
+  perlunas-postgres:
+    container_name: perlunas-postgres-prod
+    environment:
+      POSTGRES_DB: ${POSTGRES_DBNAME}
+      POSTGRES_USER: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: UTC
+      PGTZ: UTC
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres-perlunas-data-prod:/var/lib/postgresql/data
+
+  perlunas-api:
+    container_name: perlunas-api-prod
+    environment:
+      TZ: UTC
+
+      # Environment Configuration
+      Environment: ${ENVIRONMENT}
+      ASPNETCORE_ENVIRONMENT: ${ENVIRONMENT}
+      ASPNETCORE_URLS: http://+:8080
+
+      # Connection Strings
+      ConnectionStrings__DefaultConnection: Host=perlunas-postgres;Port=5432;Database=${POSTGRES_DBNAME};Username=${POSTGRES_USERNAME};Password=${POSTGRES_PASSWORD}
+
+      # Admin credentials (admin login — AdminAuth section)
+      AdminAuth__Username: ${ADMIN_USERNAME}
+      AdminAuth__Password: ${ADMIN_PASSWORD}
+
+      # JWT Configuration (this service issues and validates its own tokens).
+      JwtOption__Issuer: ${JWT_ISSUER}
+      JwtOption__Audience: ${JWT_AUDIENCE}
+      JwtOption__AccessTokenKey: ${JWT_ACCESS_TOKEN_KEY}
+      JwtOption__AccessTokenExpireMin: ${JWT_ACCESS_TOKEN_EXPIRE_MIN}
+
+      # Cloudinary Configuration (admin image upload)
+      CloudinaryOptions__CloudName: ${CLOUDINARY_CLOUD_NAME}
+      CloudinaryOptions__ApiKey: ${CLOUDINARY_API_KEY}
+      CloudinaryOptions__ApiSecret: ${CLOUDINARY_API_SECRET}
+
+      # Mail (SMTP — MailOptions section)
+      MailOptions__Mail: ${MAIL_ADDRESS}
+      MailOptions__DisplayName: ${MAIL_DISPLAY_NAME}
+      MailOptions__Password: ${MAIL_PASSWORD}
+      MailOptions__Host: ${MAIL_HOST}
+      MailOptions__Port: ${MAIL_PORT}
+
+      # Site revalidate (on-demand ISR webhook to the public site)
+      SITE_REVALIDATE_URL: ${SITE_REVALIDATE_URL}
+      SITE_REVALIDATE_SECRET: ${SITE_REVALIDATE_SECRET}
+
+      # CORS allowed origins (Cors:AllowedOrigins array — one env per index)
+      Cors__AllowedOrigins__0: ${CORS_ALLOWED_ORIGINS_0}
+      Cors__AllowedOrigins__1: ${CORS_ALLOWED_ORIGINS_1}
+
+      # Allowed Hosts
+      AllowedHosts: "*"
+    volumes:
+      - ./logs:/app/logs
+
+volumes:
+  postgres-perlunas-data-prod:
+    name: postgres-perlunas-data-prod
+    driver: local
