@@ -32,6 +32,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(dataSource)
 );
 
+// Add Service
 builder.Services.AddHttpClient();
 builder.Services.Configure<Cms.Service.JwtService.JwtOption>(builder.Configuration.GetSection(nameof(Cms.Service.JwtService.JwtOption)));
 builder.Services.AddScoped<Cms.Service.JwtService.IService, Cms.Service.JwtService.Service>();
