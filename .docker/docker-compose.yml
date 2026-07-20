@@ -53,6 +53,12 @@ services:
       CloudinaryOptions__ApiKey: ${CLOUDINARY_API_KEY}
       CloudinaryOptions__ApiSecret: ${CLOUDINARY_API_SECRET}
 
+      # BizFly Cloud Storage (presigned upload — GET /api/storage/presigned-url)
+      BizFlyCloudOptions__AccessKey: ${BIZFLY_ACCESS_KEY}
+      BizFlyCloudOptions__SecretKey: ${BIZFLY_SECRET_KEY}
+      BizFlyCloudOptions__ServiceUrl: ${BIZFLY_SERVICE_URL}
+      BizFlyCloudOptions__BucketName: ${BIZFLY_BUCKET_NAME}
+
       # Mail (SMTP — MailOptions section)
       MailOptions__Mail: ${MAIL_ADDRESS}
       MailOptions__DisplayName: ${MAIL_DISPLAY_NAME}

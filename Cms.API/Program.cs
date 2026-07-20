@@ -45,6 +45,8 @@ builder.Services.AddScoped<Cms.Service.SiteSetting.IService, Cms.Service.SiteSet
 builder.Services.AddScoped<Cms.Service.Form.IService, Cms.Service.Form.Service>();
 builder.Services.AddScoped<Cms.Service.MailService.IService, Cms.Service.MailService.Service>();
 builder.Services.AddScoped<Cms.Service.CloudinaryService.IService, Cms.Service.CloudinaryService.Service>();
+// AmazonS3Client thread-safe & tái sử dụng -> đăng ký Singleton.
+builder.Services.AddSingleton<Cms.Service.StorageService.IService, Cms.Service.StorageService.Service>();
 builder.Services.AddValidatorsFromAssembly(Cms.Service.AssemblyReference.Assembly);
 
 // ── CORS ───────────────────────────────────────────────────────────────────

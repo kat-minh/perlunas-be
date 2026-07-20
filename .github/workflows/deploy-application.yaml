@@ -58,6 +58,12 @@ jobs:
       CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
       CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
 
+      # BizFly Cloud Storage (presigned image upload)
+      BIZFLY_ACCESS_KEY: ${{ secrets.BIZFLY_ACCESS_KEY }}
+      BIZFLY_SECRET_KEY: ${{ secrets.BIZFLY_SECRET_KEY }}
+      BIZFLY_SERVICE_URL: ${{ secrets.BIZFLY_SERVICE_URL }}
+      BIZFLY_BUCKET_NAME: ${{ secrets.BIZFLY_BUCKET_NAME }}
+
       # Mail (SMTP)
       MAIL_ADDRESS: ${{ secrets.MAIL_ADDRESS }}
       MAIL_DISPLAY_NAME: ${{ secrets.MAIL_DISPLAY_NAME }}
