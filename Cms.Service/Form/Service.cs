@@ -201,10 +201,8 @@ public class Service : IService
         if (service.Type != ServiceType.Combo)
             throw new BadRequestException("SERVICE_MUST_BE_COMBO_TYPE");
 
-        // Mã combo hiển thị: dùng Code admin set nếu có, ngược lại sinh từ slug (khớp FE).
-        var comboCode = !string.IsNullOrEmpty(service.Code)
-            ? service.Code
-            : ServiceCode.ForCombo(service.Slug);
+        // Mã combo do admin tự đặt; trống thì MailTemplate tự bỏ qua row "Mã combo".
+        var comboCode = service.Code ?? string.Empty;
 
         var validRoomCategoryTitles = await _dbContext.RoomCategories
             .Where(x => x.ServiceId == request.ServiceId)
@@ -557,14 +555,8 @@ public class Service : IService
                 ServiceName = form.Service != null ? form.Service.Title : null,
                 RoomCategory = roomCategories,
                 Classify = form.Service?.Classify,
-                // Combo: fallback mã sinh từ slug (khớp FE) khi chưa set Code.
-                Code = form.Service == null
-                    ? null
-                    : !string.IsNullOrEmpty(form.Service.Code)
-                        ? form.Service.Code
-                        : form.Service.Type == ServiceType.Combo
-                            ? ServiceCode.ForCombo(form.Service.Slug)
-                            : form.Service.Code,
+                // Mã do admin tự đặt — không còn fallback sinh từ slug.
+                Code = form.Service?.Code,
                 FormDetails = form.FormDetails.Select(d => new Response.FormDetailsResponse
                 {
                     Id = d.Id,

@@ -1042,13 +1042,9 @@ public class Service : IService
             Price = service.Price ?? string.Empty,
             OriginalPrice = service.OriginalPrice ?? string.Empty,
             PriceText = service.PriceText ?? string.Empty,
-            // Combo: mã hiển thị sinh tất định từ slug (khớp FE) khi admin chưa set Code,
-            // để website/email/admin cùng một mã.
-            Code = !string.IsNullOrEmpty(service.Code)
-                ? service.Code
-                : service.Type == ServiceType.Combo
-                    ? ServiceCode.ForCombo(service.Slug)
-                    : string.Empty,
+            // Mã combo do admin TỰ ĐẶT ở form combo — không sinh tự động từ slug
+            // nữa. Trống thì để trống: trang combo tự ẩn dòng mã, email bỏ qua row.
+            Code = service.Code ?? string.Empty,
             Instruct = service.Instruct ?? string.Empty,
             Feature = service.Feature ?? string.Empty,
             Type = service.Type,
