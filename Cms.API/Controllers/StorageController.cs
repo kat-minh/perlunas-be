@@ -19,8 +19,9 @@ public class StorageController : ControllerBase
     public record DeleteFileRequest(string Url);
 
     /// <summary>
-    /// GET /api/storage/presigned-url — Xin URL có chữ ký để upload ảnh thẳng lên BizFly Cloud.
-    /// Client sau đó PUT raw binary ảnh lên <c>presignedUrl</c> với đúng header Content-Type, rồi dùng <c>fileUrl</c>.
+    /// GET /api/storage/presigned-url — Xin URL có chữ ký để upload ảnh/video thẳng lên BizFly Cloud.
+    /// Client sau đó PUT raw binary lên <c>presignedUrl</c> với đúng header Content-Type, rồi dùng <c>fileUrl</c>.
+    /// Nhận image/jpeg|png|webp|gif và video/mp4|webm|quicktime (video nền hero).
     /// </summary>
     [HttpGet("presigned-url")]
     [Authorize]

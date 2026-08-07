@@ -15,6 +15,9 @@ public class Service : IService
     /// <summary>Kích thước ảnh tối đa khuyến nghị (10MB) — đưa vào hướng dẫn cho client.</summary>
     private const long MaxImageBytes = 10 * 1024 * 1024;
 
+    /// <summary>Kích thước video tối đa khuyến nghị (50MB) — video nền hero nặng hơn ảnh nhiều.</summary>
+    private const long MaxVideoBytes = 50 * 1024 * 1024;
+
     /// <summary>Presigned URL sống bao lâu (phút).</summary>
     private const int ExpiresMinutes = 5;
 
@@ -29,6 +32,19 @@ public class Service : IService
             ["image/png"] = ".png",
             ["image/webp"] = ".webp",
             ["image/gif"] = ".gif",
+        };
+
+    /// <summary>
+    /// Content-Type video được phép -> phần mở rộng. Trang chủ có một trường nội dung là
+    /// video nền (key <c>home.hero.video</c>), trước đây chỉ nhận ảnh nên admin không đổi
+    /// được video — phải kèm cả video vào đây thì nút "Tải video lên" mới xin được chữ ký.
+    /// </summary>
+    private static readonly IReadOnlyDictionary<string, string> AllowedVideoTypes =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["video/mp4"] = ".mp4",
+            ["video/webm"] = ".webm",
+            ["video/quicktime"] = ".mov",
         };
 
     private readonly BizFlyCloudOptions _options;
@@ -49,8 +65,13 @@ public class Service : IService
         ct.ThrowIfCancellationRequested();
 
         var normalized = (contentType ?? string.Empty).Trim().ToLowerInvariant();
-        if (!AllowedImageTypes.TryGetValue(normalized, out var extension))
-            throw new BadRequestException("Định dạng ảnh không hợp lệ (chỉ nhận image/jpeg, image/png, image/webp, image/gif).");
+        var isVideo = AllowedVideoTypes.TryGetValue(normalized, out var extension);
+        if (!isVideo && !AllowedImageTypes.TryGetValue(normalized, out extension))
+            throw new BadRequestException(
+                "Định dạng tệp không hợp lệ (ảnh: image/jpeg, image/png, image/webp, image/gif; " +
+                "video: video/mp4, video/webm, video/quicktime).");
+
+        var maxBytes = isVideo ? MaxVideoBytes : MaxImageBytes;
 
         var key = BuildObjectKey(extension);
         var presignedUrl = await GeneratePresignedUrlAsync(key, normalized, ExpiresMinutes);
@@ -69,8 +90,8 @@ public class Service : IService
             },
             ExpiresInSeconds = ExpiresMinutes * 60,
             Instructions =
-                "Upload ảnh dạng raw binary bằng method PUT (KHÔNG dùng multipart/form-data). " +
-                $"Set đúng header Content-Type = {normalized}. Dung lượng tối đa {MaxImageBytes / (1024 * 1024)}MB. " +
+                $"Upload {(isVideo ? "video" : "ảnh")} dạng raw binary bằng method PUT (KHÔNG dùng multipart/form-data). " +
+                $"Set đúng header Content-Type = {normalized}. Dung lượng tối đa {maxBytes / (1024 * 1024)}MB. " +
                 $"URL hết hạn sau {ExpiresMinutes} phút.",
         };
     }
