@@ -26,7 +26,7 @@ public class Service : IService
 
         var g = group?.Trim().ToLower();
         if (!string.IsNullOrWhiteSpace(g))
-            query = query.Where(x => x.Group.ToLower() == g);
+            query = query.Where(x => x.Group == g);
 
         // Nhóm "pickup" (điểm đón/trả): mục mới thêm nằm TRÊN ĐẦU (CreatedAt desc) —
         // khớp yêu cầu hiển thị ở Danh mục + dropdown chọn điểm. Nhóm khác giữ thứ

@@ -34,6 +34,7 @@ public class Service : IService
         var totalCount = await query.CountAsync();
         var items = await query
             .OrderByDescending(x => x.CreatedAt)
+            .ThenBy(x => x.Id)
             .Skip((pageIndex - 1) * pageSize)
             .Take(pageSize)
             .Select(x => ToResponse(x))

@@ -112,8 +112,9 @@ public class Service : IService
         request.Phone = request.Phone.Replace(" ", "");
 
         var service = await _dbContext.Services
-            .Include(x => x.DepartureSchedules)
-            .FirstOrDefaultAsync(x => x.Id == request.ServiceId);
+            .AsNoTracking()
+            .Include(x => x.DepartureSchedules.Where(d => !d.IsDeleted))
+            .FirstOrDefaultAsync(x => x.Id == request.ServiceId && !x.IsDeleted);
         if (service is null) throw new NotFoundException("Service not found.");
 
         var activeSchedules = service.DepartureSchedules != null
@@ -196,7 +197,8 @@ public class Service : IService
         request.Phone = request.Phone.Replace(" ", "");
 
         var service = await _dbContext.Services
-            .FirstOrDefaultAsync(x => x.Id == request.ServiceId);
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == request.ServiceId && !x.IsDeleted);
         if (service is null) throw new NotFoundException("Service not found.");
         if (service.Type != ServiceType.Combo)
             throw new BadRequestException("SERVICE_MUST_BE_COMBO_TYPE");
@@ -207,7 +209,7 @@ public class Service : IService
             : ServiceCode.ForCombo(service.Slug);
 
         var validRoomCategoryTitles = await _dbContext.RoomCategories
-            .Where(x => x.ServiceId == request.ServiceId)
+            .Where(x => x.ServiceId == request.ServiceId && !x.IsDeleted)
             .Select(x => x.Titile)
             .ToListAsync();
 
@@ -307,13 +309,14 @@ public class Service : IService
         request.Phone = request.Phone.Replace(" ", "");
 
         var service = await _dbContext.Services
-            .FirstOrDefaultAsync(x => x.Id == request.ServiceId);
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == request.ServiceId && !x.IsDeleted);
         if (service is null) throw new NotFoundException("Service not found.");
         if (service.Type != ServiceType.Hotel)
             throw new BadRequestException("SERVICE_MUST_BE_HOTEL_TYPE");
 
         var validRoomCategoryTitles = await _dbContext.RoomCategories
-            .Where(x => x.ServiceId == request.ServiceId)
+            .Where(x => x.ServiceId == request.ServiceId && !x.IsDeleted)
             .Select(x => x.Titile)
             .ToListAsync();
 
@@ -415,9 +418,10 @@ public class Service : IService
 
         var query = _dbContext.Forms
             .AsNoTracking()
-            .Include(x => x.FormDetails)
+            .Include(x => x.FormDetails.Where(d => !d.IsDeleted))
             .Include(x => x.Service)
-                .ThenInclude(s => s.DepartureSchedules)
+                .ThenInclude(s => s!.DepartureSchedules.Where(d => !d.IsDeleted))
+            .AsSplitQuery()
             .Where(x => !x.IsDeleted);
 
         if (type.HasValue)
@@ -451,6 +455,7 @@ public class Service : IService
         var totalCount = await query.CountAsync();
         var items = await query
             .OrderByDescending(x => x.CreatedAt)
+            .ThenBy(x => x.Id)
             .Skip((pageIndex - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -466,9 +471,10 @@ public class Service : IService
 
         var form = await _dbContext.Forms
             .AsNoTracking()
-            .Include(x => x.FormDetails)
+            .Include(x => x.FormDetails.Where(d => !d.IsDeleted))
             .Include(x => x.Service)
-                .ThenInclude(s => s.DepartureSchedules)
+                .ThenInclude(s => s!.DepartureSchedules.Where(d => !d.IsDeleted))
+            .AsSplitQuery()
             .FirstOrDefaultAsync(x => !x.IsDeleted && ((isGuid && x.Id == id) || x.Slug == key));
 
         if (form is null) throw new NotFoundException("Form not found.");

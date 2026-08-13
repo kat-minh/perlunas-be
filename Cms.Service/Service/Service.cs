@@ -49,8 +49,9 @@ public class Service : IService
 
         var totalCount = await query.CountAsync();
         var entities = await query
-            .Include(x => x.DepartureSchedules)
-            .Include(x => x.RoomCategories)
+            .Include(x => x.DepartureSchedules.Where(d => !d.IsDeleted))
+            .Include(x => x.RoomCategories.Where(r => !r.IsDeleted))
+            .AsSplitQuery()
             .OrderByDescending(x => x.CreatedAt)
             .ThenBy(x => x.Id)
             .Skip((pageIndex - 1) * pageSize)
@@ -98,8 +99,9 @@ public class Service : IService
 
         var totalCount = await query.CountAsync();
         var entities = await query
-            .Include(x => x.DepartureSchedules)
-            .Include(x => x.RoomCategories)
+            .Include(x => x.DepartureSchedules.Where(d => !d.IsDeleted))
+            .Include(x => x.RoomCategories.Where(r => !r.IsDeleted))
+            .AsSplitQuery()
             .OrderByDescending(x => x.CreatedAt)
             .ThenBy(x => x.Id)
             .Skip((pageIndex - 1) * pageSize)
@@ -150,8 +152,9 @@ public class Service : IService
 
         var totalCount = await query.CountAsync();
         var entities = await query
-            .Include(x => x.DepartureSchedules)
-            .Include(x => x.RoomCategories)
+            .Include(x => x.DepartureSchedules.Where(d => !d.IsDeleted))
+            .Include(x => x.RoomCategories.Where(r => !r.IsDeleted))
+            .AsSplitQuery()
             .OrderByDescending(x => x.CreatedAt)
             .ThenBy(x => x.Id)
             .Skip((pageIndex - 1) * pageSize)
@@ -200,8 +203,9 @@ public class Service : IService
 
         var totalCount = await query.CountAsync();
         var entities = await query
-            .Include(x => x.DepartureSchedules)
-            .Include(x => x.RoomCategories)
+            .Include(x => x.DepartureSchedules.Where(d => !d.IsDeleted))
+            .Include(x => x.RoomCategories.Where(r => !r.IsDeleted))
+            .AsSplitQuery()
             // Khách sạn "Nổi bật" (BestSeller) ưu tiên hiện lên đầu trang danh sách.
             .OrderByDescending(x => x.BestSeller)
             .ThenByDescending(x => x.CreatedAt)
@@ -218,15 +222,16 @@ public class Service : IService
     {
         var normalizedKey = key.Trim();
         var idMatched = Guid.TryParse(normalizedKey, out var id);
-        var slug = normalizedKey.ToLower();
+        var slug = normalizedKey.ToLowerInvariant();
 
         var service = await _dbContext.Services
             .AsNoTracking()
-            .Include(x => x.Schedules)
-            .Include(x => x.ImportantInfors)
-            .Include(x => x.DepartureSchedules)
-            .Include(x => x.RoomCategories)
-            .FirstOrDefaultAsync(x => !x.IsDeleted && (idMatched ? x.Id == id : x.Slug.ToLower() == slug));
+            .Include(x => x.Schedules.Where(s => !s.IsDeleted))
+            .Include(x => x.ImportantInfors.Where(i => !i.IsDeleted))
+            .Include(x => x.DepartureSchedules.Where(d => !d.IsDeleted))
+            .Include(x => x.RoomCategories.Where(r => !r.IsDeleted))
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(x => !x.IsDeleted && (idMatched ? x.Id == id : x.Slug == slug));
 
         if (service is null) throw new NotFoundException("Service not found.");
 
@@ -242,52 +247,73 @@ public class Service : IService
                 .DefaultIfEmpty(0)
                 .Min();
 
-            var otherTours = await _dbContext.Services
+            // Rank on a lightweight projection first. Loading every published tour with all
+            // of its rich-text fields just to return three items becomes expensive as the
+            // catalogue grows.
+            var tourCandidates = await _dbContext.Services
                 .AsNoTracking()
-                .Include(x => x.DepartureSchedules)
                 .Where(x => !x.IsDeleted && x.IsPublic && x.Type == ServiceType.Tour && x.Id != service.Id)
+                .Select(x => new
+                {
+                    x.Id,
+                    x.Region,
+                    x.CreatedAt,
+                    Prices = x.DepartureSchedules
+                        .Where(d => !d.IsDeleted && d.Price != null)
+                        .Select(d => d.Price)
+                        .ToList()
+                })
                 .ToListAsync();
 
             var targetRegion = service.Region?.Trim().ToLower();
 
-            var sameRegionTours = otherTours
+            var sameRegionTours = tourCandidates
                 .Where(x => !string.IsNullOrEmpty(x.Region) && !string.IsNullOrEmpty(targetRegion) && x.Region.Trim().ToLower() == targetRegion)
                 .OrderByDescending(x => x.CreatedAt)
                 .ToList();
 
-            var selectedTours = sameRegionTours.Take(3).ToList();
+            var selectedTourIds = sameRegionTours.Select(x => x.Id).Take(3).ToList();
 
-            if (selectedTours.Count < 3)
+            if (selectedTourIds.Count < 3)
             {
-                var needed = 3 - selectedTours.Count;
-                var differentRegionTours = otherTours
+                var needed = 3 - selectedTourIds.Count;
+                var differentRegionTourIds = tourCandidates
                     .Where(x => string.IsNullOrEmpty(x.Region) || string.IsNullOrEmpty(targetRegion) || x.Region.Trim().ToLower() != targetRegion)
                     .Select(x => {
-                        var price = x.DepartureSchedules
-                            .Where(d => !d.IsDeleted && !string.IsNullOrEmpty(d.Price))
-                            .Select(d => ParseNumericPrice(d.Price))
+                        var price = x.Prices
+                            .Where(p => !string.IsNullOrEmpty(p))
+                            .Select(ParseNumericPrice)
                             .Where(p => p > 0)
                             .DefaultIfEmpty(0)
                             .Min();
-                        return new { Tour = x, PriceDiff = Math.Abs(price - currentTourPrice) };
+                        return new { x.Id, x.CreatedAt, PriceDiff = Math.Abs(price - currentTourPrice) };
                     })
                     .OrderBy(x => x.PriceDiff)
-                    .ThenByDescending(x => x.Tour.CreatedAt)
-                    .Select(x => x.Tour)
+                    .ThenByDescending(x => x.CreatedAt)
+                    .Select(x => x.Id)
                     .Take(needed)
                     .ToList();
 
-                selectedTours.AddRange(differentRegionTours);
+                selectedTourIds.AddRange(differentRegionTourIds);
             }
 
-            response.RelatedTours = selectedTours.Select(t => ToResponse(t)).ToList();
+            var selectedTours = await _dbContext.Services
+                .AsNoTracking()
+                .Include(x => x.DepartureSchedules.Where(d => !d.IsDeleted))
+                .Where(x => selectedTourIds.Contains(x.Id))
+                .ToDictionaryAsync(x => x.Id);
+
+            response.RelatedTours = selectedTourIds
+                .Where(selectedTours.ContainsKey)
+                .Select(id => ToResponse(selectedTours[id]))
+                .ToList();
 
             // 2. Find related hotels (max 3) based on region/location
             if (!string.IsNullOrWhiteSpace(service.Region))
             {
                 var relatedHotels = await _dbContext.Services
                     .AsNoTracking()
-                    .Include(x => x.RoomCategories)
+                    .Include(x => x.RoomCategories.Where(r => !r.IsDeleted))
                     .Where(x => !x.IsDeleted && x.IsPublic && x.Type == ServiceType.Hotel && x.Region != null && x.Region.Trim().ToLower() == targetRegion)
                     .OrderByDescending(x => x.CreatedAt)
                     .Take(3)
@@ -308,7 +334,7 @@ public class Service : IService
             {
                 var relatedHotels = await _dbContext.Services
                     .AsNoTracking()
-                    .Include(x => x.RoomCategories)
+                    .Include(x => x.RoomCategories.Where(r => !r.IsDeleted))
                     .Where(x => !x.IsDeleted && x.IsPublic && x.Type == ServiceType.Hotel && x.Id != service.Id
                         && x.Destination != null && x.Destination.Trim().ToLower() == targetDest)
                     .OrderByDescending(x => x.CreatedAt)

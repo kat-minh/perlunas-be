@@ -614,6 +614,46 @@ public class ServiceTests
         result.RoomCategories.Should().ContainSingle();
     }
 
+    [Fact]
+    public async Task GetByKeyAsync_ShouldExcludeSoftDeletedChildren()
+    {
+        var options = NewDb();
+        var serviceId = Guid.NewGuid();
+        await using (var ctx = new AppDbContext(options))
+        {
+            ctx.Services.Add(new ServiceEntity
+            {
+                Id = serviceId,
+                Title = "Service with history",
+                Slug = "service-with-history",
+                Type = ServiceType.Combo,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            });
+            ctx.Schedules.AddRange(
+                new ScheduleEntity { Id = Guid.NewGuid(), ServiceId = serviceId, Day = "Active", CreatedAt = DateTime.UtcNow },
+                new ScheduleEntity { Id = Guid.NewGuid(), ServiceId = serviceId, Day = "Deleted", IsDeleted = true, CreatedAt = DateTime.UtcNow });
+            ctx.ImportantInfors.AddRange(
+                new ImportantInforEntity { Id = Guid.NewGuid(), ServiceId = serviceId, Title = "Active", CreatedAt = DateTime.UtcNow },
+                new ImportantInforEntity { Id = Guid.NewGuid(), ServiceId = serviceId, Title = "Deleted", IsDeleted = true, CreatedAt = DateTime.UtcNow });
+            ctx.DepartureSchedules.AddRange(
+                new DepartureScheduleEntity { Id = Guid.NewGuid(), ServiceId = serviceId, Code = "ACTIVE", CreatedAt = DateTime.UtcNow },
+                new DepartureScheduleEntity { Id = Guid.NewGuid(), ServiceId = serviceId, Code = "DELETED", IsDeleted = true, CreatedAt = DateTime.UtcNow });
+            ctx.RoomCategories.AddRange(
+                new RoomCategoryEntity { Id = Guid.NewGuid(), ServiceId = serviceId, Titile = "Active", CreatedAt = DateTime.UtcNow },
+                new RoomCategoryEntity { Id = Guid.NewGuid(), ServiceId = serviceId, Titile = "Deleted", IsDeleted = true, CreatedAt = DateTime.UtcNow });
+            await ctx.SaveChangesAsync();
+        }
+
+        await using var readContext = new AppDbContext(options);
+        var result = await CreateSvc(readContext).GetByKeyAsync("service-with-history");
+
+        result.Schedules.Should().ContainSingle(x => x.Day == "Active");
+        result.ImportantInfors.Should().ContainSingle(x => x.Title == "Active");
+        result.DepartureSchedules.Should().ContainSingle(x => x.Code == "ACTIVE");
+        result.RoomCategories.Should().ContainSingle(x => x.Titile == "Active");
+    }
+
     // ==================================================================
     //  GetAllAsync
     // ==================================================================

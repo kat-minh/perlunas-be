@@ -4,6 +4,7 @@ using Cms.API.Middleware;
 using Cms.Repository;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,6 +31,10 @@ var dataSource = dataSourceBuilder.Build();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(dataSource)
+        // Fail fast when a future query joins multiple sibling collections without
+        // opting into split-query behavior. Such joins can multiply rows exponentially.
+        .ConfigureWarnings(warnings =>
+            warnings.Throw(RelationalEventId.MultipleCollectionIncludeWarning))
 );
 
 // Add Service

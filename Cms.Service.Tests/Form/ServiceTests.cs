@@ -305,6 +305,52 @@ public class ServiceTests
     }
 
     [Fact]
+    public async Task GetAllAsync_ShouldExcludeSoftDeletedFormDetails()
+    {
+        var options = NewDb();
+        var serviceId = Guid.NewGuid();
+        var formId = Guid.NewGuid();
+
+        await using (var ctx = new AppDbContext(options))
+        {
+            ctx.Services.Add(new ServiceEntity
+            {
+                Id = serviceId,
+                Title = "Test Hotel",
+                Slug = "test-hotel",
+                Type = ServiceType.Hotel
+            });
+            ctx.Forms.Add(new FormEntity
+            {
+                Id = formId,
+                ServiceId = serviceId,
+                Type = FormType.Hotel,
+                FullName = "Hotel Guest",
+                CreatedAt = DateTime.UtcNow
+            });
+            ctx.FormDetails.AddRange(
+                new FormDetailsEntity
+                {
+                    Id = Guid.NewGuid(), FormId = formId, ServiceId = serviceId,
+                    RoomCategory = ["Active room"]
+                },
+                new FormDetailsEntity
+                {
+                    Id = Guid.NewGuid(), FormId = formId, ServiceId = serviceId,
+                    RoomCategory = ["Deleted room"], IsDeleted = true
+                });
+            await ctx.SaveChangesAsync();
+        }
+
+        await using var readContext = new AppDbContext(options);
+        var result = await CreateService(readContext).GetAllAsync(1, 10, null, null);
+        var item = result.Value.Items.Single().Should().BeOfType<Response.BookingFormResponse>().Subject;
+
+        item.FormDetails.Should().ContainSingle();
+        item.FormDetails.Single().RoomCategory.Should().Equal("Active room");
+    }
+
+    [Fact]
     public async Task GetByKeyAsync_WithValidId_ShouldReturnCorrectForm()
     {
         var options = NewDb();

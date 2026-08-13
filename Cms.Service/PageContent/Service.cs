@@ -55,7 +55,7 @@ public class Service : IService
         if (item is null) throw new NotFoundException("Page content not found.");
 
         var response = ToResponse(item);
-        response.Children = BuildTree(all, id);
+        response.Children = BuildTree(all.ToLookup(x => x.ParentId), id);
         return response;
     }
 
@@ -129,7 +129,7 @@ public class Service : IService
         if (pageContent is null) throw new NotFoundException("Page content not found.");
 
         var toDelete = new List<Repository.Entities.PageContent> { pageContent };
-        CollectDescendants(all, id, toDelete);
+        CollectDescendants(all.ToLookup(x => x.ParentId), id, toDelete);
 
         var now = DateTime.UtcNow;
         foreach (var item in toDelete)
@@ -143,26 +143,29 @@ public class Service : IService
         return "Page content deleted successfully.";
     }
 
-    private static List<Response.PageContentResponse> BuildTree(List<Repository.Entities.PageContent> all, Guid? parentId)
+    private static List<Response.PageContentResponse> BuildTree(
+        ILookup<Guid?, Repository.Entities.PageContent> childrenByParent,
+        Guid? parentId)
     {
-        return all
-            .Where(x => x.ParentId == parentId)
+        return childrenByParent[parentId]
             .Select(x =>
             {
                 var r = ToResponse(x);
-                r.Children = BuildTree(all, x.Id);
+                r.Children = BuildTree(childrenByParent, x.Id);
                 return r;
             })
             .ToList();
     }
 
-    private static void CollectDescendants(List<Repository.Entities.PageContent> all, Guid parentId, List<Repository.Entities.PageContent> result)
+    private static void CollectDescendants(
+        ILookup<Guid?, Repository.Entities.PageContent> childrenByParent,
+        Guid parentId,
+        List<Repository.Entities.PageContent> result)
     {
-        var children = all.Where(x => x.ParentId == parentId).ToList();
-        foreach (var child in children)
+        foreach (var child in childrenByParent[parentId])
         {
             result.Add(child);
-            CollectDescendants(all, child.Id, result);
+            CollectDescendants(childrenByParent, child.Id, result);
         }
     }
 
