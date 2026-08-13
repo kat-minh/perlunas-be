@@ -126,6 +126,9 @@ public class Request
         public string Form { get; set; } = string.Empty;
         public bool IsPublic { get; set; }
         public bool BestSeller { get; set; }
+        // Thông tin quan trọng của KS (giờ nhận/trả phòng, quy định trẻ em, huỷ
+        // phòng…). Không bắt buộc — khác Tour/Combo (validator bắt NotEmpty).
+        public List<ImportantInforInline> ImportantInfors { get; set; } = new();
         public List<RoomCategoryInline> RoomCategories { get; set; } = new();
     }
 

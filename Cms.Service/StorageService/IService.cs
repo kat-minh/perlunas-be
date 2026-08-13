@@ -4,7 +4,8 @@ namespace Cms.Service.StorageService;
 public interface IService
 {
     /// <summary>
-    /// High-level: kiểm tra ảnh hợp lệ, sinh object key, trả presigned PUT URL + thông tin để client upload ảnh.
+    /// High-level: kiểm tra tệp hợp lệ (ảnh hoặc video nền), sinh object key, trả presigned PUT URL
+    /// + thông tin để client upload thẳng lên bucket.
     /// </summary>
     Task<Response.PresignedUploadResponse> CreatePresignedImageUploadAsync(string contentType, string? fileName = null, CancellationToken ct = default);
 

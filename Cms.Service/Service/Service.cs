@@ -642,6 +642,20 @@ public class Service : IService
 
         _dbContext.Services.Add(service);
 
+        // Thông tin quan trọng của KS — không bắt buộc nên danh sách rỗng là hợp lệ.
+        var importantInfors = request.ImportantInfors.Select((i, idx) => new Repository.Entities.ImportantInfor
+        {
+            Id = Guid.NewGuid(),
+            ServiceId = service.Id,
+            Title = i.Title.Trim(),
+            SubTitle = i.SubTitle.Trim(),
+            Description = i.Description.Trim(),
+            SortOrder = idx,
+            CreatedAt = now,
+            UpdatedAt = now,
+        }).ToList();
+        _dbContext.ImportantInfors.AddRange(importantInfors);
+
         var roomCategories = request.RoomCategories.Select((r, idx) => new Repository.Entities.RoomCategory
         {
             Id = Guid.NewGuid(),
@@ -665,6 +679,17 @@ public class Service : IService
         await _dbContext.SaveChangesAsync();
 
         var response = ToResponse(service);
+        response.ImportantInfors = importantInfors.Select(i => new ImpInforResponse
+        {
+            Id = i.Id,
+            ServiceId = i.ServiceId,
+            Title = i.Title ?? string.Empty,
+            SubTitle = i.SubTitle ?? string.Empty,
+            Description = i.Description ?? string.Empty,
+            SortOrder = i.SortOrder,
+            CreatedAt = i.CreatedAt,
+            UpdatedAt = i.UpdatedAt,
+        }).ToList();
         response.RoomCategories = roomCategories.Select(r => new RoomCatResponse
         {
             Id = r.Id,
@@ -731,7 +756,9 @@ public class Service : IService
             }));
         }
 
-        if (request.ImportantInfors is not null && (type == ServiceType.Tour || type == ServiceType.Combo))
+        // Khách sạn CŨNG có "Thông tin quan trọng" (giờ nhận/trả phòng, quy định
+        // trẻ em, huỷ phòng…) nên không gate theo Tour/Combo như Schedules.
+        if (request.ImportantInfors is not null)
         {
             var oldInfors = await _dbContext.ImportantInfors
                 .Where(x => x.ServiceId == id && !x.IsDeleted).ToListAsync();
@@ -1041,13 +1068,9 @@ public class Service : IService
             Price = service.Price ?? string.Empty,
             OriginalPrice = service.OriginalPrice ?? string.Empty,
             PriceText = service.PriceText ?? string.Empty,
-            // Combo: mã hiển thị sinh tất định từ slug (khớp FE) khi admin chưa set Code,
-            // để website/email/admin cùng một mã.
-            Code = !string.IsNullOrEmpty(service.Code)
-                ? service.Code
-                : service.Type == ServiceType.Combo
-                    ? ServiceCode.ForCombo(service.Slug)
-                    : string.Empty,
+            // Mã combo do admin TỰ ĐẶT ở form combo — không sinh tự động từ slug
+            // nữa. Trống thì để trống: trang combo tự ẩn dòng mã, email bỏ qua row.
+            Code = service.Code ?? string.Empty,
             Instruct = service.Instruct ?? string.Empty,
             Feature = service.Feature ?? string.Empty,
             Type = service.Type,
