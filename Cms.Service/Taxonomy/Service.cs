@@ -140,7 +140,55 @@ public class Service : IService
                 await q.Where(x => x.PurposeOfTrip == oldName)
                     .ExecuteUpdateAsync(s => s.SetProperty(x => x.PurposeOfTrip, newName).SetProperty(x => x.UpdatedAt, now));
                 break;
+            case "pickup":
+                // Điểm đón/trả nằm trong 2 cột mảng (text[]) nên không ExecuteUpdate
+                // được — load các tour đang dùng rồi sửa trong bộ nhớ.
+                await CascadePickupAsync(oldName, newName);
+                break;
         }
+    }
+
+    /// <summary>
+    /// Cập nhật tên điểm đón/trả trong Services.PickupPoints / DropoffPoints.
+    /// <paramref name="newName"/> = null nghĩa là XOÁ điểm đó khỏi mọi tour.
+    /// </summary>
+    private async Task CascadePickupAsync(string oldName, string? newName)
+    {
+        var services = await _dbContext.Services
+            .Where(x => !x.IsDeleted && (x.PickupPoints.Contains(oldName) || x.DropoffPoints.Contains(oldName)))
+            .ToListAsync();
+
+        if (services.Count == 0) return;
+
+        var now = DateTime.UtcNow;
+        foreach (var s in services)
+        {
+            // Gán LIST MỚI (không mutate tại chỗ) để EF chắc chắn nhận ra thay đổi.
+            s.PickupPoints = Replace(s.PickupPoints, oldName, newName);
+            s.DropoffPoints = Replace(s.DropoffPoints, oldName, newName);
+            s.UpdatedAt = now;
+        }
+
+        await _dbContext.SaveChangesAsync();
+    }
+
+    /// <summary>Đổi tên (newName != null) hoặc bỏ hẳn (newName == null) một giá trị trong danh sách.</summary>
+    private static List<string> Replace(List<string>? list, string oldName, string? newName)
+    {
+        if (list is null || list.Count == 0) return new List<string>();
+
+        var result = new List<string>(list.Count);
+        foreach (var v in list)
+        {
+            if (v != oldName)
+            {
+                if (!result.Contains(v)) result.Add(v);
+                continue;
+            }
+            // Đổi tên: giữ đúng vị trí cũ, tránh trùng nếu tên mới đã có sẵn.
+            if (newName is not null && !result.Contains(newName)) result.Add(newName);
+        }
+        return result;
     }
 
     public async Task<string> DeleteAsync(Guid id)
@@ -160,6 +208,12 @@ public class Service : IService
         item.IsDeleted = true;
         item.UpdatedAt = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
+
+        // Nhóm "pickup": tour lưu ĐIỂM ĐÓN/TRẢ dạng danh sách tên nên không chặn xoá
+        // (một tour có nhiều điểm) — thay vào đó gỡ luôn điểm vừa xoá khỏi mọi tour,
+        // nếu không form đặt tour ngoài site vẫn còn hiện điểm đã bị xoá.
+        if (string.Equals(item.Group?.Trim(), "pickup", StringComparison.OrdinalIgnoreCase))
+            await CascadePickupAsync(item.Name, null);
 
         return "Taxonomy deleted successfully.";
     }
