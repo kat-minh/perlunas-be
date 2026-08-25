@@ -51,6 +51,7 @@ public class Service : IService
         var entities = await query
             .Include(x => x.DepartureSchedules.Where(d => !d.IsDeleted))
             .Include(x => x.RoomCategories.Where(r => !r.IsDeleted))
+            .Include(x => x.ServiceSlugs.Where(s => s.IsCanonical))
             .AsSplitQuery()
             .OrderByDescending(x => x.CreatedAt)
             .ThenBy(x => x.Id)
@@ -101,6 +102,7 @@ public class Service : IService
         var entities = await query
             .Include(x => x.DepartureSchedules.Where(d => !d.IsDeleted))
             .Include(x => x.RoomCategories.Where(r => !r.IsDeleted))
+            .Include(x => x.ServiceSlugs.Where(s => s.IsCanonical))
             .AsSplitQuery()
             .OrderByDescending(x => x.CreatedAt)
             .ThenBy(x => x.Id)
@@ -154,6 +156,7 @@ public class Service : IService
         var entities = await query
             .Include(x => x.DepartureSchedules.Where(d => !d.IsDeleted))
             .Include(x => x.RoomCategories.Where(r => !r.IsDeleted))
+            .Include(x => x.ServiceSlugs.Where(s => s.IsCanonical))
             .AsSplitQuery()
             .OrderByDescending(x => x.CreatedAt)
             .ThenBy(x => x.Id)
@@ -205,6 +208,7 @@ public class Service : IService
         var entities = await query
             .Include(x => x.DepartureSchedules.Where(d => !d.IsDeleted))
             .Include(x => x.RoomCategories.Where(r => !r.IsDeleted))
+            .Include(x => x.ServiceSlugs.Where(s => s.IsCanonical))
             .AsSplitQuery()
             // Khách sạn "Nổi bật" (BestSeller) ưu tiên hiện lên đầu trang danh sách.
             .OrderByDescending(x => x.BestSeller)
@@ -222,7 +226,18 @@ public class Service : IService
     {
         var normalizedKey = key.Trim();
         var idMatched = Guid.TryParse(normalizedKey, out var id);
-        var slug = normalizedKey.ToLowerInvariant();
+
+        Repository.Entities.ServiceSlug? requestedSlug = null;
+        if (!idMatched)
+        {
+            var slug = normalizedKey.ToLowerInvariant();
+            requestedSlug = await _dbContext.ServiceSlugs
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Slug == slug);
+
+            if (requestedSlug is null) throw new NotFoundException("Service not found.");
+            id = requestedSlug.ServiceId;
+        }
 
         var service = await _dbContext.Services
             .AsNoTracking()
@@ -230,12 +245,18 @@ public class Service : IService
             .Include(x => x.ImportantInfors.Where(i => !i.IsDeleted))
             .Include(x => x.DepartureSchedules.Where(d => !d.IsDeleted))
             .Include(x => x.RoomCategories.Where(r => !r.IsDeleted))
+            .Include(x => x.ServiceSlugs.Where(s => s.IsCanonical))
             .AsSplitQuery()
-            .FirstOrDefaultAsync(x => !x.IsDeleted && (idMatched ? x.Id == id : x.Slug == slug));
+            .FirstOrDefaultAsync(x => !x.IsDeleted && x.Id == id);
 
         if (service is null) throw new NotFoundException("Service not found.");
 
         var response = ToResponse(service);
+        if (requestedSlug is not null)
+        {
+            response.RequestedSlug = requestedSlug.Slug;
+            response.IsCanonicalSlug = requestedSlug.IsCanonical;
+        }
 
         if (service.Type == ServiceType.Tour)
         {
@@ -300,6 +321,7 @@ public class Service : IService
             var selectedTours = await _dbContext.Services
                 .AsNoTracking()
                 .Include(x => x.DepartureSchedules.Where(d => !d.IsDeleted))
+                .Include(x => x.ServiceSlugs.Where(s => s.IsCanonical))
                 .Where(x => selectedTourIds.Contains(x.Id))
                 .ToDictionaryAsync(x => x.Id);
 
@@ -314,6 +336,7 @@ public class Service : IService
                 var relatedHotels = await _dbContext.Services
                     .AsNoTracking()
                     .Include(x => x.RoomCategories.Where(r => !r.IsDeleted))
+                    .Include(x => x.ServiceSlugs.Where(s => s.IsCanonical))
                     .Where(x => !x.IsDeleted && x.IsPublic && x.Type == ServiceType.Hotel && x.Region != null && x.Region.Trim().ToLower() == targetRegion)
                     .OrderByDescending(x => x.CreatedAt)
                     .Take(3)
@@ -335,6 +358,7 @@ public class Service : IService
                 var relatedHotels = await _dbContext.Services
                     .AsNoTracking()
                     .Include(x => x.RoomCategories.Where(r => !r.IsDeleted))
+                    .Include(x => x.ServiceSlugs.Where(s => s.IsCanonical))
                     .Where(x => !x.IsDeleted && x.IsPublic && x.Type == ServiceType.Hotel && x.Id != service.Id
                         && x.Destination != null && x.Destination.Trim().ToLower() == targetDest)
                     .OrderByDescending(x => x.CreatedAt)
@@ -366,11 +390,11 @@ public class Service : IService
 
         var now = DateTime.UtcNow;
         var serviceId = Guid.NewGuid();
+        var slug = await GenerateUniqueSlugAsync(request.Title);
         var service = new Repository.Entities.Service
         {
             Id = serviceId,
             Title = request.Title.Trim(),
-            Slug = await GenerateUniqueSlugAsync(request.Title),
             BestSeller = request.BestSeller,
             ComingSoon = request.ComingSoon,
             Type = ServiceType.Tour,
@@ -394,6 +418,7 @@ public class Service : IService
             CreatedAt = now,
             UpdatedAt = now,
         };
+        service.ServiceSlugs.Add(CreateCanonicalSlug(serviceId, slug, now));
         _dbContext.Services.Add(service);
 
         var schedules = request.Schedules.Select((s, i) => new Repository.Entities.Schedule
@@ -484,13 +509,13 @@ public class Service : IService
 
         var now = DateTime.UtcNow;
         var serviceId = Guid.NewGuid();
+        var slug = await GenerateUniqueSlugAsync(request.Title);
         var service = new Repository.Entities.Service
         {
             Id = serviceId,
             Title = request.Title.Trim(),
             // Đảm bảo slug duy nhất (thêm hậu tố -2, -3… khi trùng) như tour/hotel;
             // slug cố định sau khi tạo (UpdateAsync không regenerate).
-            Slug = await GenerateUniqueSlugAsync(request.Title),
             BestSeller = request.BestSeller,
             Type = ServiceType.Combo,
             Day = request.Day > 0 ? request.Day : (int?)null,
@@ -517,6 +542,7 @@ public class Service : IService
             CreatedAt = now,
             UpdatedAt = now,
         };
+        service.ServiceSlugs.Add(CreateCanonicalSlug(serviceId, slug, now));
         _dbContext.Services.Add(service);
 
         var schedules = request.Schedules.Select((s, i) => new Repository.Entities.Schedule
@@ -619,11 +645,12 @@ public class Service : IService
         await _createHotelValidator.ValidateAndThrowAsync(request);
 
         var now = DateTime.UtcNow;
+        var serviceId = Guid.NewGuid();
+        var slug = await GenerateUniqueSlugAsync(request.Title);
         var service = new Repository.Entities.Service
         {
-            Id = Guid.NewGuid(),
+            Id = serviceId,
             Title = request.Title.Trim(),
-            Slug = await GenerateUniqueSlugAsync(request.Title),
             BestSeller = request.BestSeller,
             Type = ServiceType.Hotel,
             Introducetion = request.Introducetion.Trim(),
@@ -639,6 +666,7 @@ public class Service : IService
             CreatedAt = now,
             UpdatedAt = now,
         };
+        service.ServiceSlugs.Add(CreateCanonicalSlug(serviceId, slug, now));
 
         _dbContext.Services.Add(service);
 
@@ -715,7 +743,13 @@ public class Service : IService
     {
         await _updateValidator.ValidateAndThrowAsync(request);
 
-        var service = await _dbContext.Services.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+        await using var transaction = _dbContext.Database.IsRelational()
+            ? await _dbContext.Database.BeginTransactionAsync()
+            : null;
+
+        var service = await _dbContext.Services
+            .Include(x => x.ServiceSlugs)
+            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
         if (service is null) throw new NotFoundException("Service not found.");
 
         // Collect old image URLs before overwriting (for Cloudinary cleanup after save)
@@ -724,8 +758,36 @@ public class Service : IService
 
         var now = DateTime.UtcNow;
         var type = request.Type!.Value;
+        var title = request.Title!.Trim();
+        var canonicalSlug = service.ServiceSlugs.SingleOrDefault(x => x.IsCanonical)
+            ?? throw new InvalidOperationException("Service has no canonical slug.");
 
-        service.Title = request.Title!.Trim();
+        if (!string.Equals(service.Title, title, StringComparison.Ordinal))
+        {
+            var nextSlug = await GenerateUniqueSlugAsync(title, service.Id);
+            if (!string.Equals(canonicalSlug.Slug, nextSlug, StringComparison.Ordinal))
+            {
+                canonicalSlug.IsCanonical = false;
+                canonicalSlug.RetiredAt = now;
+                canonicalSlug.UpdatedAt = now;
+                await _dbContext.SaveChangesAsync();
+
+                var previousSlug = service.ServiceSlugs.SingleOrDefault(x => x.Slug == nextSlug);
+                if (previousSlug is not null)
+                {
+                    previousSlug.IsCanonical = true;
+                    previousSlug.RetiredAt = null;
+                    previousSlug.UpdatedAt = now;
+                }
+                else
+                {
+                    _dbContext.ServiceSlugs.Add(CreateCanonicalSlug(service.Id, nextSlug, now));
+                }
+
+            }
+        }
+
+        service.Title = title;
         service.Album = JsonSerializer.Serialize(request.Album!);
         service.Region = request.Region!.Trim();
         service.IsPublic = request.IsPublic ?? service.IsPublic;
@@ -816,6 +878,7 @@ public class Service : IService
 
         service.UpdatedAt = now;
         await _dbContext.SaveChangesAsync();
+        if (transaction is not null) await transaction.CommitAsync();
 
         // Xóa ảnh cũ trên Cloudinary (album bị thay thế + room category cũ)
         var removedUrls = oldAlbumUrls.Except(request.Album ?? new()).ToList();
@@ -1041,11 +1104,12 @@ public class Service : IService
 
     private static Response.ServiceResponse ToResponse(Repository.Entities.Service service)
     {
+        var canonicalSlug = service.ServiceSlugs.SingleOrDefault(x => x.IsCanonical)?.Slug ?? string.Empty;
         var response = new Response.ServiceResponse
         {
             Id = service.Id,
             Title = service.Title ?? string.Empty,
-            Slug = service.Slug ?? string.Empty,
+            Slug = canonicalSlug,
             BestSeller = service.BestSeller,
             ComingSoon = service.ComingSoon,
             Introducetion = service.Introducetion ?? string.Empty,
@@ -1231,7 +1295,17 @@ public class Service : IService
         catch { return new(); }
     }
 
-    private async Task<string> GenerateUniqueSlugAsync(string title, Guid? excludedServiceId = null)
+    private static Repository.Entities.ServiceSlug CreateCanonicalSlug(Guid serviceId, string slug, DateTime now) => new()
+    {
+        Id = Guid.NewGuid(),
+        ServiceId = serviceId,
+        Slug = slug,
+        IsCanonical = true,
+        CreatedAt = now,
+        UpdatedAt = now,
+    };
+
+    private async Task<string> GenerateUniqueSlugAsync(string title, Guid? currentServiceId = null)
     {
         var baseSlug = Slug.GenerateSlug(title.Trim());
         if (string.IsNullOrWhiteSpace(baseSlug)) baseSlug = Guid.NewGuid().ToString("N");
@@ -1239,12 +1313,17 @@ public class Service : IService
         var slug = baseSlug;
         var suffix = 1;
 
-        while (await _dbContext.Services.AnyAsync(x => !x.IsDeleted && x.Slug == slug && (!excludedServiceId.HasValue || x.Id != excludedServiceId.Value)))
+        while (true)
         {
+            var existing = await _dbContext.ServiceSlugs
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Slug == slug);
+
+            if (existing is null || (currentServiceId.HasValue && existing.ServiceId == currentServiceId.Value))
+                return slug;
+
             slug = $"{baseSlug}-{suffix}";
             suffix++;
         }
-
-        return slug;
     }
 }

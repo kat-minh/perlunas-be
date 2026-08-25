@@ -6,7 +6,6 @@ namespace Cms.Repository.Entities;
 public class Service : BaseEntity<Guid>, IAuditableEntity
 {
     public string? Title { get; set; }
-    public string Slug { get; set; } = string.Empty;
     public bool BestSeller { get; set; }
     /// <summary>Tour: đánh dấu "Sắp ra mắt" — chưa cho xem chi tiết / hiện nhãn ở list.</summary>
     public bool ComingSoon { get; set; }
@@ -72,6 +71,7 @@ public class Service : BaseEntity<Guid>, IAuditableEntity
     public ICollection<RoomCategory> RoomCategories { get; set; } = new List<RoomCategory>();
     public ICollection<DepartureSchedule> DepartureSchedules { get; set; } = new List<DepartureSchedule>();
     public ICollection<ImportantInfor> ImportantInfors { get; set; } = new List<ImportantInfor>();
+    public ICollection<ServiceSlug> ServiceSlugs { get; set; } = new List<ServiceSlug>();
     
     public ICollection<Form>  Forms { get; set; } = new List<Form>();
 }

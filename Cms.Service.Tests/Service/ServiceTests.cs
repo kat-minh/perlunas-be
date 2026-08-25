@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Cms.Repository;
 using Cms.Repository.Enums;
+using Cms.Service.Configurations;
 using Cms.Service.Exceptions;
 using Cms.Service.Service;
 using FluentAssertions;
@@ -13,6 +14,7 @@ using ScheduleEntity = Cms.Repository.Entities.Schedule;
 using ImportantInforEntity = Cms.Repository.Entities.ImportantInfor;
 using DepartureScheduleEntity = Cms.Repository.Entities.DepartureSchedule;
 using RoomCategoryEntity = Cms.Repository.Entities.RoomCategory;
+using ServiceSlugEntity = Cms.Repository.Entities.ServiceSlug;
 
 namespace Cms.Service.Tests.Service;
 
@@ -70,13 +72,35 @@ public class ServiceTests
         Mock<IValidator<Request.CreateComboRequest>>? c = null,
         Mock<IValidator<Request.CreateHotelRequest>>? h = null,
         Mock<IValidator<Request.UpdateServiceRequest>>? u = null,
-        Mock<Cms.Service.CloudinaryService.IService>? cl = null) =>
-        new(ctx,
+        Mock<Cms.Service.CloudinaryService.IService>? cl = null)
+    {
+        var services = ctx.Services.ToList();
+        var serviceIdsWithSlug = ctx.ServiceSlugs.Select(x => x.ServiceId).ToHashSet();
+        var missingSlugs = services
+            .Where(x => !serviceIdsWithSlug.Contains(x.Id))
+            .Select(x => new ServiceSlugEntity
+            {
+                Id = Guid.NewGuid(),
+                ServiceId = x.Id,
+                Slug = Slug.GenerateSlug(x.Title ?? string.Empty),
+                IsCanonical = true,
+                CreatedAt = x.CreatedAt,
+                UpdatedAt = x.UpdatedAt
+            })
+            .ToList();
+        if (missingSlugs.Count > 0)
+        {
+            ctx.ServiceSlugs.AddRange(missingSlugs);
+            ctx.SaveChanges();
+        }
+
+        return new(ctx,
             (cl ?? CloudinaryMock()).Object,
             (t ?? TourValidatorMock()).Object,
             (c ?? ComboValidatorMock()).Object,
             (h ?? HotelValidatorMock()).Object,
             (u ?? UpdateValidatorMock()).Object);
+    }
 
     // ==================================================================
     //  CreateTourAsync
@@ -149,7 +173,7 @@ public class ServiceTests
         var options = NewDb();
         await using (var ctx = new AppDbContext(options))
         {
-            ctx.Services.Add(new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour Phú Quốc", Slug = "tour-phu-quoc", Type = ServiceType.Tour, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            ctx.Services.Add(new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour Phú Quốc", Type = ServiceType.Tour, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
             await ctx.SaveChangesAsync();
         }
 
@@ -248,7 +272,7 @@ public class ServiceTests
         var options = NewDb();
         await using (var ctx = new AppDbContext(options))
         {
-            ctx.Services.Add(new ServiceEntity { Id = Guid.NewGuid(), Title = "Combo Đà Nẵng", Slug = "combo-da-nang", Type = ServiceType.Combo, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            ctx.Services.Add(new ServiceEntity { Id = Guid.NewGuid(), Title = "Combo Đà Nẵng", Type = ServiceType.Combo, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
             await ctx.SaveChangesAsync();
         }
 
@@ -323,7 +347,7 @@ public class ServiceTests
         var options = NewDb();
         await using (var ctx = new AppDbContext(options))
         {
-            ctx.Services.Add(new ServiceEntity { Id = Guid.NewGuid(), Title = "Khách sạn Biển Xanh", Slug = "khach-san-bien-xanh", Type = ServiceType.Hotel, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            ctx.Services.Add(new ServiceEntity { Id = Guid.NewGuid(), Title = "Khách sạn Biển Xanh", Type = ServiceType.Hotel, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
             await ctx.SaveChangesAsync();
         }
 
@@ -345,13 +369,13 @@ public class ServiceTests
         var id = Guid.NewGuid();
         await using (var ctx = new AppDbContext(options))
         {
-            ctx.Services.Add(new ServiceEntity { Id = id, Title = "Test", Slug = "test-slug", Type = ServiceType.Tour, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            ctx.Services.Add(new ServiceEntity { Id = id, Title = "Test", Type = ServiceType.Tour, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
             await ctx.SaveChangesAsync();
         }
 
         await using var ctx2 = new AppDbContext(options);
         var svc = CreateSvc(ctx2);
-        var result = await svc.GetByKeyAsync("test-slug");
+        var result = await svc.GetByKeyAsync("test");
 
         result.Id.Should().Be(id);
     }
@@ -363,7 +387,7 @@ public class ServiceTests
         var id = Guid.NewGuid();
         await using (var ctx = new AppDbContext(options))
         {
-            ctx.Services.Add(new ServiceEntity { Id = id, Title = "Test", Slug = "test-slug", Type = ServiceType.Tour, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            ctx.Services.Add(new ServiceEntity { Id = id, Title = "Test", Type = ServiceType.Tour, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
             await ctx.SaveChangesAsync();
         }
 
@@ -392,7 +416,7 @@ public class ServiceTests
         var options = NewDb();
         await using (var ctx = new AppDbContext(options))
         {
-            ctx.Services.Add(new ServiceEntity { Id = Guid.NewGuid(), Title = "Deleted", Slug = "deleted", Type = ServiceType.Tour, IsDeleted = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            ctx.Services.Add(new ServiceEntity { Id = Guid.NewGuid(), Title = "Deleted", Type = ServiceType.Tour, IsDeleted = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
             await ctx.SaveChangesAsync();
         }
 
@@ -412,8 +436,8 @@ public class ServiceTests
         await using (var ctx = new AppDbContext(options))
         {
             ctx.Services.AddRange(
-                new ServiceEntity { Id = tourId, Title = "Tour A", Slug = "tour-a", Type = ServiceType.Tour, Region = "Mien Trung", IsPublic = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new ServiceEntity { Id = hotelId, Title = "Hotel A", Slug = "hotel-a", Type = ServiceType.Hotel, Region = "Mien Trung", IsPublic = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
+                new ServiceEntity { Id = tourId, Title = "Tour A", Type = ServiceType.Tour, Region = "Mien Trung", IsPublic = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
+                new ServiceEntity { Id = hotelId, Title = "Hotel A", Type = ServiceType.Hotel, Region = "Mien Trung", IsPublic = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
             );
             await ctx.SaveChangesAsync();
         }
@@ -431,7 +455,7 @@ public class ServiceTests
         var options = NewDb();
         await using (var ctx = new AppDbContext(options))
         {
-            ctx.Services.Add(new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour No Region", Slug = "tour-no-region", Type = ServiceType.Tour, Region = null, IsPublic = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            ctx.Services.Add(new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour No Region", Type = ServiceType.Tour, Region = null, IsPublic = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
             await ctx.SaveChangesAsync();
         }
 
@@ -448,7 +472,7 @@ public class ServiceTests
         var options = NewDb();
         await using (var ctx = new AppDbContext(options))
         {
-            ctx.Services.Add(new ServiceEntity { Id = Guid.NewGuid(), Title = "Combo A", Slug = "combo-a", Type = ServiceType.Combo, IsPublic = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            ctx.Services.Add(new ServiceEntity { Id = Guid.NewGuid(), Title = "Combo A", Type = ServiceType.Combo, IsPublic = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
             await ctx.SaveChangesAsync();
         }
 
@@ -473,7 +497,7 @@ public class ServiceTests
             // Current tour: 12tr
             ctx.Services.Add(new ServiceEntity
             {
-                Id = tourId, Title = "Tour Chính", Slug = "tour-chinh", Type = ServiceType.Tour,
+                Id = tourId, Title = "Tour Chính", Type = ServiceType.Tour,
                 Region = "Mien Trung", IsPublic = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
             });
             ctx.DepartureSchedules.Add(new DepartureScheduleEntity { Id = Guid.NewGuid(), ServiceId = tourId, Price = "12,000,000", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
@@ -481,7 +505,7 @@ public class ServiceTests
             // Same region: 10tr
             ctx.Services.Add(new ServiceEntity
             {
-                Id = sameRegionId, Title = "Tour Cùng Vùng", Slug = "tour-cung-vung", Type = ServiceType.Tour,
+                Id = sameRegionId, Title = "Tour Cùng Vùng", Type = ServiceType.Tour,
                 Region = "Mien Trung", IsPublic = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
             });
             ctx.DepartureSchedules.Add(new DepartureScheduleEntity { Id = Guid.NewGuid(), ServiceId = sameRegionId, Price = "10,000,000", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
@@ -489,7 +513,7 @@ public class ServiceTests
             // Different region close: 13tr (diff 1tr)
             ctx.Services.Add(new ServiceEntity
             {
-                Id = diffRegionCloseId, Title = "Tour Khác Vùng Gần", Slug = "tour-khac-vung-gan", Type = ServiceType.Tour,
+                Id = diffRegionCloseId, Title = "Tour Khác Vùng Gần", Type = ServiceType.Tour,
                 Region = "Mien Nam", IsPublic = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
             });
             ctx.DepartureSchedules.Add(new DepartureScheduleEntity { Id = Guid.NewGuid(), ServiceId = diffRegionCloseId, Price = "13,000,000", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
@@ -497,7 +521,7 @@ public class ServiceTests
             // Different region far: 8tr (diff 4tr)
             ctx.Services.Add(new ServiceEntity
             {
-                Id = diffRegionFarId, Title = "Tour Khác Vùng Xa", Slug = "tour-khac-vung-xa", Type = ServiceType.Tour,
+                Id = diffRegionFarId, Title = "Tour Khác Vùng Xa", Type = ServiceType.Tour,
                 Region = "Mien Bac", IsPublic = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
             });
             ctx.DepartureSchedules.Add(new DepartureScheduleEntity { Id = Guid.NewGuid(), ServiceId = diffRegionFarId, Price = "8,000,000", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
@@ -525,7 +549,7 @@ public class ServiceTests
         var tourId = Guid.NewGuid();
         await using (var ctx = new AppDbContext(options))
         {
-            ctx.Services.Add(new ServiceEntity { Id = tourId, Title = "Tour Giá", Slug = "tour-gia", Type = ServiceType.Tour, IsPublic = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            ctx.Services.Add(new ServiceEntity { Id = tourId, Title = "Tour Giá", Type = ServiceType.Tour, IsPublic = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
             ctx.DepartureSchedules.AddRange(
                 new DepartureScheduleEntity { Id = Guid.NewGuid(), ServiceId = tourId, Price = "10,000,000", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
                 new DepartureScheduleEntity { Id = Guid.NewGuid(), ServiceId = tourId, Price = "15,000,000", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
@@ -547,7 +571,7 @@ public class ServiceTests
         var hotelId = Guid.NewGuid();
         await using (var ctx = new AppDbContext(options))
         {
-            ctx.Services.Add(new ServiceEntity { Id = hotelId, Title = "Hotel Giá", Slug = "hotel-gia", Type = ServiceType.Hotel, IsPublic = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            ctx.Services.Add(new ServiceEntity { Id = hotelId, Title = "Hotel Giá", Type = ServiceType.Hotel, IsPublic = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
             ctx.RoomCategories.AddRange(
                 new RoomCategoryEntity { Id = Guid.NewGuid(), ServiceId = hotelId, Price = "3,000,000", Titile = "Phòng A", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
                 new RoomCategoryEntity { Id = Guid.NewGuid(), ServiceId = hotelId, Price = "5,000,000", Titile = "Phòng B", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
@@ -573,7 +597,7 @@ public class ServiceTests
         {
             ctx.Services.Add(new ServiceEntity
             {
-                Id = comboId, Title = "Combo Giá", Slug = "combo-gia", Type = ServiceType.Combo, IsPublic = true,
+                Id = comboId, Title = "Combo Giá", Type = ServiceType.Combo, IsPublic = true,
                 Price = null, OriginalPrice = "4,500,000",
                 CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
             });
@@ -596,7 +620,7 @@ public class ServiceTests
         var tourId = Guid.NewGuid();
         await using (var ctx = new AppDbContext(options))
         {
-            ctx.Services.Add(new ServiceEntity { Id = tourId, Title = "Full Tour", Slug = "full-tour", Type = ServiceType.Tour, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            ctx.Services.Add(new ServiceEntity { Id = tourId, Title = "Full Tour", Type = ServiceType.Tour, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
             ctx.Schedules.Add(new ScheduleEntity { Id = Guid.NewGuid(), ServiceId = tourId, Day = "1", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
             ctx.ImportantInfors.Add(new ImportantInforEntity { Id = Guid.NewGuid(), ServiceId = tourId, Title = "Info", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
             ctx.DepartureSchedules.Add(new DepartureScheduleEntity { Id = Guid.NewGuid(), ServiceId = tourId, Price = "5tr", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
@@ -625,7 +649,6 @@ public class ServiceTests
             {
                 Id = serviceId,
                 Title = "Service with history",
-                Slug = "service-with-history",
                 Type = ServiceType.Combo,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -665,7 +688,7 @@ public class ServiceTests
         await using (var ctx = new AppDbContext(options))
         {
             for (int i = 0; i < 5; i++)
-                ctx.Services.Add(new ServiceEntity { Id = Guid.NewGuid(), Title = $"Svc {i}", Slug = $"svc-{i}", Type = ServiceType.Tour, CreatedAt = DateTime.UtcNow.AddMinutes(-i), UpdatedAt = DateTime.UtcNow.AddMinutes(-i) });
+                ctx.Services.Add(new ServiceEntity { Id = Guid.NewGuid(), Title = $"Svc {i}", Type = ServiceType.Tour, CreatedAt = DateTime.UtcNow.AddMinutes(-i), UpdatedAt = DateTime.UtcNow.AddMinutes(-i) });
             await ctx.SaveChangesAsync();
         }
 
@@ -700,8 +723,8 @@ public class ServiceTests
         await using (var ctx = new AppDbContext(options))
         {
             ctx.Services.AddRange(
-                new ServiceEntity { Id = Guid.NewGuid(), Title = "Visible", Slug = "visible", Type = ServiceType.Tour, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new ServiceEntity { Id = Guid.NewGuid(), Title = "Deleted", Slug = "deleted", Type = ServiceType.Tour, IsDeleted = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Visible", Type = ServiceType.Tour, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Deleted", Type = ServiceType.Tour, IsDeleted = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
             );
             await ctx.SaveChangesAsync();
         }
@@ -724,9 +747,9 @@ public class ServiceTests
         await using (var ctx = new AppDbContext(options))
         {
             ctx.Services.AddRange(
-                new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour A", Slug = "tour-a", Type = ServiceType.Tour, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new ServiceEntity { Id = Guid.NewGuid(), Title = "Combo B", Slug = "combo-b", Type = ServiceType.Combo, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new ServiceEntity { Id = Guid.NewGuid(), Title = "Hotel C", Slug = "hotel-c", Type = ServiceType.Hotel, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour A", Type = ServiceType.Tour, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Combo B", Type = ServiceType.Combo, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Hotel C", Type = ServiceType.Hotel, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
             );
             await ctx.SaveChangesAsync();
         }
@@ -746,8 +769,8 @@ public class ServiceTests
         await using (var ctx = new AppDbContext(options))
         {
             ctx.Services.AddRange(
-                new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour Phú Quốc", Slug = "tour-phu-quoc", Type = ServiceType.Tour, Region = "Miền Nam", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour Nha Trang", Slug = "tour-nha-trang", Type = ServiceType.Tour, Region = "Miền Trung", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour Phú Quốc", Type = ServiceType.Tour, Region = "Miền Nam", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour Nha Trang", Type = ServiceType.Tour, Region = "Miền Trung", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
             );
             await ctx.SaveChangesAsync();
         }
@@ -766,8 +789,8 @@ public class ServiceTests
         await using (var ctx = new AppDbContext(options))
         {
             ctx.Services.AddRange(
-                new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour A", Slug = "tour-a", Type = ServiceType.Tour, Region = "Miền Trung", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour B", Slug = "tour-b", Type = ServiceType.Tour, Region = "Miền Nam", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour A", Type = ServiceType.Tour, Region = "Miền Trung", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour B", Type = ServiceType.Tour, Region = "Miền Nam", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
             );
             await ctx.SaveChangesAsync();
         }
@@ -786,8 +809,8 @@ public class ServiceTests
         await using (var ctx = new AppDbContext(options))
         {
             ctx.Services.AddRange(
-                new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour Đà Lạt", Slug = "tour-da-lat", Type = ServiceType.Tour, Region = "Tây Nguyên", Destinations = new List<string> { "da-lat" }, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour Đà Nẵng", Slug = "tour-da-nang", Type = ServiceType.Tour, Region = "Miền Trung", Destinations = new List<string> { "da-nang", "hue" }, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour Đà Lạt", Type = ServiceType.Tour, Region = "Tây Nguyên", Destinations = new List<string> { "da-lat" }, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour Đà Nẵng", Type = ServiceType.Tour, Region = "Miền Trung", Destinations = new List<string> { "da-nang", "hue" }, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
             );
             await ctx.SaveChangesAsync();
         }
@@ -806,8 +829,8 @@ public class ServiceTests
         await using (var ctx = new AppDbContext(options))
         {
             ctx.Services.AddRange(
-                new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour nổi bật", Slug = "tour-noi-bat", Type = ServiceType.Tour, BestSeller = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour thường", Slug = "tour-thuong", Type = ServiceType.Tour, BestSeller = false, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour nổi bật", Type = ServiceType.Tour, BestSeller = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour thường", Type = ServiceType.Tour, BestSeller = false, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
             );
             await ctx.SaveChangesAsync();
         }
@@ -831,8 +854,8 @@ public class ServiceTests
         await using (var ctx = new AppDbContext(options))
         {
             ctx.Services.AddRange(
-                new ServiceEntity { Id = Guid.NewGuid(), Title = "Combo A", Slug = "combo-a", Type = ServiceType.Combo, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour B", Slug = "tour-b", Type = ServiceType.Tour, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Combo A", Type = ServiceType.Combo, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour B", Type = ServiceType.Tour, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
             );
             await ctx.SaveChangesAsync();
         }
@@ -851,9 +874,9 @@ public class ServiceTests
         await using (var ctx = new AppDbContext(options))
         {
             ctx.Services.AddRange(
-                new ServiceEntity { Id = Guid.NewGuid(), Title = "Combo A", Slug = "combo-a", Type = ServiceType.Combo, Destination = "Đà Nẵng", Form = "Combo", Classify = "Cao cấp", PurposeOfTrip = "Nghỉ dưỡng", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new ServiceEntity { Id = Guid.NewGuid(), Title = "Combo B", Slug = "combo-b", Type = ServiceType.Combo, Destination = "Đà Nẵng", Form = "Combo", Classify = "Tiêu chuẩn", PurposeOfTrip = "Nghỉ dưỡng", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new ServiceEntity { Id = Guid.NewGuid(), Title = "Combo C", Slug = "combo-c", Type = ServiceType.Combo, Destination = "Hà Nội", Form = "Khác", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Combo A", Type = ServiceType.Combo, Destination = "Đà Nẵng", Form = "Combo", Classify = "Cao cấp", PurposeOfTrip = "Nghỉ dưỡng", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Combo B", Type = ServiceType.Combo, Destination = "Đà Nẵng", Form = "Combo", Classify = "Tiêu chuẩn", PurposeOfTrip = "Nghỉ dưỡng", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Combo C", Type = ServiceType.Combo, Destination = "Hà Nội", Form = "Khác", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
             );
             await ctx.SaveChangesAsync();
         }
@@ -876,8 +899,8 @@ public class ServiceTests
         await using (var ctx = new AppDbContext(options))
         {
             ctx.Services.AddRange(
-                new ServiceEntity { Id = Guid.NewGuid(), Title = "Hotel A", Slug = "hotel-a", Type = ServiceType.Hotel, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour B", Slug = "tour-b", Type = ServiceType.Tour, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Hotel A", Type = ServiceType.Hotel, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour B", Type = ServiceType.Tour, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
             );
             await ctx.SaveChangesAsync();
         }
@@ -896,8 +919,8 @@ public class ServiceTests
         await using (var ctx = new AppDbContext(options))
         {
             ctx.Services.AddRange(
-                new ServiceEntity { Id = Guid.NewGuid(), Title = "Hotel A", Slug = "hotel-a", Type = ServiceType.Hotel, Destination = "Đà Nẵng", Form = "Hotel", PurposeOfTrip = "Nghỉ dưỡng", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new ServiceEntity { Id = Guid.NewGuid(), Title = "Hotel B", Slug = "hotel-b", Type = ServiceType.Hotel, Destination = "Hà Nội", Form = "Hotel", PurposeOfTrip = "Nghỉ dưỡng", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Hotel A", Type = ServiceType.Hotel, Destination = "Đà Nẵng", Form = "Hotel", PurposeOfTrip = "Nghỉ dưỡng", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Hotel B", Type = ServiceType.Hotel, Destination = "Hà Nội", Form = "Hotel", PurposeOfTrip = "Nghỉ dưỡng", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
             );
             await ctx.SaveChangesAsync();
         }
@@ -942,7 +965,7 @@ public class ServiceTests
         {
             ctx.Services.Add(new ServiceEntity
             {
-                Id = svcId, Title = "Old Title", Slug = "old-title", Type = ServiceType.Tour,
+                Id = svcId, Title = "Old Title", Type = ServiceType.Tour,
                 Album = "[]", Region = "Cũ", Day = 1, Night = 1, Description = "Old", Infor = "Old",
                 Highlight = [], Code = "OLD", IsPublic = false, BestSeller = false,
                 CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
@@ -958,8 +981,7 @@ public class ServiceTests
         var result = await svc.UpdateAsync(svcId, UpdateReq());
 
         result.Title.Should().Be("Updated Title");
-        // fix(slug): keep slug fixed after creation - Update does NOT regenerate slug.
-        result.Slug.Should().Be("old-title");
+        result.Slug.Should().Be("updated-title");
         result.Region.Should().Be("Miền Bắc");
         result.Day.Should().Be(4);
         result.Night.Should().Be(3);
@@ -970,6 +992,15 @@ public class ServiceTests
         result.Schedules.Should().ContainSingle(s => s.Day == "Ngày 1");
         result.ImportantInfors.Should().ContainSingle(i => i.Title == "Note mới");
         result.DepartureSchedules.Should().ContainSingle(d => d.Price == "8,000,000");
+
+        var slugs = await ctx2.ServiceSlugs.Where(x => x.ServiceId == svcId).ToListAsync();
+        slugs.Should().ContainSingle(x => x.Slug == "updated-title" && x.IsCanonical);
+        slugs.Should().ContainSingle(x => x.Slug == "old-title" && !x.IsCanonical);
+
+        var fromOldSlug = await svc.GetByKeyAsync("old-title");
+        fromOldSlug.Slug.Should().Be("updated-title");
+        fromOldSlug.RequestedSlug.Should().Be("old-title");
+        fromOldSlug.IsCanonicalSlug.Should().BeFalse();
 
         // Old children should be soft-deleted
         var deletedSched = await ctx2.Schedules.IgnoreQueryFilters().Where(x => x.ServiceId == svcId).ToListAsync();
@@ -985,7 +1016,7 @@ public class ServiceTests
         {
             ctx.Services.Add(new ServiceEntity
             {
-                Id = hotelId, Title = "Old Hotel", Slug = "old-hotel", Type = ServiceType.Hotel,
+                Id = hotelId, Title = "Old Hotel", Type = ServiceType.Hotel,
                 Album = "[]", Region = "Cũ", Introducetion = "Cũ", IsPublic = false,
                 CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
             });
@@ -1020,15 +1051,15 @@ public class ServiceTests
     }
 
     [Fact]
-    public async Task UpdateAsync_DuplicateTitle_ShouldKeepSlugUnchanged()
+    public async Task UpdateAsync_DuplicateTitle_ShouldCreateUniqueCanonicalSlug()
     {
         var options = NewDb();
         var svcId = Guid.NewGuid();
         await using (var ctx = new AppDbContext(options))
         {
             ctx.Services.AddRange(
-                new ServiceEntity { Id = svcId, Title = "Original", Slug = "original", Type = ServiceType.Tour, Album = "[]", Region = "X", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new ServiceEntity { Id = Guid.NewGuid(), Title = "Existing Title", Slug = "existing-title", Type = ServiceType.Tour, Album = "[]", Region = "Y", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
+                new ServiceEntity { Id = svcId, Title = "Original", Type = ServiceType.Tour, Album = "[]", Region = "X", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
+                new ServiceEntity { Id = Guid.NewGuid(), Title = "Existing Title", Type = ServiceType.Tour, Album = "[]", Region = "Y", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
             );
             await ctx.SaveChangesAsync();
         }
@@ -1037,8 +1068,7 @@ public class ServiceTests
         var svc = CreateSvc(ctx2);
         var result = await svc.UpdateAsync(svcId, UpdateReq("Existing Title"));
 
-        // fix(slug): Update never regenerates slug even when title matches another service.
-        result.Slug.Should().Be("original");
+        result.Slug.Should().Be("existing-title-1");
     }
 
     [Fact]
@@ -1050,7 +1080,7 @@ public class ServiceTests
         {
             ctx.Services.Add(new ServiceEntity
             {
-                Id = svcId, Title = "Same Title", Slug = "same-title", Type = ServiceType.Tour,
+                Id = svcId, Title = "Same Title", Type = ServiceType.Tour,
                 Album = "[]", Region = "X", IsPublic = false, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
             });
             await ctx.SaveChangesAsync();
@@ -1074,7 +1104,7 @@ public class ServiceTests
         var svcId = Guid.NewGuid();
         await using (var ctx = new AppDbContext(options))
         {
-            ctx.Services.Add(new ServiceEntity { Id = svcId, Title = "To Delete", Slug = "to-delete", Type = ServiceType.Tour, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            ctx.Services.Add(new ServiceEntity { Id = svcId, Title = "To Delete", Type = ServiceType.Tour, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
             ctx.Schedules.Add(new ScheduleEntity { Id = Guid.NewGuid(), ServiceId = svcId, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
             ctx.ImportantInfors.Add(new ImportantInforEntity { Id = Guid.NewGuid(), ServiceId = svcId, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
             ctx.DepartureSchedules.Add(new DepartureScheduleEntity { Id = Guid.NewGuid(), ServiceId = svcId, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
@@ -1135,7 +1165,7 @@ public class ServiceTests
         var options = NewDb();
         await using (var ctx = new AppDbContext(options))
         {
-            ctx.Services.Add(new ServiceEntity { Id = Guid.NewGuid(), Title = "Same Title", Slug = "same-title", Type = ServiceType.Tour, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            ctx.Services.Add(new ServiceEntity { Id = Guid.NewGuid(), Title = "Same Title", Type = ServiceType.Tour, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
             await ctx.SaveChangesAsync();
         }
 
@@ -1161,7 +1191,7 @@ public class ServiceTests
         var id = Guid.NewGuid();
         await using (var ctx = new AppDbContext(options))
         {
-            ctx.Services.Add(new ServiceEntity { Id = id, Title = "Gone", Slug = "gone", Type = ServiceType.Tour, IsDeleted = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            ctx.Services.Add(new ServiceEntity { Id = id, Title = "Gone", Type = ServiceType.Tour, IsDeleted = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
             await ctx.SaveChangesAsync();
         }
 

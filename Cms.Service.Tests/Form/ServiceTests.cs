@@ -82,7 +82,6 @@ public class ServiceTests
             {
                 Id = serviceId,
                 Title = "Test Service",
-                Slug = "test-service",
                 Type = ServiceType.Tour
             });
 
@@ -139,7 +138,6 @@ public class ServiceTests
             {
                 Id = serviceId,
                 Title = "Test Service",
-                Slug = "test-service",
                 Type = ServiceType.Hotel
             });
 
@@ -192,7 +190,6 @@ public class ServiceTests
             {
                 Id = serviceId,
                 Title = "Test Service",
-                Slug = "test-service",
                 Type = ServiceType.Tour
             });
 
@@ -256,7 +253,6 @@ public class ServiceTests
             {
                 Id = serviceId,
                 Title = "Test Hotel",
-                Slug = "test-hotel",
                 Type = ServiceType.Hotel
             });
 
@@ -317,7 +313,6 @@ public class ServiceTests
             {
                 Id = serviceId,
                 Title = "Test Hotel",
-                Slug = "test-hotel",
                 Type = ServiceType.Hotel
             });
             ctx.Forms.Add(new FormEntity
@@ -363,7 +358,6 @@ public class ServiceTests
             {
                 Id = serviceId,
                 Title = "Test Service",
-                Slug = "test-service",
                 Type = ServiceType.Tour
             });
 
@@ -402,7 +396,6 @@ public class ServiceTests
             {
                 Id = serviceId,
                 Title = "Test Service",
-                Slug = "test-service",
                 Type = ServiceType.Tour
             });
 
@@ -535,7 +528,7 @@ public class ServiceTests
         var serviceId = Guid.NewGuid();
         await using (var ctx = new AppDbContext(options))
         {
-            ctx.Services.Add(new ServiceEntity { Id = serviceId, Title = "Tour", Slug = "tour", Type = ServiceType.Tour });
+            ctx.Services.Add(new ServiceEntity { Id = serviceId, Title = "Tour", Type = ServiceType.Tour });
             await ctx.SaveChangesAsync();
         }
 
@@ -581,7 +574,6 @@ public class ServiceTests
             {
                 Id = serviceId,
                 Title = "Amazing Tour",
-                Slug = "amazing-tour",
                 Type = ServiceType.Tour
             });
             ctx.DepartureSchedules.Add(new DepartureScheduleEntity
@@ -640,7 +632,7 @@ public class ServiceTests
         var serviceId = Guid.NewGuid();
         await using (var ctx = new AppDbContext(options))
         {
-            ctx.Services.Add(new ServiceEntity { Id = serviceId, Title = "Combo", Slug = "combo", Type = ServiceType.Combo });
+            ctx.Services.Add(new ServiceEntity { Id = serviceId, Title = "Combo", Type = ServiceType.Combo });
             ctx.RoomCategories.Add(new RoomCategoryEntity { Id = Guid.NewGuid(), ServiceId = serviceId, Titile = "Deluxe" });
             await ctx.SaveChangesAsync();
         }
@@ -671,7 +663,7 @@ public class ServiceTests
         var serviceId = Guid.NewGuid();
         await using (var ctx = new AppDbContext(options))
         {
-            ctx.Services.Add(new ServiceEntity { Id = serviceId, Title = "Hotel", Slug = "hotel", Type = ServiceType.Hotel });
+            ctx.Services.Add(new ServiceEntity { Id = serviceId, Title = "Hotel", Type = ServiceType.Hotel });
             await ctx.SaveChangesAsync();
         }
 
@@ -696,7 +688,7 @@ public class ServiceTests
         var serviceId = Guid.NewGuid();
         await using (var ctx = new AppDbContext(options))
         {
-            ctx.Services.Add(new ServiceEntity { Id = serviceId, Title = "Combo", Slug = "combo", Type = ServiceType.Combo });
+            ctx.Services.Add(new ServiceEntity { Id = serviceId, Title = "Combo", Type = ServiceType.Combo });
             ctx.RoomCategories.Add(new RoomCategoryEntity { Id = Guid.NewGuid(), ServiceId = serviceId, Titile = "Deluxe" });
             await ctx.SaveChangesAsync();
         }
@@ -725,7 +717,7 @@ public class ServiceTests
         var serviceId = Guid.NewGuid();
         await using (var ctx = new AppDbContext(options))
         {
-            ctx.Services.Add(new ServiceEntity { Id = serviceId, Title = "Tour", Slug = "tour", Type = ServiceType.Tour });
+            ctx.Services.Add(new ServiceEntity { Id = serviceId, Title = "Tour", Type = ServiceType.Tour });
             await ctx.SaveChangesAsync();
         }
 
@@ -796,7 +788,6 @@ public class ServiceTests
             {
                 Id = serviceId,
                 Title = "Deluxe Combo Pack",
-                Slug = "deluxe-combo-pack",
                 Type = ServiceType.Combo,
                 Classify = "Tier 1 Resort",
                 Code = "CB-999"
@@ -859,7 +850,6 @@ public class ServiceTests
             {
                 Id = serviceId,
                 Title = "Grand Imperial Hotel",
-                Slug = "grand-imperial-hotel",
                 Type = ServiceType.Hotel
             });
             ctx.RoomCategories.Add(new RoomCategoryEntity
@@ -932,7 +922,6 @@ public class ServiceTests
             {
                 Id = tourServiceId,
                 Title = "Amazing Halong Tour",
-                Slug = "amazing-halong-tour",
                 Type = ServiceType.Tour
             };
             tour.DepartureSchedules.Add(new DepartureScheduleEntity
@@ -949,7 +938,6 @@ public class ServiceTests
             {
                 Id = hotelServiceId,
                 Title = "Lunar Bay Resort",
-                Slug = "lunar-bay-resort",
                 Type = ServiceType.Hotel
             });
 
@@ -958,7 +946,6 @@ public class ServiceTests
             {
                 Id = comboServiceId,
                 Title = "Romantic Escapade Combo",
-                Slug = "romantic-escapade-combo",
                 Type = ServiceType.Combo,
                 Classify = "Luxury",
                 Code = "CB-101"
