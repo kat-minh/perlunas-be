@@ -10,6 +10,7 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<Entities.Service> Services => Set<Entities.Service>();
+    public DbSet<ServiceSlug> ServiceSlugs => Set<ServiceSlug>();
     public DbSet<Schedule> Schedules => Set<Schedule>();
     public DbSet<RoomCategory> RoomCategories => Set<RoomCategory>();
     public DbSet<DepartureSchedule> DepartureSchedules => Set<DepartureSchedule>();

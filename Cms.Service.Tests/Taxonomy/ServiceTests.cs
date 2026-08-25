@@ -741,7 +741,7 @@ public class ServiceTests
         await using (var ctx = new AppDbContext(options))
         {
             ctx.Taxonomies.Add(new TaxonomyEntity { Id = id, Group = "region", Name = "Miền Bắc", Slug = "mien-bac", SortOrder = 1, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
-            ctx.Services.Add(new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour", Slug = "tour-1", Type = ServiceType.Tour, Region = "Miền Bắc", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            ctx.Services.Add(new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour", Type = ServiceType.Tour, Region = "Miền Bắc", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
             await ctx.SaveChangesAsync();
         }
 
@@ -809,7 +809,7 @@ public class ServiceTests
         await using (var ctx = new AppDbContext(options))
         {
             ctx.Taxonomies.Add(new TaxonomyEntity { Id = id, Group = "region", Name = "Miền Bắc", Slug = "mien-bac", SortOrder = 1, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
-            ctx.Services.Add(new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour", Slug = "tour-1", Type = ServiceType.Tour, Region = "Miền Bắc", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            ctx.Services.Add(new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour", Type = ServiceType.Tour, Region = "Miền Bắc", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
             await ctx.SaveChangesAsync();
         }
 
@@ -832,7 +832,7 @@ public class ServiceTests
         await using (var ctx = new AppDbContext(options))
         {
             ctx.Taxonomies.Add(new TaxonomyEntity { Id = id, Group = "region", Name = "Miền Bắc", Slug = "mien-bac", SortOrder = 1, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
-            ctx.Services.Add(new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour", Slug = "tour-1", Type = ServiceType.Tour, Region = "Miền Bắc", IsDeleted = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+            ctx.Services.Add(new ServiceEntity { Id = Guid.NewGuid(), Title = "Tour", Type = ServiceType.Tour, Region = "Miền Bắc", IsDeleted = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
             await ctx.SaveChangesAsync();
         }
 
