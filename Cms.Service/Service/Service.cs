@@ -47,20 +47,8 @@ public class Service : IService
             .AsNoTracking()
             .Where(x => !x.IsDeleted);
 
-        var totalCount = await query.CountAsync();
-        var entities = await query
-            .Include(x => x.DepartureSchedules.Where(d => !d.IsDeleted))
-            .Include(x => x.RoomCategories.Where(r => !r.IsDeleted))
-            .Include(x => x.ServiceSlugs.Where(s => s.IsCanonical))
-            .AsSplitQuery()
-            .OrderByDescending(x => x.CreatedAt)
-            .ThenBy(x => x.Id)
-            .Skip((pageIndex - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
-        var items = entities.Select(ToListItemResponse).ToList();
-
-        return ApiResponseFactory.BasePagination(items, pageIndex, pageSize, totalCount);
+        return await GetListPageAsync(query, pageIndex, pageSize,
+            q => q.OrderByDescending(x => x.CreatedAt).ThenBy(x => x.Id));
     }
 
     public async Task<BasePaginationResponse> GetToursAsync(string? keyword, string? destination, string? city, bool? bestSeller, int pageIndex, int pageSize)
@@ -98,20 +86,8 @@ public class Service : IService
             query = query.Where(x => x.Destinations.Contains(c));
         }
 
-        var totalCount = await query.CountAsync();
-        var entities = await query
-            .Include(x => x.DepartureSchedules.Where(d => !d.IsDeleted))
-            .Include(x => x.RoomCategories.Where(r => !r.IsDeleted))
-            .Include(x => x.ServiceSlugs.Where(s => s.IsCanonical))
-            .AsSplitQuery()
-            .OrderByDescending(x => x.CreatedAt)
-            .ThenBy(x => x.Id)
-            .Skip((pageIndex - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
-        var items = entities.Select(ToListItemResponse).ToList();
-
-        return ApiResponseFactory.BasePagination(items, pageIndex, pageSize, totalCount);
+        return await GetListPageAsync(query, pageIndex, pageSize,
+            q => q.OrderByDescending(x => x.CreatedAt).ThenBy(x => x.Id));
     }
 
     public async Task<BasePaginationResponse> GetCombosAsync(string? keyword, string? destination, string? form, string? classify, string? purposeOfTrip, int pageIndex, int pageSize)
@@ -152,20 +128,8 @@ public class Service : IService
             query = query.Where(x => x.PurposeOfTrip != null && x.PurposeOfTrip.ToLower().Contains(pot));
         }
 
-        var totalCount = await query.CountAsync();
-        var entities = await query
-            .Include(x => x.DepartureSchedules.Where(d => !d.IsDeleted))
-            .Include(x => x.RoomCategories.Where(r => !r.IsDeleted))
-            .Include(x => x.ServiceSlugs.Where(s => s.IsCanonical))
-            .AsSplitQuery()
-            .OrderByDescending(x => x.CreatedAt)
-            .ThenBy(x => x.Id)
-            .Skip((pageIndex - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
-        var items = entities.Select(ToListItemResponse).ToList();
-
-        return ApiResponseFactory.BasePagination(items, pageIndex, pageSize, totalCount);
+        return await GetListPageAsync(query, pageIndex, pageSize,
+            q => q.OrderByDescending(x => x.CreatedAt).ThenBy(x => x.Id));
     }
 
     public async Task<BasePaginationResponse> GetHotelsAsync(string? keyword, string? destination, string? form, string? purposeOfTrip, bool? bestSeller, int pageIndex, int pageSize)
@@ -204,22 +168,58 @@ public class Service : IService
             query = query.Where(x => x.PurposeOfTrip != null && x.PurposeOfTrip.ToLower().Contains(pot));
         }
 
-        var totalCount = await query.CountAsync();
-        var entities = await query
-            .Include(x => x.DepartureSchedules.Where(d => !d.IsDeleted))
-            .Include(x => x.RoomCategories.Where(r => !r.IsDeleted))
-            .Include(x => x.ServiceSlugs.Where(s => s.IsCanonical))
-            .AsSplitQuery()
+        return await GetListPageAsync(query, pageIndex, pageSize,
+            q => q.OrderByDescending(x => x.BestSeller)
+                .ThenByDescending(x => x.CreatedAt)
+                .ThenBy(x => x.Id));
             // Khách sạn "Nổi bật" (BestSeller) ưu tiên hiện lên đầu trang danh sách.
-            .OrderByDescending(x => x.BestSeller)
-            .ThenByDescending(x => x.CreatedAt)
-            .ThenBy(x => x.Id)
+    }
+
+    private async Task<BasePaginationResponse> GetListPageAsync(
+        IQueryable<Repository.Entities.Service> query,
+        int pageIndex,
+        int pageSize,
+        Func<IQueryable<Repository.Entities.Service>, IOrderedQueryable<Repository.Entities.Service>> orderBy)
+    {
+        var totalCount = await query.CountAsync();
+        var rows = await orderBy(query)
+            .AsSplitQuery()
             .Skip((pageIndex - 1) * pageSize)
             .Take(pageSize)
+            .Select(x => new ServiceListRow
+            {
+                Service = x,
+                CanonicalSlug = x.ServiceSlugs
+                    .Where(s => s.IsCanonical)
+                    .Select(s => s.Slug)
+                    .FirstOrDefault() ?? string.Empty,
+                DeparturePrices = x.DepartureSchedules
+                    .Where(d => !d.IsDeleted)
+                    .Select(d => d.Price)
+                    .ToList(),
+                RoomPrices = x.RoomCategories
+                    .Where(r => !r.IsDeleted)
+                    .Select(r => new PricePair { Price = r.Price, OriginalPrice = r.OriginalPrice })
+                    .ToList()
+            })
             .ToListAsync();
-        var items = entities.Select(ToListItemResponse).ToList();
 
-        return ApiResponseFactory.BasePagination(items, pageIndex, pageSize, totalCount);
+        return ApiResponseFactory.BasePagination(
+            rows.Select(ToListItemResponse).ToList(), pageIndex, pageSize, totalCount);
+    }
+
+    private sealed class ServiceListRow
+    {
+        public Repository.Entities.Service Service { get; init; } = null!;
+        public string CanonicalSlug { get; init; } = string.Empty;
+        public List<string?> DeparturePrices { get; init; } = new();
+        public List<PricePair> RoomPrices { get; init; } = new();
+    }
+
+    private sealed class PricePair
+    {
+        public string? Price { get; init; }
+        public string? OriginalPrice { get; init; }
     }
 
     public async Task<Response.ServiceResponse> GetByKeyAsync(string key)
@@ -227,35 +227,33 @@ public class Service : IService
         var normalizedKey = key.Trim();
         var idMatched = Guid.TryParse(normalizedKey, out var id);
 
-        Repository.Entities.ServiceSlug? requestedSlug = null;
+        string? requestedSlug = null;
         if (!idMatched)
         {
-            var slug = normalizedKey.ToLowerInvariant();
-            requestedSlug = await _dbContext.ServiceSlugs
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.Slug == slug);
-
-            if (requestedSlug is null) throw new NotFoundException("Service not found.");
-            id = requestedSlug.ServiceId;
+            requestedSlug = normalizedKey.ToLowerInvariant();
         }
 
-        var service = await _dbContext.Services
+        var serviceQuery = _dbContext.Services
             .AsNoTracking()
             .Include(x => x.Schedules.Where(s => !s.IsDeleted))
             .Include(x => x.ImportantInfors.Where(i => !i.IsDeleted))
             .Include(x => x.DepartureSchedules.Where(d => !d.IsDeleted))
             .Include(x => x.RoomCategories.Where(r => !r.IsDeleted))
             .Include(x => x.ServiceSlugs.Where(s => s.IsCanonical))
-            .AsSplitQuery()
-            .FirstOrDefaultAsync(x => !x.IsDeleted && x.Id == id);
+            .AsSplitQuery();
+
+        var service = await (idMatched
+                ? serviceQuery.Where(x => !x.IsDeleted && x.Id == id)
+                : serviceQuery.Where(x => !x.IsDeleted && x.ServiceSlugs.Any(s => s.Slug == requestedSlug)))
+            .FirstOrDefaultAsync();
 
         if (service is null) throw new NotFoundException("Service not found.");
 
         var response = ToResponse(service);
         if (requestedSlug is not null)
         {
-            response.RequestedSlug = requestedSlug.Slug;
-            response.IsCanonicalSlug = requestedSlug.IsCanonical;
+            response.RequestedSlug = requestedSlug;
+            response.IsCanonicalSlug = string.Equals(response.Slug, requestedSlug, StringComparison.Ordinal);
         }
 
         if (service.Type == ServiceType.Tour)
@@ -274,11 +272,11 @@ public class Service : IService
             var tourCandidates = await _dbContext.Services
                 .AsNoTracking()
                 .Where(x => !x.IsDeleted && x.IsPublic && x.Type == ServiceType.Tour && x.Id != service.Id)
-                .Select(x => new
+                .Select(x => new TourCandidate
                 {
-                    x.Id,
-                    x.Region,
-                    x.CreatedAt,
+                    Id = x.Id,
+                    Region = x.Region,
+                    CreatedAt = x.CreatedAt,
                     Prices = x.DepartureSchedules
                         .Where(d => !d.IsDeleted && d.Price != null)
                         .Select(d => d.Price)
@@ -288,40 +286,13 @@ public class Service : IService
 
             var targetRegion = service.Region?.Trim().ToLower();
 
-            var sameRegionTours = tourCandidates
-                .Where(x => !string.IsNullOrEmpty(x.Region) && !string.IsNullOrEmpty(targetRegion) && x.Region.Trim().ToLower() == targetRegion)
-                .OrderByDescending(x => x.CreatedAt)
-                .ToList();
-
-            var selectedTourIds = sameRegionTours.Select(x => x.Id).Take(3).ToList();
-
-            if (selectedTourIds.Count < 3)
-            {
-                var needed = 3 - selectedTourIds.Count;
-                var differentRegionTourIds = tourCandidates
-                    .Where(x => string.IsNullOrEmpty(x.Region) || string.IsNullOrEmpty(targetRegion) || x.Region.Trim().ToLower() != targetRegion)
-                    .Select(x => {
-                        var price = x.Prices
-                            .Where(p => !string.IsNullOrEmpty(p))
-                            .Select(ParseNumericPrice)
-                            .Where(p => p > 0)
-                            .DefaultIfEmpty(0)
-                            .Min();
-                        return new { x.Id, x.CreatedAt, PriceDiff = Math.Abs(price - currentTourPrice) };
-                    })
-                    .OrderBy(x => x.PriceDiff)
-                    .ThenByDescending(x => x.CreatedAt)
-                    .Select(x => x.Id)
-                    .Take(needed)
-                    .ToList();
-
-                selectedTourIds.AddRange(differentRegionTourIds);
-            }
+            var selectedTourIds = SelectRelatedTourIds(tourCandidates, targetRegion, currentTourPrice);
 
             var selectedTours = await _dbContext.Services
                 .AsNoTracking()
                 .Include(x => x.DepartureSchedules.Where(d => !d.IsDeleted))
                 .Include(x => x.ServiceSlugs.Where(s => s.IsCanonical))
+                .AsSplitQuery()
                 .Where(x => selectedTourIds.Contains(x.Id))
                 .ToDictionaryAsync(x => x.Id);
 
@@ -337,6 +308,7 @@ public class Service : IService
                     .AsNoTracking()
                     .Include(x => x.RoomCategories.Where(r => !r.IsDeleted))
                     .Include(x => x.ServiceSlugs.Where(s => s.IsCanonical))
+                    .AsSplitQuery()
                     .Where(x => !x.IsDeleted && x.IsPublic && x.Type == ServiceType.Hotel && x.Region != null && x.Region.Trim().ToLower() == targetRegion)
                     .OrderByDescending(x => x.CreatedAt)
                     .Take(3)
@@ -359,6 +331,7 @@ public class Service : IService
                     .AsNoTracking()
                     .Include(x => x.RoomCategories.Where(r => !r.IsDeleted))
                     .Include(x => x.ServiceSlugs.Where(s => s.IsCanonical))
+                    .AsSplitQuery()
                     .Where(x => !x.IsDeleted && x.IsPublic && x.Type == ServiceType.Hotel && x.Id != service.Id
                         && x.Destination != null && x.Destination.Trim().ToLower() == targetDest)
                     .OrderByDescending(x => x.CreatedAt)
@@ -374,6 +347,69 @@ public class Service : IService
         }
 
         return response;
+    }
+
+    private sealed class TourCandidate
+    {
+        public Guid Id { get; init; }
+        public string? Region { get; init; }
+        public DateTime CreatedAt { get; init; }
+        public List<string?> Prices { get; init; } = new();
+    }
+
+    private static List<Guid> SelectRelatedTourIds(
+        IEnumerable<TourCandidate> candidates,
+        string? targetRegion,
+        decimal currentTourPrice)
+    {
+        // Both groups have a maximum of three entries. Maintaining these tiny
+        // ordered buffers is O(n), unlike sorting the whole catalogue O(n log n).
+        var sameRegion = new List<TourCandidate>(capacity: 3);
+        var otherRegions = new List<(TourCandidate Candidate, decimal PriceDiff)>(capacity: 3);
+
+        foreach (var candidate in candidates)
+        {
+            var isSameRegion = !string.IsNullOrEmpty(candidate.Region)
+                && !string.IsNullOrEmpty(targetRegion)
+                && string.Equals(candidate.Region.Trim(), targetRegion, StringComparison.OrdinalIgnoreCase);
+
+            if (isSameRegion)
+            {
+                InsertTop(sameRegion, candidate, 3,
+                    (left, right) => right.CreatedAt.CompareTo(left.CreatedAt));
+                continue;
+            }
+
+            var price = candidate.Prices
+                .Select(ParseNumericPrice)
+                .Where(value => value > 0)
+                .DefaultIfEmpty(0)
+                .Min();
+            var ranked = (Candidate: candidate, PriceDiff: Math.Abs(price - currentTourPrice));
+            InsertTop(otherRegions, ranked, 3, (left, right) =>
+            {
+                var byPrice = left.PriceDiff.CompareTo(right.PriceDiff);
+                return byPrice != 0
+                    ? byPrice
+                    : right.Candidate.CreatedAt.CompareTo(left.Candidate.CreatedAt);
+            });
+        }
+
+        var result = sameRegion.Select(x => x.Id).ToList();
+        result.AddRange(otherRegions.Take(3 - result.Count).Select(x => x.Candidate.Id));
+        return result;
+    }
+
+    private static void InsertTop<T>(List<T> items, T item, int capacity, Comparison<T> comparison)
+    {
+        var index = 0;
+        while (index < items.Count && comparison(items[index], item) <= 0)
+            index++;
+
+        if (index >= capacity) return;
+
+        items.Insert(index, item);
+        if (items.Count > capacity) items.RemoveAt(capacity);
     }
 
     private static decimal ParseNumericPrice(string? priceStr)
@@ -1271,14 +1307,49 @@ public class Service : IService
     /// Map cho THẺ LIST: giữ PriceFrom (đã tính trong ToResponse) nhưng bỏ các
     /// bảng con nặng (lịch trình/hạng phòng/lịch khởi hành) mà thẻ list không cần.
     /// </summary>
-    private static Response.ServiceResponse ToListItemResponse(Repository.Entities.Service service)
+    private static Response.ServiceResponse ToListItemResponse(ServiceListRow row)
     {
-        var response = ToResponse(service);
+        var response = ToResponse(row.Service);
+        response.Slug = row.CanonicalSlug;
+        response.PriceFrom = ComputeListPriceFrom(row);
         response.Schedules = new();
         response.ImportantInfors = new();
         response.DepartureSchedules = new();
         response.RoomCategories = new();
         return response;
+    }
+
+    private static decimal? ComputeListPriceFrom(ServiceListRow row)
+    {
+        if (row.Service.Type == ServiceType.Combo)
+        {
+            var price = ParseNumericPrice(row.Service.Price);
+            if (price > 0) return price;
+
+            price = ParseNumericPrice(row.Service.OriginalPrice);
+            return price > 0 ? price : null;
+        }
+
+        decimal? minimum = null;
+        foreach (var priceText in row.DeparturePrices)
+            AddPrice(ref minimum, priceText);
+
+        foreach (var room in row.RoomPrices)
+            AddPrice(ref minimum, room.Price);
+
+        if (minimum.HasValue) return minimum;
+
+        foreach (var room in row.RoomPrices)
+            AddPrice(ref minimum, room.OriginalPrice);
+
+        return minimum;
+    }
+
+    private static void AddPrice(ref decimal? minimum, string? priceText)
+    {
+        var price = ParseNumericPrice(priceText);
+        if (price > 0 && (!minimum.HasValue || price < minimum.Value))
+            minimum = price;
     }
 
     private static List<string> DeserializeAlbum(string? album)
