@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -9,6 +10,7 @@ namespace Cms.Repository.Migrations
     /// ServiceSlugs, so the transitional Services.Slug column and its unique
     /// index can be safely removed.
     /// </summary>
+    [DbContext(typeof(AppDbContext))]
     [Migration("20260825120000_RemoveLegacyServiceSlug")]
     public partial class RemoveLegacyServiceSlug : Migration
     {
