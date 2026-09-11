@@ -53,7 +53,7 @@ public static class MailTemplate
     <tr><td align=""center"">
       <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:560px;background:#fffdf8;border:1px solid #e5e0d5;border-radius:6px;overflow:hidden;"">
         <tr><td style=""background:{Navy};padding:30px 32px;text-align:center;"">
-          <img src=""{LogoUrl}"" alt=""PERLUNAS"" width=""200"" style=""display:block;margin:0 auto;width:200px;max-width:70%;height:auto;border:0;outline:none;text-decoration:none;color:#ffffff;font-size:20px;letter-spacing:6px;font-weight:bold;"">
+          <img src=""{LogoUrl}"" alt=""PERLUNAS"" width=""220"" style=""display:block;margin:0 auto;width:220px;max-width:70%;height:auto;border:0;outline:none;text-decoration:none;color:#ffffff;font-size:20px;letter-spacing:6px;font-weight:bold;"">
           <div style=""color:#c5cae0;font-size:11px;letter-spacing:2px;margin-top:12px;"">HÀNH TRÌNH KẾT NỐI GIÁ TRỊ</div>
         </td></tr>
         <tr><td style=""padding:34px 32px 8px;"">
