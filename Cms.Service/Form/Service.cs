@@ -79,7 +79,7 @@ public class Service : IService
                     ("Thời gian", $"{request.Month}/{request.Year}"),
                     ("Ghi chú", request.Note),
                 },
-                closing: "Đội ngũ Perlunas sẽ liên hệ với bạn trong thời gian sớm nhất.")
+                closing: "Đội ngũ Perlunas Travel sẽ liên hệ với bạn trong thời gian sớm nhất.")
         });
 
         await _mailService.SendMail(new MailService.MailContent
@@ -164,7 +164,7 @@ public class Service : IService
                     ("Tour", request.Title),
                     ("Chi tiết đặt", request.Note),
                 },
-                closing: "Đội ngũ Perlunas sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận tour.")
+                closing: "Đội ngũ Perlunas Travel sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận tour.")
         });
 
         await _mailService.SendMail(new MailService.MailContent
@@ -273,7 +273,7 @@ public class Service : IService
                     ("Mã combo", comboCode),
                     ("Tổng tiền", $"{request.TotalPrice:N0} VNĐ"),
                 },
-                closing: "Đội ngũ Perlunas sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận.")
+                closing: "Đội ngũ Perlunas Travel sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận.")
         });
 
         await _mailService.SendMail(new MailService.MailContent
@@ -380,7 +380,7 @@ public class Service : IService
                     ("Email", request.Email),
                     ("Tổng tiền", $"{request.TotalPrice:N0} VNĐ"),
                 },
-                closing: "Đội ngũ Perlunas sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận.")
+                closing: "Đội ngũ Perlunas Travel sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận.")
         });
 
         await _mailService.SendMail(new MailService.MailContent
